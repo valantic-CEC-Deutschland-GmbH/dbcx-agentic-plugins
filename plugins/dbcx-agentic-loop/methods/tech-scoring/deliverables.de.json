@@ -1,0 +1,708 @@
+{
+ "_readme": [
+  "Excel-Deliverable der Methode tech-scoring (deutsch). Ein Workbook: D1 Technologiebewertung und Shortlist.",
+  "Jede Aggregation ist eine Formel: die Gewichte auf dem Blatt Parameters treiben über SUMMENPRODUKT die gewichteten Gesamtwerte auf Ranking und Shortlist, eine geänderte Gewichtung rangiert die Technologien also live neu.",
+  "Das Blatt Parameters ist eine TABELLE (nicht der `parameters`-Sheet-Typ der Engine), weil die Kriterien aus der Run-Konfiguration kommen und nicht aus dieser Spezifikation: die Spalte `value` ist die editierbare Eingabe, adressiert wird sie in Formeln per INDEX/VERGLEICH über die Spalte `key`.",
+  "Die Kalibrierungstabelle der Konsolidierung wird bewusst NICHT exportiert: sie hält fest, wie Bewertungen intern angeglichen wurden, und ist nicht für den Kunden."
+ ],
+ "deliverables": {
+  "D1": {
+   "title": "Technologiebewertung und Shortlist",
+   "requires": [
+    "scopes"
+   ],
+   "purpose": "Welche Technologien zum strategischen Kontext, zu den Leitlinien und zu den Anforderungen von {engagement.client} passen, wie stark, und welche davon auf die Shortlist kommen. Jede Kriteriumsbewertung ist eine Einschätzung, gemessen an einer Angabe von {engagement.client} und belegt in der Herstellerdokumentation; jede Fähigkeit ist ein Fakt für die genannte Version bzw. den genannten Plan. Die Gewichte sind auf dem Blatt Parameters editierbar - Gesamtwerte, Ränge und Shortlist rechnen sich daraus neu.",
+   "sources": "analysis/scopes/<technology>.md (eine Bewertung je Technologie), analysis/consolidated/SHORTLIST.md (Kalibrierung, Ranking, Shortlist, Leitlinien), state/requirements.json",
+   "extra": "Der gewichtete Gesamtwert ist der gewichtete Mittelwert der Kriteriumsbewertungen auf der Skala 0-10 (SUMMENPRODUKT aus Bewertung und Gewicht, geteilt durch die Summe der Gewichte der bewerteten Kriterien). Wird ein Gewicht auf Parameters geändert, folgen alle Gesamtwerte, Ränge und Shortlist-Kennzeichen. Ein Leitlinien-Kriterium unterhalb der Leitlinien-Schwelle gilt als Leitlinien-Treffer.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "Kennzahlen (Formeln über die Detailblätter) und der Bewertungstext",
+     "kpis": [
+      {
+       "label": "Bewertete Technologien",
+       "formula": "=IFERROR(SUMPRODUCT(({rng:Scores.technology}<>\"\")/COUNTIF({rng:Scores.technology},{rng:Scores.technology}&\"\")),0)",
+       "note": "verschiedene Technologien mit bewerteten Kriterien (Blatt Scores)",
+       "id": "technologies"
+      },
+      {
+       "label": "Technologien im Ranking",
+       "formula": "=COUNTA({rng:Shortlist.technology})",
+       "note": "eine Zeile je Technologie auf dem Blatt Shortlist",
+       "id": "ranked"
+      },
+      {
+       "label": "Auf der Shortlist",
+       "formula": "=COUNTIF({rng:Shortlist.shortlist_formula},\"{L:true}\")",
+       "note": "die besten Einträge nach gewichtetem Gesamtwert, so viele, wie die Shortlist-Größe auf Parameters zulässt",
+       "id": "shortlisted"
+      },
+      {
+       "label": "Führende Technologie",
+       "formula": "=IFERROR(INDEX({rng:Shortlist.technology},MATCH(MAX({rng:Shortlist.weighted}),{rng:Shortlist.weighted},0)),\"\")",
+       "note": "höchster gewichteter Gesamtwert mit den aktuell auf Parameters gesetzten Gewichten",
+       "id": "leader"
+      },
+      {
+       "label": "Bester gewichteter Gesamtwert",
+       "formula": "=IFERROR(ROUND(MAX({rng:Shortlist.weighted}),2)&\" / \"&INDEX({rng:Parameters.value},MATCH(\"{L:score_max}\",{rng:Parameters.key},0)),\"\")",
+       "note": "gewichteter Mittelwert der Kriteriumsbewertungen auf der Skala 0-10",
+       "id": "best_total"
+      },
+      {
+       "label": "Gewichtete Kriterien",
+       "formula": "=COUNTIF({rng:Parameters.type},\"{L:criterion}\")",
+       "note": "Kriterien auf dem Blatt Parameters (Gewichte editierbar)",
+       "id": "criteria"
+      },
+      {
+       "label": "Summe der Gewichte",
+       "formula": "=SUMIF({rng:Parameters.type},\"{L:criterion}\",{rng:Parameters.value})",
+       "note": "die Gewichte sind Anteile dieser Summe - sie müssen keine feste Summe ergeben",
+       "id": "weight_sum"
+      },
+      {
+       "label": "Bewertete Kriteriumszeilen",
+       "formula": "=COUNTA({rng:Scores.criterion_id})",
+       "note": "Technologien x Kriterien (Blatt Scores), jede mit Begründung und zwei Nachweisen",
+       "id": "score_rows"
+      },
+      {
+       "label": "Technologien mit Leitlinien-Treffer",
+       "formula": "=COUNTIF({rng:Shortlist.guardrail_hits},\">0\")",
+       "note": "eine Leitlinie von {engagement.client}, die diese Technologie nicht einhalten kann (Blatt Guardrails)",
+       "id": "guardrail_techs"
+      },
+      {
+       "label": "Blockierende Risiken",
+       "formula": "=COUNTIF({rng:Risks.impact},\"{L:blocker}\")",
+       "note": "Risiken, die eine Leitlinie oder den Termin brechen würden (Blatt Risks)",
+       "id": "blockers"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "shortlisted",
+       "status": "standard",
+       "label": "auf der Shortlist"
+      },
+      {
+       "kpi": "technologies",
+       "status": "neutral",
+       "label": "bewertete Technologien"
+      },
+      {
+       "kpi": "guardrail_techs",
+       "status": "rebuild",
+       "label": "Technologien mit Leitlinien-Treffer"
+      },
+      {
+       "kpi": "blockers",
+       "status": "rebuild",
+       "label": "blockierende Risiken"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "ranking",
+       "title": "Gewichteter Gesamtwert je {unit.noun}"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Parameters",
+     "type": "table",
+     "dataset": "parameters_rows",
+     "table_name": "Parameters",
+     "readme": "Die Kriterien mit ihren Gewichten und die beiden Einstellungen des Modells - die einzigen Zellen, die geändert werden sollen. Alle Gesamtwerte, Ränge und Shortlist-Kennzeichen rechnen sich daraus neu.",
+     "columns": [
+      {
+       "header": "Schlüssel",
+       "field": "key",
+       "id": "key",
+       "width": 16,
+       "label": true
+      },
+      {
+       "header": "Kriterium / Einstellung",
+       "field": "name",
+       "id": "name",
+       "width": 40
+      },
+      {
+       "header": "Art",
+       "field": "type",
+       "id": "type",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Gewicht / Wert (editierbar)",
+       "field": "value",
+       "id": "value",
+       "numeric": true,
+       "width": 14
+      },
+      {
+       "header": "Leitlinien-Kriterium",
+       "field": "guardrail",
+       "id": "guardrail",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Anteil an den Gewichten",
+       "id": "share",
+       "formula": "=IF({cell:type}<>\"{L:criterion}\",\"\",IFERROR({cell:value}/SUMIF({rng:Parameters.type},\"{L:criterion}\",{rng:Parameters.value}),\"\"))",
+       "number_format": "0%",
+       "width": 12
+      },
+      {
+       "header": "Bedeutung",
+       "field": "meaning",
+       "wrap": true,
+       "width": 90
+      }
+     ],
+     "tab": "reference"
+    },
+    {
+     "name": "Scores",
+     "type": "table",
+     "dataset": "scores",
+     "table_name": "Scores",
+     "readme": "Eine Zeile je Technologie und Kriterium: die Bewertung 0-10 mit dem Mechanismus in der Begründung, das Leitlinien-Urteil und die Grundlage; eingeklappt: die Nachweise auf Kundenseite und in der Herstellerdokumentation, Version bzw. Plan",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Kriterium",
+       "field": "criterion_id",
+       "id": "criterion_id",
+       "width": 9
+      },
+      {
+       "header": "Kriteriumsname",
+       "field": "criterion",
+       "id": "criterion",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Bewertung 0-10",
+       "field": "score",
+       "id": "score",
+       "numeric": true,
+       "number_format": "0",
+       "validation": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+       ],
+       "scale": {
+        "min": 0,
+        "mid": 5,
+        "max": 10,
+        "min_color": "rebuild",
+        "mid_color": "rework",
+        "max_color": "standard"
+       },
+       "width": 11
+      },
+      {
+       "header": "Gewicht",
+       "id": "weight",
+       "formula": "=IFERROR(INDEX({rng:Parameters.value},MATCH({cell:criterion_id},{rng:Parameters.key},0)),0)",
+       "width": 8
+      },
+      {
+       "header": "Gewichtete Punkte",
+       "id": "weighted",
+       "formula": "={cell:score}*{cell:weight}",
+       "width": 11
+      },
+      {
+       "header": "Leitlinien-Treffer",
+       "field": "guardrail_hit",
+       "id": "gr_hit",
+       "label": true,
+       "validation": [
+        "yes",
+        "no",
+        "not-applicable"
+       ],
+       "width": 12,
+       "emphasis": "decision",
+       "status": {
+        "yes": "rebuild",
+        "no": "standard"
+       }
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Begründung",
+       "field": "rationale",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Leitlinien-Kriterium",
+       "id": "gr_crit",
+       "formula": "=IFERROR(INDEX({rng:Parameters.guardrail},MATCH({cell:criterion_id},{rng:Parameters.key},0)),\"\")",
+       "width": 11,
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Nachweis Kundenseite",
+       "field": "client_evidence",
+       "width": 40,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Nachweis Herstellerdokumentation",
+       "field": "vendor_evidence",
+       "width": 40,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Version / Plan",
+       "field": "version_or_plan",
+       "width": 20,
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Leitlinie (Formel)",
+       "id": "gr_formula",
+       "formula": "=IF({cell:gr_crit}<>\"{L:true}\",\"{L:not-applicable}\",IF({cell:score}<IFERROR(INDEX({rng:Parameters.value},MATCH(\"{L:guardrail_floor}\",{rng:Parameters.key},0)),0),\"{L:yes}\",\"{L:no}\"))",
+       "width": 12,
+       "internal": true
+      },
+      {
+       "header": "Prüfung",
+       "id": "gr_check",
+       "formula": "=IF({cell:gr_formula}={cell:gr_hit},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Sicherheit",
+       "field": "confidence",
+       "label": true,
+       "width": 10,
+       "internal": true
+      }
+     ],
+     "row_key": "row_id"
+    },
+    {
+     "name": "Ranking",
+     "type": "overview",
+     "title": "Gewichtetes Ranking - jede Spalte eine Formel über Scores und die Gewichte auf Parameters",
+     "readme": "Das Ranking: gewichteter Gesamtwert je Technologie (SUMMENPRODUKT aus Bewertung und Gewicht), Leitlinien-Treffer, Rang und Shortlist-Kennzeichen, mit der Verteilung als Diagramm",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Gewichteter Gesamtwert je {unit.noun}",
+       "row_header": "{unit.noun}",
+       "row_values_from": "scores.technology",
+       "total": false,
+       "columns": [
+        {
+         "header": "Gewichteter Gesamtwert (0-10)",
+         "formula": "=IFERROR(SUMPRODUCT(({rng:Scores.technology}={row})*{rng:Scores.score}*{rng:Scores.weight})/SUMPRODUCT(({rng:Scores.technology}={row})*{rng:Scores.weight}),\"\")"
+        },
+        {
+         "header": "Gewichtete Punkte",
+         "formula": "=SUMPRODUCT(({rng:Scores.technology}={row})*{rng:Scores.score}*{rng:Scores.weight})"
+        },
+        {
+         "header": "Bewertete Kriterien",
+         "formula": "=COUNTIFS({rng:Scores.technology},{row})"
+        },
+        {
+         "header": "Leitlinien-Treffer",
+         "formula": "=SUMPRODUCT(({rng:Scores.technology}={row})*({rng:Scores.gr_hit}=\"{L:yes}\"))"
+        },
+        {
+         "header": "Bewertungen unter der Leitlinien-Schwelle",
+         "formula": "=SUMPRODUCT(({rng:Scores.technology}={row})*({rng:Scores.score}<>\"\")*({rng:Scores.score}<IFERROR(INDEX({rng:Parameters.value},MATCH(\"{L:guardrail_floor}\",{rng:Parameters.key},0)),0)))"
+        },
+        {
+         "header": "Rang",
+         "formula": "=IFERROR(INDEX({rng:Shortlist.rank_formula},MATCH({row},{rng:Shortlist.technology},0)),\"\")"
+        },
+        {
+         "header": "Auf der Shortlist",
+         "formula": "=IFERROR(INDEX({rng:Shortlist.shortlist_formula},MATCH({row},{rng:Shortlist.technology},0)),\"\")"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "type": "bar",
+        "title": "Gewichteter Gesamtwert je {unit.noun}"
+       },
+       "id": "ranking"
+      }
+     ]
+    },
+    {
+     "name": "Shortlist",
+     "type": "table",
+     "dataset": "ranking",
+     "table_name": "Shortlist",
+     "readme": "Die Shortlist je Technologie: Rang, Shortlist-Kennzeichen und gewichteter Gesamtwert (alles Formeln über Scores und die Gewichte auf Parameters), Leitlinien-Treffer, blockierende Risiken, die Passungsaussage und die Erläuterung; eingeklappt: was den Gesamtwert trägt und die Nachweise",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 22
+      },
+      {
+       "header": "Rang",
+       "id": "rank_formula",
+       "formula": "=IF({cell:weighted}=\"\",\"\",RANK({cell:weighted},{rng:Shortlist.weighted}))",
+       "number_format": "0",
+       "width": 8
+      },
+      {
+       "header": "Auf der Shortlist",
+       "id": "shortlist_formula",
+       "formula": "=IF({cell:rank_formula}=\"\",\"\",IF({cell:rank_formula}<=IFERROR(INDEX({rng:Parameters.value},MATCH(\"{L:shortlist_size}\",{rng:Parameters.key},0)),3),\"{L:true}\",\"{L:false}\"))",
+       "width": 12,
+       "emphasis": "decision",
+       "status": {
+        "true": "standard",
+        "false": "neutral"
+       }
+      },
+      {
+       "header": "Gesamtwert (0-10)",
+       "id": "weighted",
+       "formula": "=IFERROR(SUMPRODUCT(({rng:Scores.technology}={cell:technology})*{rng:Scores.score}*{rng:Scores.weight})/SUMPRODUCT(({rng:Scores.technology}={cell:technology})*{rng:Scores.weight}),\"\")",
+       "number_format": "0.00",
+       "scale": {
+        "min": 0,
+        "mid": 5,
+        "max": 10,
+        "min_color": "rebuild",
+        "mid_color": "rework",
+        "max_color": "standard"
+       },
+       "width": 14
+      },
+      {
+       "header": "Leitlinien-Treffer",
+       "id": "guardrail_hits",
+       "formula": "=SUMPRODUCT(({rng:Scores.technology}={cell:technology})*({rng:Scores.gr_hit}=\"{L:yes}\"))",
+       "width": 11
+      },
+      {
+       "header": "Blockierende Risiken",
+       "id": "blocking_risks",
+       "formula": "=COUNTIFS({rng:Risks.technology},{cell:technology},{rng:Risks.impact},\"{L:blocker}\")",
+       "width": 12
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Passung für {engagement.client}",
+       "field": "fit_statement",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Erläuterung",
+       "field": "partner_explanation",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Was den Gesamtwert trägt",
+       "field": "weighted_total_note",
+       "width": 50,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Nachweis",
+       "field": "evidence",
+       "evidence": true,
+       "sep": "; ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Rang (eingeschätzt)",
+       "field": "rank",
+       "id": "rank_assessed",
+       "numeric": true,
+       "number_format": "0",
+       "width": 9,
+       "internal": true
+      },
+      {
+       "header": "Prüfung",
+       "id": "rank_check",
+       "formula": "=IF({cell:rank_formula}={cell:rank_assessed},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Auf der Shortlist (eingeschätzt)",
+       "field": "shortlisted",
+       "id": "shortlisted_assessed",
+       "label": true,
+       "width": 12,
+       "internal": true
+      },
+      {
+       "header": "Prüfung",
+       "id": "shortlist_check",
+       "formula": "=IF({cell:shortlist_formula}={cell:shortlisted_assessed},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      }
+     ],
+     "row_key": "technology"
+    },
+    {
+     "name": "Capabilities",
+     "type": "table",
+     "dataset": "capabilities",
+     "table_name": "Capabilities",
+     "readme": "Die Fähigkeiten, auf denen die Bewertungen ruhen: was die Technologie in der genannten Version bzw. dem genannten Plan bietet, Grundlage und Hinweise; eingeklappt: die Quelle",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Fähigkeit",
+       "field": "capability",
+       "id": "capability",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Verfügbar",
+       "field": "available",
+       "id": "available",
+       "label": true,
+       "width": 11,
+       "emphasis": "decision",
+       "status": {
+        "yes": "standard",
+        "partial": "rework",
+        "no": "rebuild",
+        "unknown": "neutral"
+       }
+      },
+      {
+       "header": "Version / Plan",
+       "field": "version_or_plan",
+       "width": 22
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Hinweise",
+       "field": "notes",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Quelle",
+       "field": "locator",
+       "id": "locator",
+       "width": 50,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Quelle genannt (Formel)",
+       "id": "verified",
+       "formula": "=IF({cell:locator}=\"\",\"{L:_no}\",\"{L:_yes}\")",
+       "width": 12,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "name": "Guardrails",
+     "type": "table",
+     "dataset": "guardrails",
+     "table_name": "Guardrails",
+     "readme": "Jede Leitlinie von {engagement.client} gegen jede Technologie: kann sie eingehalten werden, die als Leitlinien-Treffer markierten Bewertungszeilen und der Fakt, der das entscheidet",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Leitlinie",
+       "field": "guardrail",
+       "id": "guardrail",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Nicht einhaltbar",
+       "field": "hit",
+       "id": "hit",
+       "label": true,
+       "width": 12,
+       "emphasis": "decision",
+       "status": {
+        "yes": "rebuild",
+        "no": "standard",
+        "unclear": "rework"
+       }
+      },
+      {
+       "header": "Markierte Bewertungszeilen",
+       "id": "flagged",
+       "formula": "=SUMPRODUCT(({rng:Scores.technology}={cell:technology})*({rng:Scores.gr_hit}=\"{L:yes}\"))",
+       "width": 11
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Entscheidender Fakt",
+       "field": "note",
+       "wrap": true,
+       "width": 70
+      },
+      {
+       "header": "Nachweis",
+       "field": "evidence",
+       "evidence": true,
+       "sep": "; ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Risks",
+     "type": "table",
+     "dataset": "risks",
+     "table_name": "Risks",
+     "readme": "Was die Entscheidung, den Termin oder das Budget gefährden würde, wenn diese Technologie gewählt wird, mit Gegenmaßnahme und Grundlage",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Risiko",
+       "field": "risk",
+       "id": "risk",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Auswirkung",
+       "field": "impact",
+       "id": "impact",
+       "label": true,
+       "width": 10,
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "standard"
+       }
+      },
+      {
+       "header": "Betrifft Kriterium",
+       "field": "affects_criterion",
+       "width": 12
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Gegenmaßnahme",
+       "field": "mitigation",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Nachweis",
+       "field": "evidence",
+       "width": 50,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "all",
+     "readme": "Jede Aussage dieses Workbooks mit ihrem Nachweis und den beiden unabhängigen Prüfbewertungen"
+    }
+   ],
+   "sources_client": "Strategie, Leitlinien und Anforderungsliste von {engagement.client}; Herstellerdokumentation der bewerteten Technologien"
+  }
+ }
+}

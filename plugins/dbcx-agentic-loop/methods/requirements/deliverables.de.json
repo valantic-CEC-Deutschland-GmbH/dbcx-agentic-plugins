@@ -1,0 +1,954 @@
+{
+ "_readme": [
+  "Excel-Deliverables der Methode `requirements` (Deutsch) - identische Struktur wie deliverables.en.json (Spalten-ids, Entscheidungsspalten, Gruppen), deutsche Anzeigetexte.",
+  "Jede Aggregation ist eine Excel-Formel ueber die Detailblaetter."
+ ],
+ "deliverables": {
+  "D1": {
+   "title": "D1 Quellenverzeichnis und Epic-Struktur",
+   "requires": [
+    "inventory"
+   ],
+   "purpose": "Auf welchen Dokumenten, Board-Exporten und Workshop-Ergebnissen des Kunden dieser Anforderungssatz aufbaut, was jede Quelle als Grundlage wert ist (Textqualität, zitierbare Anker), und in welcher Epic-Struktur die Anforderungen geordnet sind - mit der je Epic erwarteten Anzahl Anforderungen.",
+   "sources": "corpus/index.json (indexiertes Kundenmaterial mit stabilen Fundstellen), corpus/unextractable.md, analysis/inventory/source_inventory.md",
+   "extra": "Jede Quelle trägt die Id, unter der sie zitiert wird (SRC-nnn). Eine Anforderung in D2 zeigt auf einen Anker einer dieser Quellen; eine Quelle mit dem Vermerk `unextractable` kann nur als `visual, unverified` zitiert werden - ihre Themen erscheinen deshalb als Fragen an den Kunden und nicht als Anforderung.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "Kennzahlen (Formeln über die Detailblätter) und Einschätzung der Quellenlage",
+     "kpis": [
+      {
+       "label": "Indexierte Quellen",
+       "formula": "=COUNTA({rng:Quellen.id})",
+       "note": "Dokumente, Präsentationen, Tabellen und Board-Exporte, auf denen der Anforderungssatz aufbaut (Blatt Quellen)"
+      },
+      {
+       "label": "davon vollständig lesbar",
+       "formula": "=COUNTIF({rng:Quellen.index_quality},\"good\")",
+       "note": "Text konnte vollständig gewonnen werden, jede Aussage dazu ist an einem Anker prüfbar"
+      },
+      {
+       "label": "davon teilweise lesbar",
+       "formula": "=COUNTIF({rng:Quellen.index_quality},\"partial*\")+COUNTIF({rng:Quellen.index_quality},\"none*\")",
+       "note": "bildlastige Folien oder Scans ohne Textebene - Aussagen dazu bleiben `visual, unverified`"
+      },
+      {
+       "label": "davon gar nicht lesbar",
+       "formula": "=COUNTIF({rng:Quellen.index_quality},\"unextractable\")",
+       "note": "Bilder und Diagramme ohne Text: ihre Themen werden Fragen an den Kunden, nie abgeleitete Anforderungen"
+      },
+      {
+       "label": "Zitierbare Anker",
+       "formula": "=SUM({rng:Quellen.anchors})",
+       "note": "Seiten, Folien, Absatzblöcke, Tabellenzeilen und Board-Elemente, auf die eine Anforderung zeigen kann"
+      },
+      {
+       "label": "{unit.noun_plural}",
+       "formula": "=COUNTA({rng:Epics.name})",
+       "note": "die Struktur, in der die Anforderungen geordnet sind (Blatt {unit.noun_plural})"
+      },
+      {
+       "label": "davon fachlich",
+       "formula": "=COUNTIF({rng:Epics.kind},\"{L:functional}\")",
+       "note": "was das Geschäft mit {system.type} tun kann"
+      },
+      {
+       "label": "davon technisch",
+       "formula": "=COUNTIF({rng:Epics.kind},\"{L:technical}\")",
+       "note": "Schnittstellen zu anderen Systemen, Plattform, Daten, Migration"
+      },
+      {
+       "label": "davon nicht-funktional",
+       "formula": "=COUNTIF({rng:Epics.kind},\"{L:nfr}\")",
+       "note": "messbare Eigenschaften: Leistung, Verfügbarkeit, Sicherheit, Barrierefreiheit, Betreibbarkeit"
+      },
+      {
+       "label": "Erwartete Anforderungen",
+       "formula": "=SUM({rng:Epics.estimated_requirements})",
+       "note": "Schätzung je Epic aus den tragenden Quellenstellen - die Zahl, an der D2 gemessen wird"
+      },
+      {
+       "label": "{unit.noun_plural} ausserhalb des Umfangs",
+       "formula": "=COUNTIF({rng:Epics.activation},\"{L:out-of-scope}\")",
+       "note": "Themen, die das Material des Kunden ausdrücklich ausschliesst - aufgeführt, damit niemand zweimal fragt"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Quellen",
+     "type": "table",
+     "dataset": "sources",
+     "readme": "Eine Zeile je indexierter Quelle: was sie ist, was sie enthält, wie gut sie zitierbar ist",
+     "columns": [
+      {
+       "header": "Quelle",
+       "field": "id",
+       "width": 11
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "Textgewinnung",
+       "field": "index_quality",
+       "emphasis": "decision",
+       "status": {
+        "good": "standard",
+        "partial*": "rework",
+        "none*": "rebuild",
+        "unextractable": "rebuild"
+       },
+       "width": 18
+      },
+      {
+       "header": "Inhalt",
+       "field": "covers",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Zitieren als",
+       "field": "cite_as",
+       "width": 18
+      },
+      {
+       "header": "Art",
+       "field": "type",
+       "width": 16,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Datum",
+       "field": "date",
+       "width": 12,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Herkunft",
+       "field": "origin",
+       "width": 26,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Zitierbare Anker",
+       "field": "anchors",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Bewertete Qualität",
+       "field": "quality",
+       "width": 16,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Datei",
+       "field": "path",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Fassung",
+       "field": "revision",
+       "width": 9,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Hinweise",
+       "field": "notes",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ],
+     "row_key": "id"
+    },
+    {
+     "name": "Epics",
+     "type": "table",
+     "dataset": "epics",
+     "readme": "Eine Zeile je {unit.noun}: Art, Inhalt, tragende Quellen, erwartete Anzahl Anforderungen",
+     "columns": [
+      {
+       "header": "{unit.noun}-Id",
+       "field": "name",
+       "width": 20
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "title",
+       "width": 28
+      },
+      {
+       "header": "Art",
+       "field": "kind",
+       "label": true,
+       "validation": "$requirements.types",
+       "emphasis": "decision",
+       "status": {
+        "functional": "standard",
+        "technical": "rework",
+        "nfr": "neutral"
+       },
+       "width": 15
+      },
+      {
+       "header": "Im Umfang",
+       "field": "activation",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "active": "standard",
+        "out-of-scope": "neutral"
+       },
+       "width": 14
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Beschreibung",
+       "field": "description",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Erwartete Anforderungen",
+       "field": "estimated_requirements",
+       "numeric": true,
+       "width": 12
+      },
+      {
+       "header": "Quellen",
+       "field": "sources",
+       "evidence": true,
+       "sep": ", ",
+       "width": 24,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Quellen (Anzahl)",
+       "field": "n_sources",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Hängt ab von",
+       "field": "depends_on",
+       "sep": ", ",
+       "width": 24,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Hinweise",
+       "field": "notes",
+       "width": 36,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ],
+     "row_key": "name"
+    },
+    {
+     "name": "Uebersicht",
+     "type": "overview",
+     "title": "Quellenlage und {unit.noun}-Struktur (Formeln über die Blätter Quellen und {unit.noun_plural})",
+     "readme": "Formelbasierte Auswertung je {unit.noun}-Art und je Textqualität",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "{unit.noun_plural} je Art",
+       "row_header": "Art",
+       "row_tokens": "$requirements.types",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Epics.kind},{row})"
+        },
+        {
+         "header": "Im Umfang",
+         "formula": "=COUNTIFS({rng:Epics.kind},{row},{rng:Epics.activation},\"{L:active}\")"
+        },
+        {
+         "header": "Ausserhalb des Umfangs",
+         "formula": "=COUNTIFS({rng:Epics.kind},{row},{rng:Epics.activation},\"{L:out-of-scope}\")"
+        },
+        {
+         "header": "Erwartete Anforderungen",
+         "formula": "=SUMIF({rng:Epics.kind},{row},{rng:Epics.estimated_requirements})"
+        },
+        {
+         "header": "Quellenverweise",
+         "formula": "=SUMIF({rng:Epics.kind},{row},{rng:Epics.n_sources})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "{unit.noun_plural} je Art"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Quellenlage",
+       "rows": [
+        {
+         "label": "Indexierte Quellen",
+         "formula": "=COUNTA({rng:Quellen.id})"
+        },
+        {
+         "label": "Textgewinnung gut",
+         "formula": "=COUNTIF({rng:Quellen.index_quality},\"good\")"
+        },
+        {
+         "label": "Textgewinnung teilweise",
+         "formula": "=COUNTIF({rng:Quellen.index_quality},\"partial*\")"
+        },
+        {
+         "label": "Keine Textebene",
+         "formula": "=COUNTIF({rng:Quellen.index_quality},\"none*\")"
+        },
+        {
+         "label": "Gar kein Text gewinnbar",
+         "formula": "=COUNTIF({rng:Quellen.index_quality},\"unextractable\")"
+        },
+        {
+         "label": "Zitierbare Anker gesamt",
+         "formula": "=SUM({rng:Quellen.anchors})"
+        },
+        {
+         "label": "Indexiert, aber nicht im Verzeichnis",
+         "formula": "=COUNTIF({rng:Quellen.notes},\"indexed in the corpus*\")"
+        },
+        {
+         "label": "{unit.noun_plural} auf nur einer Quelle",
+         "formula": "=COUNTIF({rng:Epics.n_sources},1)"
+        },
+        {
+         "label": "{unit.noun_plural} mit Abhängigkeit von einem anderen {unit.noun}",
+         "formula": "=COUNTA({rng:Epics.depends_on})"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Aussagen",
+     "type": "claims",
+     "scopes": "D1",
+     "readme": "Jede Aussage dieser Arbeitsmappe mit Nachweis und den Bewertungen der beiden Prüfer"
+    }
+   ]
+  },
+  "D2": {
+   "title": "D2 Anforderungen an {system.type}",
+   "requires": [
+    "SET"
+   ],
+   "purpose": "Die Anforderungen an {system.type}, eine Zeile je Anforderung, jede mit der Stelle im Material des Kunden, die sie trägt: fachliche, technische und nicht-funktionale Anforderungen je {unit.noun}, mit Priorität, Release, Abnahmehinweis, dem Abgleich fachlich gegen technisch, dem Abgleich gegen den Referenzkatalog, den gefundenen Widersprüchen zwischen Quellen und den offenen Punkten für den Kunden.",
+   "sources": "analysis/consolidated/SET.md (der konsolidierte Satz), analysis/scopes/*.md (ein Anforderungssatz je {unit.noun}), analysis/inventory/source_inventory.md, corpus/index.json",
+   "extra": "Die Nachweisbarkeit ist der Zweck dieser Arbeitsmappe: das Blatt Nachweis führt eine Zeile je Anforderung UND Fundstelle, damit jede Anforderung bis zur Seite, Folie, zum Absatz, zur Tabellenzeile oder zum Board-Element verfolgt werden kann, die sie trägt. Eine Anforderung, deren Fundstelle `inferred` lautet, hat keine Quelle wörtlich genannt - sie ist eine Ableitung und ist auf dem Blatt Anforderungen (Status) als solche gekennzeichnet.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "Kennzahlen (Formeln über die Detailblätter) und Einschätzung des Anforderungssatzes",
+     "kpis": [
+      {
+       "label": "Anforderungen",
+       "formula": "=COUNTA({rng:Anforderungen.req_id})",
+       "note": "der vollständige Satz für {system.type} (Blatt Anforderungen)",
+       "id": "requirements"
+      },
+      {
+       "label": "davon fachlich",
+       "formula": "=COUNTIF({rng:Anforderungen.type},\"{L:functional}\")",
+       "note": "was das Geschäft mit dem System tun kann",
+       "id": "functional"
+      },
+      {
+       "label": "davon technisch",
+       "formula": "=COUNTIF({rng:Anforderungen.type},\"{L:technical}\")",
+       "note": "Schnittstellen zu anderen Systemen, Plattform, Daten, Migration",
+       "id": "technical"
+      },
+      {
+       "label": "davon nicht-funktional",
+       "formula": "=COUNTIF({rng:Anforderungen.type},\"{L:nfr}\")",
+       "note": "messbare Eigenschaften: Leistung, Verfügbarkeit, Sicherheit, Barrierefreiheit, Betreibbarkeit"
+      },
+      {
+       "label": "Muss-Anforderungen",
+       "formula": "=COUNTIF({rng:Anforderungen.priority},\"{L:must}\")",
+       "note": "Priorität so, wie die Quellen sie nennen - nie von uns vergeben"
+      },
+      {
+       "label": "Anforderungen für {x:phase_in_scope}",
+       "formula": "=COUNTIF({rng:Anforderungen.release},\"{x:phase_in_scope}\")",
+       "note": "Release-Zuordnung, soweit die Quellen eine nennen"
+      },
+      {
+       "label": "Auf eine Quelle nachweisbar",
+       "formula": "=IFERROR(TEXT(COUNTIF({rng:Anforderungen.traced},\"{L:yes}\")/COUNTA({rng:Anforderungen.req_id}),\"0%\"),\"\")",
+       "note": "Anteil der Anforderungen mit mindestens einer Fundstelle im Material des Kunden (Blatt Nachweis)"
+      },
+      {
+       "label": "Auf Ableitung beruhend",
+       "formula": "=COUNTIF({rng:Anforderungen.status},\"{L:inferred}\")",
+       "note": "keine Quelle nennt sie wörtlich; jede ist auf dem Blatt Anforderungen als abgeleitet gekennzeichnet"
+      },
+      {
+       "label": "Schnittstellen ohne technische Anforderung",
+       "formula": "=COUNTIF({rng:Abgleich.relation},\"{L:missing-tr}\")",
+       "note": "fachliche Anforderungen, die Daten über eine Systemgrenze bewegen, ohne technisches Gegenstück (Blatt Abgleich)"
+      },
+      {
+       "label": "Katalogfähigkeiten ohne Anforderung",
+       "formula": "=COUNTIF({rng:Katalog_Luecken.n_covered},0)",
+       "note": "Einträge des Referenzkatalogs, die noch nichts abdeckt (Blatt Katalog_Luecken)"
+      },
+      {
+       "label": "Mit dem Kunden zu klärende Punkte",
+       "formula": "=COUNTIF({rng:Anforderungen.status},\"{L:question}\")+COUNTA({rng:Widersprueche.topic})",
+       "note": "Anforderungen, die von einer Antwort abhängen, dazu Widersprüche zwischen zwei Quellen (Blatt Widersprueche)"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Anforderungen",
+     "type": "table",
+     "dataset": "requirements",
+     "readme": "Der finale Satz: eine Zeile je Anforderung mit Fundstellen, Priorität, Release und Abnahmehinweis",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "epic",
+       "width": 20
+      },
+      {
+       "header": "Art",
+       "field": "type",
+       "label": true,
+       "validation": "$requirements.types",
+       "width": 14
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "Priorität",
+       "field": "priority",
+       "label": true,
+       "validation": "$requirements.priorities",
+       "width": 12
+      },
+      {
+       "header": "Status",
+       "field": "status",
+       "label": true,
+       "validation": "$requirements.statuses",
+       "emphasis": "decision",
+       "status": {
+        "confirmed": "standard",
+        "inferred": "assumption",
+        "question": "rework"
+       },
+       "width": 22
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Anforderung",
+       "field": "description",
+       "width": 78,
+       "wrap": true
+      },
+      {
+       "header": "Release",
+       "field": "release",
+       "width": 12
+      },
+      {
+       "header": "Quelle",
+       "field": "source_locators",
+       "evidence": true,
+       "sep": ", ",
+       "width": 30,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Nachweisbar",
+       "id": "traced",
+       "formula": "=IF(EXACT(LOWER({cell:source_locators}),\"inferred\"),\"{L:no}\",\"{L:yes}\")",
+       "width": 11,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "n_locators",
+       "numeric": true,
+       "width": 9,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Abnahmehinweis",
+       "field": "acceptance_hint",
+       "width": 52,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Zusammengeführt aus",
+       "field": "duplicates_of",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ],
+     "row_key": "req_id"
+    },
+    {
+     "name": "Nachweis",
+     "type": "table",
+     "dataset": "traceability",
+     "readme": "Eine Zeile je Anforderung UND Fundstelle: welche Stelle welches Dokuments diese Anforderung trägt",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "epic",
+       "width": 20
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "Art der Fundstelle",
+       "field": "locator_kind",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "corpus": "standard",
+        "handover": "standard",
+        "reference": "standard",
+        "url": "rework",
+        "visual": "rework",
+        "inferred": "rework",
+        "other": "neutral",
+        "empty": "rebuild"
+       },
+       "width": 14
+      },
+      {
+       "header": "Fundstelle",
+       "field": "locator",
+       "width": 26
+      },
+      {
+       "header": "Art",
+       "field": "type",
+       "label": true,
+       "width": 14,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Priorität",
+       "field": "priority",
+       "label": true,
+       "width": 12,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Status",
+       "field": "status",
+       "label": true,
+       "width": 13,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Quelle",
+       "field": "source_id",
+       "width": 11,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Anker",
+       "field": "anchor",
+       "width": 18,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Titel der Quelle",
+       "field": "source_title",
+       "width": 34,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Datei",
+       "field": "source_path",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ],
+     "row_key": "req_id"
+    },
+    {
+     "name": "Abgleich",
+     "type": "table",
+     "dataset": "crosscheck",
+     "readme": "Fachliche gegen technische Anforderung: has-tr, missing-tr, orphan-tr",
+     "columns": [
+      {
+       "header": "Fachliche Anforderung",
+       "field": "functional_requirement",
+       "width": 18
+      },
+      {
+       "header": "Technische Anforderung",
+       "field": "technical_requirement",
+       "width": 18
+      },
+      {
+       "header": "Beziehung",
+       "field": "relation",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "has-tr": "standard",
+        "missing-tr": "rebuild",
+        "orphan-tr": "rework"
+       },
+       "width": 16
+      },
+      {
+       "header": "Hinweis",
+       "field": "note",
+       "width": 90,
+       "wrap": true
+      }
+     ],
+     "row_key": "functional_requirement"
+    },
+    {
+     "name": "Katalog_Luecken",
+     "type": "table",
+     "dataset": "catalogue_gaps",
+     "readme": "Fähigkeiten des Referenzkatalogs, die keine Anforderung abdeckt, mit Entscheidung",
+     "columns": [
+      {
+       "header": "Katalogeintrag",
+       "field": "catalogue_id",
+       "width": 16
+      },
+      {
+       "header": "Fähigkeit",
+       "field": "capability",
+       "width": 70,
+       "wrap": true
+      },
+      {
+       "header": "Entscheidung",
+       "field": "decision",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "in-scope": "standard",
+        "out-of-scope": "neutral",
+        "question": "rework"
+       },
+       "width": 16
+      },
+      {
+       "header": "Abgedeckt von (Anzahl)",
+       "field": "n_covered",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ],
+     "row_key": "catalogue_id"
+    },
+    {
+     "name": "Widersprueche",
+     "type": "table",
+     "dataset": "contradictions",
+     "readme": "Wo zwei Quellen Unterschiedliches sagen - mit Auflösungsvorschlag, nie stillschweigend entschieden",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "epic",
+       "width": 20
+      },
+      {
+       "header": "Thema",
+       "field": "topic",
+       "width": 30,
+       "wrap": true
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Unterschied",
+       "field": "what_differs",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Auflösungsvorschlag",
+       "field": "proposed_resolution",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Quelle A",
+       "field": "source_a",
+       "evidence": true,
+       "width": 20,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Quelle B",
+       "field": "source_b",
+       "evidence": true,
+       "width": 20,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ],
+     "row_key": "epic"
+    },
+    {
+     "name": "Uebersicht",
+     "type": "overview",
+     "title": "Anforderungssatz auf einen Blick (Formeln über die Blätter Anforderungen, Abgleich, Katalog_Luecken, Widersprueche)",
+     "readme": "Matrizen je Art x Priorität und je {unit.noun}, dazu die Nachweisquote",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Anforderungen je Art und Priorität",
+       "row_header": "Art",
+       "row_tokens": "$requirements.types",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "{L:must}",
+         "formula": "=COUNTIFS({rng:Anforderungen.type},{row},{rng:Anforderungen.priority},\"{L:must}\")"
+        },
+        {
+         "header": "{L:should}",
+         "formula": "=COUNTIFS({rng:Anforderungen.type},{row},{rng:Anforderungen.priority},\"{L:should}\")"
+        },
+        {
+         "header": "{L:could}",
+         "formula": "=COUNTIFS({rng:Anforderungen.type},{row},{rng:Anforderungen.priority},\"{L:could}\")"
+        },
+        {
+         "header": "{L:unknown}",
+         "formula": "=COUNTIFS({rng:Anforderungen.type},{row},{rng:Anforderungen.priority},\"{L:unknown}\")"
+        },
+        {
+         "header": "Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.type},{row})"
+        },
+        {
+         "header": "Auf eine Quelle nachweisbar",
+         "formula": "=COUNTIFS({rng:Anforderungen.type},{row},{rng:Anforderungen.traced},\"{L:yes}\")"
+        },
+        {
+         "header": "Auf Ableitung beruhend",
+         "formula": "=COUNTIFS({rng:Anforderungen.type},{row},{rng:Anforderungen.status},\"{L:inferred}\")"
+        }
+       ],
+       "chart": {
+        "column": 5,
+        "title": "Anforderungen je Art"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "Anforderungen je {unit.noun}",
+       "row_header": "{unit.noun}",
+       "row_values_from": "requirements.epic",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.epic},{row})"
+        },
+        {
+         "header": "{L:functional}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.type},\"{L:functional}\")"
+        },
+        {
+         "header": "{L:technical}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.type},\"{L:technical}\")"
+        },
+        {
+         "header": "{L:nfr}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.type},\"{L:nfr}\")"
+        },
+        {
+         "header": "{L:must}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.priority},\"{L:must}\")"
+        },
+        {
+         "header": "Auf eine Quelle nachweisbar",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.traced},\"{L:yes}\")"
+        },
+        {
+         "header": "Nachweisquote",
+         "formula": "=IFERROR(COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.traced},\"{L:yes}\")/COUNTIF({rng:Anforderungen.epic},{row}),\"\")"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Anforderungen je {unit.noun}"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Nachweisbarkeit, Abgleich und offene Punkte",
+       "rows": [
+        {
+         "label": "Anforderungen gesamt",
+         "formula": "=COUNTA({rng:Anforderungen.req_id})"
+        },
+        {
+         "label": "Nachweisquote (Zeilen mit mindestens einer Fundstelle)",
+         "formula": "=IFERROR(COUNTIF({rng:Anforderungen.traced},\"{L:yes}\")/COUNTA({rng:Anforderungen.req_id}),\"\")"
+        },
+        {
+         "label": "Nachweisquote (Gegenrechnung über die Quellenspalte)",
+         "formula": "=IFERROR((COUNTA({rng:Anforderungen.req_id})-COUNTIF({rng:Anforderungen.source_locators},\"inferred\"))/COUNTA({rng:Anforderungen.req_id}),\"\")"
+        },
+        {
+         "label": "Fundstellen gesamt",
+         "formula": "=COUNTA({rng:Nachweis.locator})"
+        },
+        {
+         "label": "Durch eine Quelle belegte Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.status},\"{L:confirmed}\")"
+        },
+        {
+         "label": "Auf Ableitung beruhende Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.status},\"{L:inferred}\")"
+        },
+        {
+         "label": "Anforderungen, die von einer offenen Antwort abhängen",
+         "formula": "=COUNTIF({rng:Anforderungen.status},\"{L:question}\")"
+        },
+        {
+         "label": "Aus Duplikaten zusammengeführte Anforderungen",
+         "formula": "=COUNTA({rng:Anforderungen.duplicates_of})"
+        },
+        {
+         "label": "Schnittstellen mit technischer Anforderung",
+         "formula": "=COUNTIF({rng:Abgleich.relation},\"{L:has-tr}\")"
+        },
+        {
+         "label": "Schnittstellen ohne technische Anforderung",
+         "formula": "=COUNTIF({rng:Abgleich.relation},\"{L:missing-tr}\")"
+        },
+        {
+         "label": "Technische Anforderungen, die niemand verlangt",
+         "formula": "=COUNTIF({rng:Abgleich.relation},\"{L:orphan-tr}\")"
+        },
+        {
+         "label": "Katalogfähigkeiten ohne Anforderung",
+         "formula": "=COUNTIF({rng:Katalog_Luecken.n_covered},0)"
+        },
+        {
+         "label": "Kataloglücken zu entscheiden",
+         "formula": "=COUNTIF({rng:Katalog_Luecken.decision},\"{L:question}\")"
+        },
+        {
+         "label": "Kataloglücken bewusst ausgeschlossen",
+         "formula": "=COUNTIF({rng:Katalog_Luecken.decision},\"{L:out-of-scope}\")"
+        },
+        {
+         "label": "Widersprüche zwischen Quellen",
+         "formula": "=COUNTA({rng:Widersprueche.topic})"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Aussagen",
+     "type": "claims",
+     "scopes": "scopes_and_set",
+     "readme": "Jede Aussage dieser Arbeitsmappe mit Nachweis und den Bewertungen der beiden Prüfer"
+    }
+   ]
+  }
+ }
+}

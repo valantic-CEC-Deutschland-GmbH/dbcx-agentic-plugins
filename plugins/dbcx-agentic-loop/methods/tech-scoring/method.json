@@ -1,0 +1,439 @@
+{
+ "name": "tech-scoring",
+ "display": "Technology shortlist with strategic scoring",
+ "version": "0.1.0",
+ "description": "Scores a set of candidate technologies against the client's strategic context, guardrails and requirements: one analyst per technology, every criterion score an evidenced assessment with a client locator and a vendor locator, one cross-technology consolidation that calibrates the scores and produces a weighted, formula-driven ranking, a shortlist with fit statements and a partner-friendly explanation for every technology that does not make it.",
+ "knowledge_slots": {
+  "catalogue": {
+   "kind": "catalogue",
+   "role": "catalogue",
+   "required": false
+  }
+ },
+ "defaults": {
+  "unit": {
+   "noun": "Technology",
+   "noun_plural": "Technologies"
+  },
+  "decision": {
+   "question": "",
+   "timeline": "",
+   "guardrails": ""
+  },
+  "shortlist": {
+   "size": 3
+  },
+  "scale": {
+   "max": 10,
+   "guardrail_floor": 5
+  },
+  "technologies": [],
+  "criteria": [
+   {
+    "id": "C-01",
+    "name": "Business model fit (B2B / B2C)",
+    "weight": 15,
+    "guardrail": false,
+    "description": "Depth of the business model the client actually sells in: B2B pricing, contracts, units/organisations, approvals, quotes, punch-out; B2C merchandising, promotions, subscriptions. Native depth beats an add-on."
+   },
+   {
+    "id": "C-02",
+    "name": "Ecosystem and ERP integration fit",
+    "weight": 15,
+    "guardrail": false,
+    "description": "Fit with the client's existing landscape (ERP, PIM, CRM, payment, search, marketing): documented connectors or a documented integration layer for exactly those systems, not integration capability in general."
+   },
+   {
+    "id": "C-03",
+    "name": "Standard coverage of the key requirements",
+    "weight": 15,
+    "guardrail": false,
+    "description": "Share of the client's key requirements met by documented standard functionality of the named version or plan, without custom development."
+   },
+   {
+    "id": "C-04",
+    "name": "Business-user autonomy",
+    "weight": 10,
+    "guardrail": true,
+    "description": "What business users change without a developer: content, pricing, promotions, catalogue, workflows, page composition. A guardrail criterion: below the floor the client's autonomy requirement is not met."
+   },
+   {
+    "id": "C-05",
+    "name": "Cost of ownership and licence model",
+    "weight": 10,
+    "guardrail": false,
+    "description": "Licence or subscription model (metric, tiering, what drives the price), hosting cost, effort to keep current. Named model and metric, never a price guess."
+   },
+   {
+    "id": "C-06",
+    "name": "Timeline feasibility and partner availability",
+    "weight": 10,
+    "guardrail": true,
+    "description": "Can the client's go-live date be met with this technology, and are implementation partners available in the client's region and language. A guardrail criterion: below the floor the timeline is not credible."
+   },
+   {
+    "id": "C-07",
+    "name": "Architecture fit (composable, API-first)",
+    "weight": 8,
+    "guardrail": false,
+    "description": "How well the technology matches the client's target architecture: API coverage, headless or composable options, extension model, upgrade path, cloud operating model."
+   },
+   {
+    "id": "C-08",
+    "name": "Regional presence and support",
+    "weight": 7,
+    "guardrail": false,
+    "description": "Vendor presence, support hours and language in the client's markets, local tax/legal/payment coverage, data residency."
+   },
+   {
+    "id": "C-09",
+    "name": "Scalability and performance headroom",
+    "weight": 5,
+    "guardrail": false,
+    "description": "Headroom for the client's growth target: catalogue and order volumes, peak handling, multi-site and multi-market scaling, documented limits of the plan."
+   },
+   {
+    "id": "C-10",
+    "name": "Roadmap and vendor viability",
+    "weight": 5,
+    "guardrail": false,
+    "description": "Product roadmap for the capabilities the client depends on, release cadence, ownership and financial standing of the vendor, maintenance commitment for the named version."
+   }
+  ],
+  "requirements": {
+   "input_glob": "input/requirements/*.xlsx",
+   "mapping": "requirements_mapping.json"
+  },
+  "deliverables": {
+   "D1": {
+    "enabled": true,
+    "file": "Technology_Scoring.xlsx"
+   }
+  },
+  "models": {
+   "analyst": "balanced_review",
+   "consolidator": "deep_reasoning",
+   "critic_client": "code_analysis",
+   "critic_standard": "balanced_review",
+   "critic_standard_consolidation": "deep_reasoning"
+  },
+  "scoring": {
+   "max_claims": 25,
+   "gate_personas": [
+    "cto",
+    "head_of_ecommerce",
+    "cfo"
+   ]
+  },
+  "rules": {
+   "do_not_run": []
+  }
+ },
+ "init_fields": {
+  "technologies": "the technologies to evaluate, as a JSON list: [{\"name\": \"Shopware\", \"pack\": \"shopware or null\", \"version_or_plan\": \"6.6 Evolve\"}, ...] - one scope per entry",
+  "decision.question": "1-2 sentences: which decision this scoring supports (e.g. 'replatform the B2B shop by Q4 2026 - which technology goes on the shortlist')",
+  "decision.timeline": "the client's date constraint (e.g. 'go-live Q4 2026, project start Q1 2026')",
+  "decision.guardrails": "the client's hard constraints in one line each, separated by ';' (e.g. 'standard before custom; business users change content without developers; SAP S/4HANA stays the system of record')"
+ },
+ "evidence_bases": [
+  {
+   "id": "client-context",
+   "kind": "corpus",
+   "roots": [
+    "input",
+    "@project/corpus",
+    "state/requirements.json"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "orchestrator",
+    "analyst",
+    "consolidator",
+    "critic-client"
+   ],
+   "note": "the client's strategy, guardrails and requirements: handed-over material, the indexed corpus (locators SRC-nnn#anchor) and the imported requirements set; the standard reviewer never sees it"
+  },
+  {
+   "id": "vendor-docs",
+   "kind": "web",
+   "domains": [],
+   "roles": [
+    "orchestrator",
+    "analyst",
+    "consolidator",
+    "critic-standard",
+    "researcher"
+   ],
+   "note": "vendor and product documentation with generic queries only (no client name, no client locator); a capability counts only for the named version or plan"
+  },
+  {
+   "id": "reference",
+   "kind": "reference",
+   "roots": [
+    "@project/reference"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "verified standard facts of this engagement, cited by id PS-7-NNN"
+  },
+  {
+   "id": "handover",
+   "kind": "handover",
+   "roots": [
+    "input/handover"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "frozen artefacts of earlier runs (requirements set, client context), cited as HO-<type>#<id>"
+  },
+  {
+   "id": "analyses",
+   "kind": "derived",
+   "roots": [
+    "analysis"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "the run's own analysis files; a technology analyst reads only its own scope file (the consolidation reads all of them)"
+  }
+ ],
+ "artefacts": {
+  "consumes": [
+   {
+    "type": "requirements-set",
+    "required": false,
+    "target": "state/requirements.json",
+    "import_tool": "requirements_to_json",
+    "note": "the client's requirement list (workbook with a mapping, or a released requirements-set of a `requirements` run); without one the criteria are scored against the strategic context and the guardrails only, and every affected score carries confidence low"
+   },
+   {
+    "type": "client-context",
+    "required": false,
+    "note": "a released client-context artefact (strategy, landscape, guardrails) of an earlier run; imported frozen and cited as HO-client-context#<id>"
+   }
+  ],
+  "produces": [
+   {
+    "type": "shortlist",
+    "source": "analysis/consolidated/SHORTLIST.json",
+    "scope": "SHORTLIST"
+   }
+  ]
+ },
+ "scopes": {
+  "kind": "scoring",
+  "noun_key": "unit.noun",
+  "output_dir": "analysis/scopes",
+  "agent_prefix": "analyst-",
+  "discover": "discover",
+  "wave_rule": "parallel",
+  "state_key": "technologies",
+  "size_field": "size",
+  "id_prefix": "C-"
+ },
+ "inventory": null,
+ "consolidations": {
+  "SHORTLIST": {
+   "kind": "shortlist",
+   "output": "analysis/consolidated/SHORTLIST.md",
+   "digest_tables": [
+    "criteria_scores",
+    "capabilities",
+    "risks",
+    "open_questions"
+   ],
+   "deliverable": "D1",
+   "head_fields": {
+    "SHORTLIST SIZE": "{shortlist.size}",
+    "GUARDRAIL FLOOR": "{scale.guardrail_floor}"
+   }
+  }
+ },
+ "phases": [
+  {
+   "id": "preflight",
+   "type": "simple",
+   "hint": "dbcx check_fill; dbcx smoke tech-scoring; dbcx md_to_json --generate; dbcx corpus index (client material); dbcx requirements_to_json (or handover import requirements-set); dbcx intake; dbcx status init; dbcx discover; dbcx plan_waves; researcher (dbcx render research)"
+  },
+  {
+   "id": "waves",
+   "type": "scopes",
+   "deliverable": "D1"
+  },
+  {
+   "id": "consolidation_shortlist",
+   "type": "gauntlet",
+   "scope": "SHORTLIST",
+   "deliverable": "D1",
+   "before": "dbcx render digest SHORTLIST",
+   "after": "write analysis/summaries/D1.md; dbcx build_excel D1"
+  },
+  {
+   "id": "excel_build",
+   "type": "build"
+  },
+  {
+   "id": "final_gate",
+   "type": "gate"
+  }
+ ],
+ "deliverable_sources": {
+  "D1": [
+   "analysis/scopes/*.json",
+   "analysis/consolidated/SHORTLIST.json",
+   "analysis/summaries/D1.md"
+  ]
+ },
+ "gauntlet": {
+  "pack_sections": {
+   "scoring": [
+    "Summary"
+   ],
+   "shortlist": [
+    "Ranking"
+   ]
+  },
+  "row_tables": {
+   "scoring": [
+    [
+     "criteria_scores",
+     "criterion_id"
+    ],
+    [
+     "capabilities",
+     "capability"
+    ],
+    [
+     "risks",
+     "risk"
+    ]
+   ],
+   "shortlist": [
+    [
+     "ranking",
+     "technology"
+    ],
+    [
+     "calibration",
+     "row_id"
+    ],
+    [
+     "guardrails",
+     "technology"
+    ]
+   ]
+  }
+ },
+ "briefs": {
+  "rows": [
+   [
+    "DECISION THIS SCORING SUPPORTS",
+    "{decision.question}"
+   ],
+   [
+    "TIMELINE CONSTRAINT",
+    "{decision.timeline}"
+   ],
+   [
+    "CLIENT GUARDRAILS",
+    "{decision.guardrails}"
+   ],
+   [
+    "SCOPE NOUN",
+    "{unit.noun} (plural {unit.noun_plural}) - one scope per {unit.noun}"
+   ],
+   [
+    "SHORTLIST SIZE",
+    "{shortlist.size}"
+   ],
+   [
+    "SCORE SCALE",
+    "0-{scale.max}; a guardrail criterion scored below {scale.guardrail_floor} is a guardrail hit"
+   ]
+  ],
+  "notes_title": "SCORING NOTES (from the method and the knowledge packs)",
+  "notes_keys": {
+   "analyst": [
+    "score_anchors",
+    "evidence_rules",
+    "guardrail_rule",
+    "capability_rule"
+   ],
+   "consolidate:SHORTLIST": [
+    "calibration_rule",
+    "shortlist_rule",
+    "partner_tone",
+    "score_anchors"
+   ],
+   "critic-client": [
+    "client_critic_focus",
+    "guardrail_rule",
+    "score_anchors"
+   ],
+   "critic-standard": [
+    "critic2_persona",
+    "vendor_evidence_rule",
+    "capability_rule",
+    "docs_domains"
+   ],
+   "gate": [
+    "partner_tone"
+   ],
+   "researcher": [
+    "docs_domains",
+    "research_focus"
+   ]
+  },
+  "analyst_inputs": {
+   "CLIENT CONTEXT": "input/ (handed-over material) and the indexed corpus (locators SRC-nnn#anchor, `dbcx corpus show <id>`)",
+   "REQUIREMENTS": "state/requirements.json (ids FR-/TR-...; cite the requirement id AND its source locator)",
+   "CRITERIA": "the CRITERIA block below - score every row, no additions, no omissions",
+   "KNOWLEDGE": "dbcx knowledge show"
+  },
+  "consolidator_inputs": "analysis/consolidated/digest-SHORTLIST.md (read FIRST), analysis/scopes/*.md (open only for rows the digest points to), state/requirements.json, reference/platform-standard.md, analysis/consolidated/estate_observations.json",
+  "critic_client_persona": "the client's own CTO / enterprise architect: knows the strategy, the landscape, the guardrails and the requirement list by heart, has no vendor documentation and no interest in a vendor's marketing. Checks whether the client's context was read correctly, whether the guardrail was applied, whether the rationale follows from the requirements and whether the scores are comparable across criteria",
+  "critic_standard_persona_key": "critic2_persona",
+  "critic_standard_persona": "an independent product expert for the evaluated technologies: knows the vendor documentation, the release notes, the licence and plan models and the partner landscape, and has NO access to the client's material. Checks whether a capability is true for the named version or plan, whether the licence model is stated correctly and whether the regional presence and partner availability are real"
+ },
+ "snippets": {
+  "rulings_topics": "decision-frame: the decision the shortlist serves and its guardrails; technologies: which technologies are compared and which are excluded; criteria-weighting: how the criteria are weighted and which are knock-out; landscape-constraints: the fixed systems (ERP, PIM, identity) a technology must fit",
+  "score_anchors": "0-10 anchors, identical for every criterion and every technology: 10 = native, documented and proven in the client's segment and region, no custom development; 8-9 = standard functionality of the named version/plan, documented, small configuration effort; 6-7 = covered by a documented extension, official app/plugin or a supported add-on, with integration effort; 4-5 = possible but with substantial custom development or an unofficial extension; 2-3 = only possible against the product's model (workaround, parallel system, manual process); 0-1 = not possible in the named version/plan. A score without a rationale that names the mechanism is worth nothing; a score of 8 or higher needs a vendor locator that documents the mechanism.",
+  "evidence_rules": "Every score row carries BOTH locators: a CLIENT locator (the requirement id, the guardrail sentence or the context statement the score is measured against - `state/requirements.json` id, `SRC-nnn#anchor`, `HO-<type>#<id>`) and a VENDOR locator (documentation URL with the page title, or `PS-7-NNN` from the reference file). A capability without a vendor locator is `unknown`, never `yes`. Never cite a vendor blog for a capability the product documentation does not confirm.",
+  "guardrail_rule": "A criterion marked as a guardrail encodes a hard client constraint. `guardrail_hit` is an explicit yes or no for EVERY row (never left empty) and, where yes, names the guardrail: 'yes - business users change content without developers'. A guardrail criterion scored below the floor and `guardrail_hit: no` is a contradiction and will be scored as one.",
+  "capability_rule": "A capability row is a FACT, not an opinion: capability, `available` yes | partial | no | unknown, the exact version or plan it holds for, and a locator. `partial` names what is missing. `unknown` is a legitimate answer and becomes an open question to the vendor or the client, never a guess.",
+  "calibration_rule": "Calibration is the point of the consolidation: the same criterion with a comparable rationale gets a comparable score across technologies. Walk the digest criterion by criterion, compare the rationales, and adjust the outlier - never the majority. Every adjusted row is listed in `Calibration` by row id with the reason, so the reviewers see exactly what moved. Do not adjust a score to make the ranking more interesting or to protect a favourite.",
+  "shortlist_rule": "The shortlist is the top SHORTLIST SIZE technologies by the weighted total; the weighted total itself is a formula in the workbook, so the `rank` and `shortlisted` columns are the assessment that the workbook checks against its own formula. A guardrail hit is stated in the fit statement of a shortlisted technology, never hidden. Every technology that is not shortlisted gets a partner explanation.",
+  "partner_tone": "Partner-friendly wording, always context-specific: name what the technology is genuinely good at, then why another technology fits THIS client better, then the conclusion. 'has limited X capabilities for this scenario', never 'lacks X'; 'other technologies fit these requirements better', never 'is inferior'. Two to three sentences, no superlatives, no vendor marketing, and no absolute criticism of any product.",
+  "critic2_persona": "an independent product expert for the evaluated technologies: knows the vendor documentation, the release notes, the licence and plan models and the partner landscape for the named versions, and has NO access to the client's material. Judges capability truth for the version/plan, licence-model correctness, regional presence and partner availability.",
+  "vendor_evidence_rule": "Score the vendor half of each claim: does the named mechanism exist in the named version or plan, does the cited page document it, is the licence metric named correctly, is the regional presence real (vendor office, support language, partner list). A capability that exists only in a higher plan or a later release is a factual error, not a nuance. Vendor marketing pages are not documentation.",
+  "docs_domains": "the product documentation, developer portal, release notes and pricing/plan pages of the evaluated technologies; generic queries only, never with the client's name",
+  "research_focus": "per technology: the exact current version or plan names, the capability areas the criteria touch, the licence metric, the regional presence and the partner situation; resolve every *(verify)* item with a URL and a date or mark it unverifiable with a reason"
+ },
+ "research_topics": "For every technology in `technologies` (name and version_or_plan in state/scopes.json): current version or plan names and their differences, documented capabilities for the criteria in the CRITERIA block, licence or subscription metric, hosting and operating model, regional presence and support languages, implementation partner availability, roadmap statements for the capabilities the client depends on. Write verified facts into section 7 of the reference file with `dbcx reference add` (URL + date) so every scope can cite them as PS-7-NNN instead of re-searching.",
+ "lint": {
+  "forbidden_terms": [
+   "\\bscoring rounds?\\b",
+   "\\bevaluation rounds?\\b"
+  ],
+  "allow_terms": [
+   "plan version",
+   "version or plan",
+   "supported version",
+   "version of the platform",
+   "licence version"
+  ]
+ },
+ "progress": {
+  "size_weighted": true
+ },
+ "hook": {
+  "scope_names_public": true
+ }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "cms-requirements",
+  "display": "CMS / Content Platform Requirement Catalogue",
+  "kind": "catalogue",
+  "roles": [
+    "catalogue"
+  ],
+  "_readme": "Reference catalogue of content-platform / DXP requirements used as a completeness checklist when eliciting and classifying CMS requirements in an engagement. Hand-written seed of 2026-09-08 from general content-platform architecture practice; it is not, and must never be presented as, any client's requirement set.",
+  "snippets": {
+    "catalogue_persona": "an experienced content-platform / DXP architect and editorial-process analyst who has built content models for multi-site, multi-language estates and has watched editorial teams abandon a technically correct model because authoring it was unworkable",
+    "catalogue_focus": "completeness across the whole content chain from modelling to delivery: does every entry name a testable capability, is it correctly classified as FR (behaviour a user or editor can exercise), TR (a technical or interface constraint) or NFR (a measurable quality attribute), is the editor experience treated as a first-class requirement alongside the developer experience, and are the consequences of headless vs. coupled delivery made explicit wherever the answer changes the requirement (preview, personalisation, caching, invalidation, SEO ownership)",
+    "docs_domains": ""
+  },
+  "research_seed": "catalogue.md",
+  "reference_cache": "reference-cache.md"
+}

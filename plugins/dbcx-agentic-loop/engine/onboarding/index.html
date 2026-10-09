@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting started · dbcx agentic loop</title>
+<style>
+/* colours, type and light/dark behaviour follow the run board (../dashboard/dashboard.html) */
+:root{
+  --bg:#eef0f3; --surface:#ffffff; --surface-2:#f5f6f8; --sunk:#e4e7ec;
+  --ink:#14171c; --ink-2:#4a5260; --ink-3:#7a8392; --line:#d9dde4; --line-2:#e8ebef;
+  --accent:#2f6fed; --accent-bg:#e6eefe;
+  --queued:#9aa3b1; --analysing:#2f6fed; --critique:#7b4fd6; --passed:#1f9d61; --consol:#0f8a8a; --gate:#b07d00;
+  --passed-bg:#e4f5ec; --gate-bg:#fbf1d9; --warn:#b86e00; --bad:#d23c3c;
+  --r-analyst:#2f6fed; --r-client:#d9731a; --r-standard:#7b4fd6;
+  --shadow:0 1px 2px rgba(20,23,28,.06),0 2px 8px rgba(20,23,28,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --surface:#181b21; --surface-2:#1e222a; --sunk:#12151a;
+    --ink:#e9ecf1; --ink-2:#aab2bf; --ink-3:#7c8595; --line:#2b3039; --line-2:#232831;
+    --accent:#6b9bff; --accent-bg:#1c2a45;
+    --queued:#6f7888; --analysing:#6b9bff; --critique:#a88bf0; --passed:#3fc486; --consol:#35b8b8; --gate:#e0ae3a;
+    --passed-bg:#15301f; --gate-bg:#2e2512; --warn:#f0a53a; --bad:#ff6b6b;
+    --r-analyst:#6b9bff; --r-client:#f0913d; --r-standard:#a88bf0;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 2px 10px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --surface:#181b21; --surface-2:#1e222a; --sunk:#12151a;
+  --ink:#e9ecf1; --ink-2:#aab2bf; --ink-3:#7c8595; --line:#2b3039; --line-2:#232831;
+  --accent:#6b9bff; --accent-bg:#1c2a45;
+  --queued:#6f7888; --analysing:#6b9bff; --critique:#a88bf0; --passed:#3fc486; --consol:#35b8b8; --gate:#e0ae3a;
+  --passed-bg:#15301f; --gate-bg:#2e2512; --warn:#f0a53a; --bad:#ff6b6b;
+  --r-analyst:#6b9bff; --r-client:#f0913d; --r-standard:#a88bf0;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 2px 10px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+button{font:inherit;color:inherit}
+a{color:var(--accent)}
+b{font-weight:650}
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{flex:1 1 auto;min-width:0}
+.brand .t{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .s{font-size:12.5px;color:var(--ink-3)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:0 0 auto}
+.seg button{border:0;background:var(--surface);padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+main{max-width:1160px;margin:0 auto;padding:0 16px 40px}
+section{margin-top:40px}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.15;letter-spacing:-.02em;margin:0 0 14px}
+h2{font-size:22px;letter-spacing:-.01em;margin:0 0 6px}
+h3{font-size:16px;margin:0 0 4px}
+.lead{color:var(--ink-2);margin:0 0 16px;max-width:760px}
+.kick{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:0 0 8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.muted{color:var(--ink-3)}
+.note{font-size:13px;color:var(--ink-3);margin:8px 0 0}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:20px;align-items:start;margin-top:28px}
+.hero p.intro{margin:0 0 10px;color:var(--ink-2);max-width:680px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;min-height:28px;padding:3px 11px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink-2)}
+.chips .cl{font-size:12.5px;color:var(--ink-3);align-self:center;margin-right:2px}
+.chip.own{border-style:dashed;border-color:var(--accent);color:var(--accent);font-weight:600;text-decoration:none}
+.chip.own:hover{background:var(--accent-bg)}
+.side{display:flex;flex-direction:column;gap:14px}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 18px;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;text-decoration:none;box-shadow:var(--shadow);text-align:center}
+.cta:hover{filter:brightness(1.08)}
+.cta:focus-visible,.pr:focus-visible,.chip.own:focus-visible,.rail a:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cta svg{width:18px;height:18px;flex:0 0 auto}
+.demo-card .cta{width:100%}
+.demo-card .cta+.cta{margin-top:8px}
+.cta.alt{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+.demo-card .tag{display:inline-block;font-size:11.5px;font-weight:700;color:var(--gate);background:var(--gate-bg);border:1px dashed var(--gate);border-radius:10px;padding:1px 8px;margin-bottom:8px}
+
+/* prompt cards */
+.pr{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;margin-top:8px;padding:9px 11px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:9px;background:var(--surface-2);cursor:pointer}
+.pr:hover{border-color:var(--accent)}
+.pr .q{flex:1 1 auto;min-width:0;font-size:14px;overflow-wrap:anywhere}
+.pr .q::before{content:"\201C"}.pr .q::after{content:"\201D"}
+.pr .c{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--ink-3);margin-top:1px}
+.pr .c svg{width:14px;height:14px}
+.pr.done{border-color:var(--passed);border-left-color:var(--passed)}
+.pr.done .c{color:var(--passed)}
+
+/* the loop */
+.rail{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;counter-reset:st}
+.rail li{position:relative;min-width:0}
+.rail a{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);height:100%}
+.rail a:hover{border-color:color-mix(in srgb,var(--c) 60%,var(--line));border-top-color:var(--c)}
+.rail .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--c);color:#fff;font-size:12.5px;font-weight:800}
+.rail .nm{display:block;font-weight:700;margin-top:6px;overflow-wrap:anywhere}
+.rail .x{display:block;font-size:12.5px;color:var(--ink-3);overflow-wrap:anywhere}
+.rail li+li::before{content:"";position:absolute;left:-8px;top:24px;width:8px;height:2px;background:var(--line)}
+.back{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:8px;font-size:13px;color:var(--ink-3)}
+.back svg{width:30px;height:16px;flex:0 0 auto;color:var(--gate)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+.step{border-top:4px solid var(--c);scroll-margin-top:70px}
+.step .hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.step .hd .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--c);color:#fff;font-size:13px;font-weight:800;flex:0 0 auto}
+.step .hd .k{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c)}
+.step p{margin:0 0 4px;color:var(--ink-2);font-size:14px}
+.flow{list-style:none;margin:10px 0 4px;padding:0;display:flex;flex-direction:column;gap:0}
+.flow li{position:relative;display:flex;gap:10px;align-items:flex-start;padding:6px 0 6px 0}
+.flow li+li::before{content:"";position:absolute;left:11px;top:-6px;height:12px;width:2px;background:var(--line)}
+.flow .dot{flex:0 0 auto;display:inline-flex;gap:2px;width:24px;justify-content:center;margin-top:2px}
+.flow .dot i{width:12px;height:12px;border-radius:50%;background:var(--rc)}
+.flow .dot.two i{width:10px;height:10px}
+.flow b{display:block;font-size:13.5px}
+.flow span.s{display:block;font-size:12.5px;color:var(--ink-3)}
+
+/* dashboard */
+.dash{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:14px;margin-top:16px;align-items:stretch}
+.mini{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.gband{margin-top:12px;border-top:4px solid var(--gate);padding-top:5px}
+.gband .gh{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-2);margin-bottom:6px}
+.gband .gh span+span{font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-3)}
+.gband .mini{grid-template-columns:repeat(4,minmax(0,1fr))}
+.gband .mini .ch{min-height:0;font-size:10.5px}
+.gband .mini .cell{min-height:44px}
+.pband{margin-top:12px;border-top:4px solid var(--consol);padding-top:5px}
+.pband .gh{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-2);margin-bottom:6px}
+.pband .gh span+span{font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-3)}
+.pm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.pm i{display:block;height:16px;border-radius:4px;background:var(--surface);border:1px solid var(--line)}
+.pm i.on{background:color-mix(in srgb,var(--consol) 22%,var(--surface));border-color:color-mix(in srgb,var(--consol) 45%,var(--line))}
+.pm i.ov{background:color-mix(in srgb,var(--critique) 22%,var(--surface));border-color:color-mix(in srgb,var(--critique) 45%,var(--line))}
+.mini .col{min-width:0}
+.mini .ch{border-top:4px solid var(--c);padding-top:5px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-2);overflow-wrap:anywhere;hyphens:auto;min-height:36px}
+.mini .cell{display:flex;flex-direction:column;gap:5px;padding:5px;border-radius:9px;background:color-mix(in srgb,var(--c) 8%,transparent);min-height:120px}
+.mini .cell i{display:block;height:26px;border-radius:6px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--c)}
+.mini .cell i.q{position:relative}
+.mini .cell i.q::after{content:"";position:absolute;right:4px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--warn)}
+.feat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px}
+.feat ul{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+.feat li{margin:4px 0}
+.feat p{margin:0;font-size:14px;color:var(--ink-2)}
+.ui{font-weight:650;color:var(--ink)}
+.pair{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}
+.pair p{margin:0 0 4px;color:var(--ink-2);font-size:14px}
+.more{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+footer{max-width:1160px;margin:0 auto;padding:18px 16px 30px;font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line)}
+
+@media (max-width:1100px){
+  .feat{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:820px){
+  .hero,.dash,.pair{grid-template-columns:minmax(0,1fr)}
+  .rail{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .rail li:nth-child(4)::before{display:none}
+  .steps,.feat{grid-template-columns:minmax(0,1fr)}
+  .mini{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .gband .mini{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mini .cell{min-height:70px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="t" data-i="brand"></div><div class="s" data-i="brand_s"></div></div>
+  <div class="seg" role="group" data-ia="aria-label:lang_label"><button data-lang="en" data-i="en"></button><button data-lang="de" data-i="de"></button></div>
+</header>
+<main>
+  <section class="hero">
+    <div>
+      <p class="kick" data-i="kick"></p>
+      <h1 data-i="hero_h"></h1>
+      <p class="intro" data-i="hero_p1"></p>
+      <p class="intro" data-i="hero_p2"></p>
+      <p class="intro" data-i="hero_p3"></p>
+      <div class="chips"><span class="cl" data-i="methods_l"></span><span class="chip" data-i="m1"></span><span class="chip" data-i="m2"></span><span class="chip" data-i="m3"></span><span class="chip" data-i="m4"></span><span class="chip" data-i="m5"></span><a class="chip own" href="#s1" data-i="m6"></a></div>
+    </div>
+    <div class="side">
+      <div class="card demo-card">
+        <span class="tag" data-i="demo_tag"></span>
+        <h3 data-i="demo_h"></h3>
+        <p class="note" style="margin:0 0 12px" data-i="demo_s"></p>
+        <a class="cta" href="../dashboard/dashboard.html?demo=1" target="_blank" rel="noopener" id="demoBtn"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4L13 8z"/></svg><span data-i="demo_btn"></span></a>
+        <a class="cta alt" href="../dashboard/dashboard.html?demo=1&amp;scenario=estimate" target="_blank" rel="noopener" id="demoBtn2"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4L13 8z"/></svg><span data-i="demo_btn2"></span></a>
+      </div>
+      <div class="card">
+        <h3 data-i="setup_h"></h3>
+        <button class="pr"><span class="q" data-i="setup_p"></span><span class="c"></span></button>
+        <p class="note" data-i="where"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="loop">
+    <h2 data-i="loop_h"></h2>
+    <p class="lead" data-i="loop_p"></p>
+    <ol class="rail">
+      <li style="--c:var(--ink-2)"><a href="#s1"><span class="n">1</span><span class="nm" data-i="s1_n"></span><span class="x" data-i="s1_x"></span></a></li>
+      <li style="--c:var(--consol)"><a href="#s2"><span class="n">2</span><span class="nm" data-i="s2_n"></span><span class="x" data-i="s2_x"></span></a></li>
+      <li style="--c:var(--analysing)"><a href="#s3"><span class="n">3</span><span class="nm" data-i="s3_n"></span><span class="x" data-i="s3_x"></span></a></li>
+      <li style="--c:var(--critique)"><a href="#s4"><span class="n">4</span><span class="nm" data-i="s4_n"></span><span class="x" data-i="s4_x"></span></a></li>
+      <li style="--c:var(--passed)"><a href="#s5"><span class="n">5</span><span class="nm" data-i="s5_n"></span><span class="x" data-i="s5_x"></span></a></li>
+      <li style="--c:var(--gate)"><a href="#s6"><span class="n">6</span><span class="nm" data-i="s6_n"></span><span class="x" data-i="s6_x"></span></a></li>
+    </ol>
+    <div class="back"><svg viewBox="0 0 30 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M28 3v5H4"/><path d="M8 4 4 8l4 4"/></svg><span data-i="loop_back"></span></div>
+    <div class="steps">
+      <article class="card step" id="s1" style="--c:var(--ink-2)">
+        <div class="hd"><span class="n">1</span><span class="k" data-i="s1_n"></span></div>
+        <h3 data-i="s1_t"></h3><p data-i="s1_d"></p>
+        <button class="pr"><span class="q" data-i="s1_p1"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s1_p2"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s1_p3"></span><span class="c"></span></button>
+      </article>
+      <article class="card step" id="s2" style="--c:var(--consol)">
+        <div class="hd"><span class="n">2</span><span class="k" data-i="s2_n"></span></div>
+        <h3 data-i="s2_t"></h3><p data-i="s2_d"></p>
+        <button class="pr"><span class="q" data-i="s2_p1"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s2_p2"></span><span class="c"></span></button>
+      </article>
+      <article class="card step" id="s3" style="--c:var(--analysing)">
+        <div class="hd"><span class="n">3</span><span class="k" data-i="s3_n"></span></div>
+        <h3 data-i="s3_t"></h3><p data-i="s3_d"></p>
+        <ol class="flow">
+          <li><span class="dot" style="--rc:var(--r-analyst)"><i></i></span><span><b data-i="f1"></b><span class="s" data-i="f1_s"></span></span></li>
+          <li><span class="dot two"><i style="--rc:var(--r-client)"></i><i style="--rc:var(--r-standard)"></i></span><span><b data-i="f2"></b><span class="s" data-i="f2_s"></span></span></li>
+          <li><span class="dot" style="--rc:var(--passed)"><i></i></span><span><b data-i="f3"></b><span class="s" data-i="f3_s"></span></span></li>
+          <li><span class="dot" style="--rc:var(--gate)"><i></i></span><span><b data-i="f4"></b><span class="s" data-i="f4_s"></span></span></li>
+        </ol>
+        <button class="pr"><span class="q" data-i="s3_p1"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s3_p2"></span><span class="c"></span></button>
+      </article>
+      <article class="card step" id="s4" style="--c:var(--critique)">
+        <div class="hd"><span class="n">4</span><span class="k" data-i="s4_n"></span></div>
+        <h3 data-i="s4_t"></h3><p data-i="s4_d"></p>
+        <button class="pr"><span class="q" data-i="s4_p1"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s4_p2"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s4_p3"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s4_p4"></span><span class="c"></span></button>
+      </article>
+      <article class="card step" id="s5" style="--c:var(--passed)">
+        <div class="hd"><span class="n">5</span><span class="k" data-i="s5_n"></span></div>
+        <h3 data-i="s5_t"></h3><p data-i="s5_d"></p>
+        <button class="pr"><span class="q" data-i="s5_p1"></span><span class="c"></span></button>
+      </article>
+      <article class="card step" id="s6" style="--c:var(--gate)">
+        <div class="hd"><span class="n">6</span><span class="k" data-i="s6_n"></span></div>
+        <h3 data-i="s6_t"></h3><p data-i="s6_d"></p>
+        <button class="pr"><span class="q" data-i="s6_p1"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="s6_p2"></span><span class="c"></span></button>
+      </article>
+    </div>
+    <p class="note" data-i="prompt_note"></p>
+  </section>
+
+  <section id="dashboard">
+    <h2 data-i="dash_h"></h2>
+    <p class="lead" data-i="dash_p"></p>
+    <div class="dash">
+      <div class="card" aria-hidden="true">
+        <div class="mini">
+          <div class="col" style="--c:var(--queued)"><div class="ch" data-i="c1"></div><div class="cell"><i></i><i></i></div></div>
+          <div class="col" style="--c:var(--analysing)"><div class="ch" data-i="c2"></div><div class="cell"><i class="q"></i><i></i></div></div>
+          <div class="col" style="--c:var(--critique)"><div class="ch" data-i="c3"></div><div class="cell"><i></i></div></div>
+          <div class="col" style="--c:var(--passed)"><div class="ch" data-i="c4"></div><div class="cell"><i></i><i></i><i></i></div></div>
+          <div class="col" style="--c:var(--consol)"><div class="ch" data-i="c5"></div><div class="cell"><i></i></div></div>
+        </div>
+        <div class="pband">
+          <div class="gh"><span data-i="c7"></span> <span data-i="c7_s"></span></div>
+          <div class="pm"><i class="on"></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="ov"></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i></div>
+        </div>
+        <div class="gband">
+          <div class="gh"><span data-i="c6"></span> <span data-i="c6_s"></span></div>
+          <div class="mini">
+            <div class="col" style="--c:var(--queued)"><div class="ch" data-i="g1"></div><div class="cell"></div></div>
+            <div class="col" style="--c:var(--gate)"><div class="ch" data-i="g2"></div><div class="cell"><i></i></div></div>
+            <div class="col" style="--c:var(--passed)"><div class="ch" data-i="g3"></div><div class="cell"><i></i><i></i></div></div>
+            <div class="col" style="--c:var(--bad)"><div class="ch" data-i="g4"></div><div class="cell"><i></i></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card demo-card">
+        <span class="tag" data-i="demo_tag"></span>
+        <h3 data-i="demo_h2"></h3>
+        <p class="note" style="margin:0 0 12px" data-i="demo_p"></p>
+        <a class="cta" href="../dashboard/dashboard.html?demo=1" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4L13 8z"/></svg><span data-i="demo_btn"></span></a>
+        <a class="cta alt" href="../dashboard/dashboard.html?demo=1&amp;scenario=estimate" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.8v10.4L13 8z"/></svg><span data-i="demo_btn2"></span></a>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="card"><h3 data-i="d1_h"></h3><p data-i="d1_p"></p></div>
+      <div class="card"><h3 data-i="d2_h"></h3><p data-i="d2_p"></p><ul><li data-i="d2_a"></li><li data-i="d2_b"></li><li data-i="d2_c"></li></ul></div>
+      <div class="card"><h3 data-i="d3_h"></h3><p data-i="d3_p"></p></div>
+      <div class="card"><h3 data-i="d4_h"></h3><p data-i="d4_p"></p></div>
+    </div>
+    <p class="note" data-i="dash_note"></p>
+  </section>
+
+  <section id="customise">
+    <h2 data-i="cust_h"></h2>
+    <p class="lead" data-i="cust_p"></p>
+    <div class="pair">
+      <div class="card">
+        <h3 data-i="o_h"></h3><p data-i="o_p"></p>
+        <button class="pr"><span class="q" data-i="o_p1"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="o_p2"></span><span class="c"></span></button>
+        <button class="pr"><span class="q" data-i="o_p3"></span><span class="c"></span></button>
+      </div>
+      <div class="card">
+        <h3 data-i="m_h"></h3><p data-i="m_p"></p>
+        <button class="pr"><span class="q" data-i="m_p1"></span><span class="c"></span></button>
+      </div>
+      <div class="card">
+        <h3 data-i="e_h"></h3><p data-i="e_p"></p>
+        <button class="pr"><span class="q" data-i="e_p1"></span><span class="c"></span></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="more">
+    <h2 data-i="more_h"></h2>
+    <p class="lead" data-i="more_p"></p>
+    <div class="more"><span class="chip" data-i="x1"></span><span class="chip" data-i="x2"></span><span class="chip" data-i="x3"></span><span class="chip" data-i="x4"></span><span class="chip" data-i="x5"></span><span class="chip" data-i="x6"></span><span class="chip" data-i="x7"></span><span class="chip" data-i="x8"></span><span class="chip" data-i="x9"></span><span class="chip" data-i="x10"></span></div>
+  </section>
+</main>
+<footer data-i="foot"></footer>
+
+<!-- every visible string, EN and DE (both languages carry the same keys) -->
+<script type="application/json" id="i18n">
+{
+"en": {
+  "title": "Getting started · dbcx agentic loop",
+  "brand": "dbcx agentic loop",
+  "brand_s": "Getting started",
+  "lang_label": "Language",
+  "en": "EN", "de": "DE",
+  "kick": "Getting started",
+  "hero_h": "Evidence-first consulting analyses that run on their own",
+  "hero_p1": "The plugin turns a client's material – documents, workshop boards, workbooks, code – into reviewed deliverables: Excel workbooks with management summaries.",
+  "hero_p2": "A team of AI agents analyses the material, independent critics from the client side and from the standard side check every statement against the evidence, and a final gate reads the result through the eyes of your client's stakeholders.",
+  "hero_p3": "You set it up with a few sentences in Claude Code, follow the run on a live dashboard and answer its questions whenever it suits you.",
+  "methods_l": "Methods included:",
+  "m1": "Code analysis", "m2": "Enterprise architecture landscape", "m3": "Requirements", "m4": "Technology scoring", "m5": "Technology-fit estimation", "m6": "+ your own",
+  "demo_tag": "Demo · fictional project",
+  "demo_h": "See a run before you start one",
+  "demo_s": "The real dashboard, playing a recorded run – a code analysis or an estimate of several systems. Nothing is sent or started.",
+  "demo_btn": "Live demo: code analysis",
+  "demo_btn2": "Live demo: estimate of several systems",
+  "setup_h": "First time on this computer? Say:",
+  "setup_p": "Set up the dbcx plugin",
+  "where": "Type the prompts on this page into Claude Code – the Code tab of the Claude desktop app – with your project folder open. A click on a prompt copies it.",
+  "loop_h": "The main loop",
+  "loop_p": "Six steps from an empty folder to reviewed deliverables. Each step starts with a plain sentence to Claude.",
+  "s1_n": "Set up", "s1_x": "engagement and run",
+  "s2_n": "Prepare", "s2_x": "check what is needed",
+  "s3_n": "Run", "s3_x": "works on its own",
+  "s4_n": "Steer", "s4_x": "from the dashboard",
+  "s5_n": "Deliverables", "s5_x": "for the client",
+  "s6_n": "Improve", "s6_x": "evaluate and optimize",
+  "loop_back": "Next task: back to step 2",
+  "s1_t": "Create the engagement and a run",
+  "s1_d": "Claude asks for the client, the language, the material and the method: one of the five, with adjustments if needed, or a method of your own (a new one, or one from your personal library). For a new method, Claude runs a short interview (what the client should get, what one unit of analysis is, what is checked against which standard), builds the method, tests it on a small example and shows you the example workbook before the first run.",
+  "s1_p1": "Initiate the project with the dbcx agentic loop plugin for &lt;client&gt;: a requirements analysis, deliverables in German.",
+  "s1_p2": "Initiate the project with the dbcx agentic loop plugin – we need our own method for a supplier assessment",
+  "s1_p3": "Start a second run in this engagement: a technology scoring.",
+  "s2_t": "Check what the run needs",
+  "s2_d": "Claude lists what is already there and what is missing – documents, open fields, knowledge – with a recommendation for every choice, so you can simply approve. Nothing starts yet.",
+  "s2_p1": "Prepare for task 1",
+  "s2_p2": "Here are the notes from last week's workshop – add them to the input.",
+  "s3_t": "The run works on its own",
+  "s3_d": "Open Claude Code in the run folder that preparation names, and start. The run never stops to ask you: open points become questions on the dashboard, and it carries on with its recommended answer.",
+  "f1": "Analysts", "f1_s": "one per topic, every statement with its source",
+  "f2": "Critics", "f2_s": "client side: against the client's evidence; standard side: one or more, against the external standard",
+  "f3": "Rounds", "f3_s": "rework until every statement passes",
+  "f4": "Final gate", "f4_s": "your client's stakeholders read and score the result",
+  "s3_p1": "Execute the plan",
+  "s3_p2": "Resume the run",
+  "s4_t": "You steer from the dashboard",
+  "s4_d": "The dashboard opens in your browser when the session starts. Answer questions, send hints, pause – or simply ask in the chat.",
+  "s4_p1": "How far are we?",
+  "s4_p2": "Show me the status of the run",
+  "s4_p3": "Open the dashboard",
+  "s4_p4": "Pause the run",
+  "s5_t": "Two editions of one result",
+  "s5_d": "The customer edition goes to the client. The internal edition adds every statement with its evidence and the open questions. A final report sums up the numbers, the assumptions and the open client questions.",
+  "s5_p1": "Where are the deliverables?",
+  "s6_t": "Evaluate, then optimize",
+  "s6_d": "After a run, Claude judges it with you and proposes numbered changes. Nothing changes before you approve; approved changes apply to the next run of the engagement.",
+  "s6_p1": "Evaluate the outcome of task 1",
+  "s6_p2": "Optimize the project setup",
+  "prompt_note": "Replace the parts in angle brackets. The prompts work in German too.",
+  "dash_h": "How the dashboard works",
+  "dash_p": "A live picture of the run in your browser. It shows and collects – the work itself stays in Claude Code.",
+  "c1": "Queued", "c2": "Analysing", "c3": "Critique", "c4": "Passed", "c5": "Consolidated", "c6": "Final gate", "c6_s": "· one lane per review round", "c7": "Method view", "c7_s": "· e.g. impact per system",
+  "g1": "Queued", "g2": "Reviewing", "g3": "Passed", "g4": "Not passed",
+  "demo_h2": "Try it with a fictional project",
+  "demo_p": "The live demo plays a recorded run in the real dashboard: the code analysis of the fictional Nordwind Werkzeuge GmbH, or the estimate of the fictional Alpenkamm Outdoor AG – two shop technologies on the shortlist, an integration platform, a customer data platform, a CMS that a partner estimates and UX design. Answer questions, open cards, change a cell of a method view, press Pause – nothing is sent, saved or started. <span class=\"ui\">Next milestone</span> jumps ahead.",
+  "d1_h": "The board",
+  "d1_p": "Every topic of the analysis is a card that moves from left to right: queued, analysing, critique, passed, consolidated. Below the board, a method can add its own view – an estimate of several systems shows <span class=\"ui\">Impact per system</span>: which systems every requirement touches, decided and applied automatically before the estimation starts; when an analyst finds a requirement its system cannot carry, <span class=\"ui\">Gap decisions</span> shows where the architect sent the work – to another system, to a system outside the estimate, or back to the standard (the estimate demo shows both views). Below that, the final gate: your client's stakeholders review the customer edition in rounds, one lane per round. The strip on top shows how far each deliverable and the gate are.",
+  "d2_h": "Decisions",
+  "d2_p": "Questions the run could not settle alone. Each has options and a recommendation the run already works under.",
+  "d2_a": "<span class=\"ui\">Send answer</span>: pick an option or write your own.",
+  "d2_b": "<span class=\"ui\">Fact</span> is binding for the run; a <span class=\"ui\">Proposal</span> is weighed by the critics against the documents.",
+  "d2_c": "<span class=\"ui\">Keep assumption</span> closes the question: it stays an assumption in the deliverables, nothing is re-analysed, and you can reopen it.",
+  "d3_h": "Hints, disputes, feedback",
+  "d3_p": "Open a card to read the story of a topic. Send the analyst a hint, or dispute a critic's score – as a fact or as a hint. In the final gate, open a stakeholder to see their score per key question; if a question misses the point, send <span class=\"ui\">Feedback</span> and the run rewords or drops it from the next round. In <span class=\"ui\">Impact per system</span>, click a cell to add or remove a system or to change its impact text – optional: the run already works with what was decided, and the next wave picks up your change. In <span class=\"ui\">Gap decisions</span>, click another system's cell to send a gap there, or change the solution text – optional as well.",
+  "d4_h": "Pause and checkpoint",
+  "d4_p": "<span class=\"ui\">Pause</span> (or “Pause the run” in the chat) lets running agents finish their step, saves everything and stops cleanly; say “Resume the run” in a new session to continue. <span class=\"ui\">Checkpoint</span> asks for a fresh progress report and interim workbooks.",
+  "dash_note": "What you send lands in an inbox; the run picks it up at its next step.",
+  "cust_h": "Make it fit your project",
+  "cust_p": "Every setting can be changed for your engagement. The changes live in your engagement folder and apply to its later runs – the plugin itself stays untouched.",
+  "o_h": "Optimize this engagement",
+  "o_p": "Thresholds, wording, domain knowledge about the client, and project notes that the agents read together with their instructions.",
+  "o_p1": "Optimize the project setup",
+  "o_p2": "Raise the pass threshold to 7.5 for this engagement",
+  "o_p3": "Add a project note for the analysts: the client calls its online shops “channels”.",
+  "m_h": "Your own method",
+  "m_p": "Your own method lives in your engagement folder, and in your personal library if you save it there. Change it between runs, never during one.",
+  "m_p1": "Change our method: add a sheet with the open risks",
+  "e_h": "Send learnings to the maintainer",
+  "e_p": "What only the plugin can fix goes out as one anonymised file – and you can add your own method, so the maintainer can offer it to everyone. You see everything that leaves the project before the file is written, and client names are replaced.",
+  "e_p1": "Export the learnings for the plugin maintainer",
+  "more_h": "More to explore",
+  "more_p": "An onboarding cannot cover everything. Ask Claude about these when you need them:",
+  "x1": "Handing results over to the next run",
+  "x2": "Chaining methods",
+  "x3": "Rulings before the first wave",
+  "x4": "The run's knowledge base",
+  "x5": "Lean profile for document collections",
+  "x6": "Batched client questions",
+  "x7": "Comparing with a manual reference",
+  "x8": "Knowledge packs",
+  "x9": "Refreshing external reference facts",
+  "x10": "Importing Miro boards",
+  "copy": "Copy", "copied": "Copied", "copy_fail": "Select the text to copy it",
+  "foot": "dbcx agentic loop · This page works offline and sends nothing."
+},
+"de": {
+  "title": "Einstieg · dbcx agentic loop",
+  "brand": "dbcx agentic loop",
+  "brand_s": "Einstieg",
+  "lang_label": "Sprache",
+  "en": "EN", "de": "DE",
+  "kick": "Einstieg",
+  "hero_h": "Evidenzbasierte Beratungsanalysen, die selbstständig laufen",
+  "hero_p1": "Das Plugin macht aus den Unterlagen eines Kunden – Dokumente, Workshop-Boards, Arbeitsmappen, Code – geprüfte Ergebnisse: Excel-Arbeitsmappen mit Management-Summaries.",
+  "hero_p2": "Ein Team von KI-Agenten analysiert das Material, unabhängige Kritiker von Kundenseite und von Standardseite prüfen jede Aussage an den Belegen, und ein abschließendes Gate liest das Ergebnis mit den Augen der Stakeholder deines Kunden.",
+  "hero_p3": "Du richtest alles mit wenigen Sätzen in Claude Code ein, verfolgst den Lauf auf einem Live-Dashboard und beantwortest seine Fragen, wann es dir passt.",
+  "methods_l": "Enthaltene Methoden:",
+  "m1": "Code-Analyse", "m2": "Enterprise-Architektur-Landschaft", "m3": "Anforderungsanalyse", "m4": "Technologie-Scoring", "m5": "Technologie-Fit-Schätzung", "m6": "+ eigene",
+  "demo_tag": "Demo · fiktives Projekt",
+  "demo_h": "Einen Lauf ansehen, bevor du einen startest",
+  "demo_s": "Das echte Dashboard mit einem aufgezeichneten Lauf – einer Code-Analyse oder einer Schätzung mehrerer Systeme. Es wird nichts gesendet oder gestartet.",
+  "demo_btn": "Live-Demo: Code-Analyse",
+  "demo_btn2": "Live-Demo: Schätzung mehrerer Systeme",
+  "setup_h": "Zum ersten Mal auf diesem Rechner? Sag:",
+  "setup_p": "Das dbcx-Plugin einrichten",
+  "where": "Die Beispiele dieser Seite gibst du in Claude Code ein – im Code-Tab der Claude-Desktop-App – bei geöffnetem Projektordner. Ein Klick auf ein Beispiel kopiert es.",
+  "loop_h": "Der Hauptablauf",
+  "loop_p": "Sechs Schritte vom leeren Ordner bis zu geprüften Ergebnissen. Jeder Schritt beginnt mit einem einfachen Satz an Claude.",
+  "s1_n": "Anlegen", "s1_x": "Engagement und Lauf",
+  "s2_n": "Vorbereiten", "s2_x": "prüfen, was fehlt",
+  "s3_n": "Laufen lassen", "s3_x": "arbeitet selbstständig",
+  "s4_n": "Steuern", "s4_x": "über das Dashboard",
+  "s5_n": "Ergebnisse", "s5_x": "für den Kunden",
+  "s6_n": "Verbessern", "s6_x": "bewerten und optimieren",
+  "loop_back": "Nächste Aufgabe: zurück zu Schritt 2",
+  "s1_t": "Engagement und Lauf anlegen",
+  "s1_d": "Claude fragt nach dem Kunden, der Sprache, den Unterlagen und der Methode: eine der fünf, bei Bedarf angepasst, oder eine eigene Methode (eine neue oder eine aus deiner persönlichen Bibliothek). Für eine neue Methode führt Claude ein kurzes Interview (was der Kunde bekommen soll, was eine Analyseeinheit ist, was gegen welchen Standard geprüft wird), baut die Methode, testet sie an einem kleinen Beispiel und zeigt dir die Beispiel-Arbeitsmappe vor dem ersten Lauf.",
+  "s1_p1": "Projekt mit dem dbcx agentic loop Plugin für &lt;Kunde&gt; anlegen: eine Anforderungsanalyse, Ergebnisse auf Deutsch.",
+  "s1_p2": "Projekt mit dem dbcx agentic loop Plugin anlegen – wir brauchen eine eigene Methode für eine Lieferantenbewertung",
+  "s1_p3": "Einen zweiten Lauf in diesem Engagement starten: ein Technologie-Scoring.",
+  "s2_t": "Prüfen, was der Lauf braucht",
+  "s2_d": "Claude listet auf, was schon vorhanden ist und was fehlt – Dokumente, offene Felder, Wissen – mit einer Empfehlung für jede Wahl, sodass du nur noch zustimmst. Gestartet wird noch nichts.",
+  "s2_p1": "Aufgabe 1 vorbereiten",
+  "s2_p2": "Hier sind die Notizen aus dem Workshop der letzten Woche – bitte in den Input aufnehmen.",
+  "s3_t": "Der Lauf arbeitet selbstständig",
+  "s3_d": "Öffne Claude Code in dem Laufordner, den die Vorbereitung nennt, und starte. Der Lauf hält nie an, um dich zu fragen: Offene Punkte werden zu Fragen auf dem Dashboard, und er arbeitet mit der empfohlenen Antwort weiter.",
+  "f1": "Analysten", "f1_s": "einer je Thema, jede Aussage mit Quelle",
+  "f2": "Kritiker", "f2_s": "Kundenseite: gegen die Belege des Kunden; Standardseite: einer oder mehrere, gegen den externen Standard",
+  "f3": "Runden", "f3_s": "Nacharbeit, bis jede Aussage besteht",
+  "f4": "Abschluss-Gate", "f4_s": "die Stakeholder deines Kunden lesen und bewerten das Ergebnis",
+  "s3_p1": "Den Plan ausführen",
+  "s3_p2": "Den Lauf fortsetzen",
+  "s4_t": "Du steuerst über das Dashboard",
+  "s4_d": "Das Dashboard öffnet sich beim Start der Sitzung im Browser. Fragen beantworten, Hinweise senden, pausieren – oder einfach im Chat fragen.",
+  "s4_p1": "Wie weit sind wir?",
+  "s4_p2": "Den Stand des Laufs zeigen",
+  "s4_p3": "Das Dashboard öffnen",
+  "s4_p4": "Den Lauf pausieren",
+  "s5_t": "Zwei Ausgaben eines Ergebnisses",
+  "s5_d": "Die Kundenausgabe geht an den Kunden. Die interne Ausgabe enthält zusätzlich jede Aussage mit ihren Belegen und die offenen Fragen. Ein Abschlussbericht fasst Zahlen, Annahmen und offene Kundenfragen zusammen.",
+  "s5_p1": "Wo liegen die Ergebnisse?",
+  "s6_t": "Bewerten, dann optimieren",
+  "s6_d": "Nach einem Lauf bewertet Claude ihn mit dir und schlägt nummerierte Änderungen vor. Ohne deine Freigabe ändert sich nichts; freigegebene Änderungen gelten ab dem nächsten Lauf des Engagements.",
+  "s6_p1": "Das Ergebnis von Aufgabe 1 bewerten",
+  "s6_p2": "Das Projekt-Setup optimieren",
+  "prompt_note": "Ersetze die Teile in spitzen Klammern. Die Beispiele funktionieren auf Deutsch wie auf Englisch.",
+  "dash_h": "So funktioniert das Dashboard",
+  "dash_p": "Ein Live-Bild des Laufs im Browser. Es zeigt an und nimmt entgegen – die eigentliche Arbeit bleibt in Claude Code.",
+  "c1": "Wartend", "c2": "In Analyse", "c3": "In Kritik", "c4": "Bestanden", "c5": "Konsolidiert", "c6": "Abschluss-Gate", "c6_s": "· eine Spur je Prüfrunde", "c7": "Methodenansicht", "c7_s": "· z. B. Auswirkung je System",
+  "g1": "Wartend", "g2": "In Prüfung", "g3": "Bestanden", "g4": "Nicht bestanden",
+  "demo_h2": "Mit einem fiktiven Projekt ausprobieren",
+  "demo_p": "Die Live-Demo spielt im echten Dashboard einen aufgezeichneten Lauf ab: die Code-Analyse der fiktiven Nordwind Werkzeuge GmbH oder die Schätzung der fiktiven Alpenkamm Outdoor AG – zwei Shop-Technologien in der engeren Wahl, eine Integrationsplattform, eine Kundendatenplattform, ein CMS, das ein Partner schätzt, und UX-Design. Beantworte Fragen, öffne Karten, ändere eine Zelle einer Methodenansicht, drück Pause – es wird nichts gesendet, gespeichert oder gestartet. <span class=\"ui\">Next milestone</span> springt vorwärts. Das Dashboard ist auf Englisch.",
+  "d1_h": "Das Board",
+  "d1_p": "Jedes Thema der Analyse ist eine Karte, die von links nach rechts wandert: wartend, in Analyse, in Kritik, bestanden, konsolidiert. Unter dem Board kann eine Methode eine eigene Ansicht zeigen – eine Schätzung mehrerer Systeme zeigt <span class=\"ui\">Impact per system</span> (Auswirkung je System): welche Systeme jede Anforderung berührt, vor der Schätzung automatisch entschieden und übernommen; findet ein Analyst eine Anforderung, die sein System nicht tragen kann, zeigt <span class=\"ui\">Gap decisions</span> (Lückenentscheidungen), wohin der Architekt die Arbeit gegeben hat – an ein anderes System, an ein System außerhalb der Schätzung oder zurück zum Standard (die Schätzungs-Demo zeigt beide Ansichten). Darunter liegt das Abschluss-Gate: Die Stakeholder deines Kunden prüfen die Kundenausgabe in Runden, eine Spur je Runde. Die Leiste oben zeigt, wie weit jedes Ergebnis und das Gate sind.",
+  "d2_h": "Entscheidungen",
+  "d2_p": "Fragen, die der Lauf nicht allein klären konnte. Jede hat Optionen und eine Empfehlung, mit der der Lauf bereits arbeitet.",
+  "d2_a": "<span class=\"ui\">Send answer</span>: eine Option wählen oder eine eigene Antwort schreiben.",
+  "d2_b": "<span class=\"ui\">Fact</span> ist für den Lauf verbindlich; ein <span class=\"ui\">Proposal</span> (Vorschlag) wird von den Kritikern gegen die Dokumente abgewogen.",
+  "d2_c": "<span class=\"ui\">Keep assumption</span> schließt die Frage: Die Annahme bleibt in den Ergebnissen stehen, nichts wird neu analysiert, und du kannst die Frage wieder öffnen.",
+  "d3_h": "Hinweise, Einwände, Feedback",
+  "d3_p": "Öffne eine Karte, um den Verlauf eines Themas zu lesen. Schick dem Analysten einen Hinweis oder widersprich der Bewertung eines Kritikers – als Fakt oder als Hinweis. Im Abschluss-Gate öffnest du einen Stakeholder, um seine Bewertung je Kernfrage zu sehen; trifft eine Frage nicht, schickst du <span class=\"ui\">Feedback</span>, und der Lauf formuliert sie ab der nächsten Runde um oder streicht sie. In <span class=\"ui\">Impact per system</span> klickst du auf eine Zelle, um ein System hinzuzufügen oder zu entfernen oder den Auswirkungstext zu ändern – freiwillig: Der Lauf arbeitet bereits mit dem Entschiedenen weiter, und die nächste Welle übernimmt deine Änderung. In <span class=\"ui\">Gap decisions</span> klickst du auf die Zelle eines anderen Systems, um eine Lücke dorthin zu geben, oder änderst den Lösungstext – ebenfalls freiwillig.",
+  "d4_h": "Pause und Zwischenstand",
+  "d4_p": "<span class=\"ui\">Pause</span> (oder „Den Lauf pausieren“ im Chat) lässt laufende Agenten ihren Schritt beenden, sichert alles und hält sauber an; zum Weitermachen sagst du in einer neuen Sitzung „Den Lauf fortsetzen“. <span class=\"ui\">Checkpoint</span> fordert einen aktuellen Fortschrittsbericht und Zwischenstände der Arbeitsmappen an.",
+  "dash_note": "Was du sendest, landet in einem Posteingang; der Lauf übernimmt es bei seinem nächsten Schritt.",
+  "cust_h": "An dein Projekt anpassen",
+  "cust_p": "Jede Einstellung lässt sich für dein Engagement ändern. Die Änderungen liegen in deinem Engagement-Ordner und gelten für dessen spätere Läufe – das Plugin selbst bleibt unverändert.",
+  "o_h": "Dieses Engagement optimieren",
+  "o_p": "Schwellenwerte, Formulierungen, Fachwissen über den Kunden und Projektnotizen, die die Agenten zusammen mit ihren Anweisungen lesen.",
+  "o_p1": "Das Projekt-Setup optimieren",
+  "o_p2": "Die Bestehensgrenze für dieses Engagement auf 7,5 anheben",
+  "o_p3": "Eine Projektnotiz für die Analysten ergänzen: Der Kunde nennt seine Onlineshops „Kanäle“.",
+  "m_h": "Deine eigene Methode",
+  "m_p": "Deine eigene Methode liegt in deinem Engagement-Ordner und in deiner persönlichen Bibliothek, wenn du sie dort speicherst. Ändere sie zwischen zwei Läufen, nie während eines Laufs.",
+  "m_p1": "Unsere Methode ändern: ein Blatt mit den offenen Risiken ergänzen",
+  "e_h": "Erkenntnisse an den Maintainer senden",
+  "e_p": "Was nur das Plugin beheben kann, geht als eine anonymisierte Datei hinaus – und du kannst deine eigene Methode beilegen, damit der Maintainer sie allen anbieten kann. Du siehst alles, was das Projekt verlässt, bevor die Datei geschrieben wird, und Kundennamen werden ersetzt.",
+  "e_p1": "Die Erkenntnisse für den Plugin-Maintainer exportieren",
+  "more_h": "Mehr zu entdecken",
+  "more_p": "Eine Einführung kann nicht alles abdecken. Frag Claude danach, wenn du es brauchst:",
+  "x1": "Ergebnisse an den nächsten Lauf übergeben",
+  "x2": "Methoden verketten",
+  "x3": "Grundsatzentscheidungen vor der ersten Welle",
+  "x4": "Die Wissensbasis des Laufs",
+  "x5": "Schlankes Profil für Dokumentsammlungen",
+  "x6": "Gebündelte Kundenfragen",
+  "x7": "Vergleich mit einer manuellen Referenz",
+  "x8": "Wissenspakete",
+  "x9": "Externe Referenzfakten auffrischen",
+  "x10": "Miro-Boards importieren",
+  "copy": "Kopieren", "copied": "Kopiert", "copy_fail": "Text markieren, um ihn zu kopieren",
+  "foot": "dbcx agentic loop · Diese Seite funktioniert offline und sendet nichts."
+}
+}
+</script>
+<script>
+(() => {
+  const T = JSON.parse(document.getElementById('i18n').textContent), KEY = 'dbcx.onboarding.lang';
+  const saved = () => { try { return localStorage.getItem(KEY); } catch { return null; } };
+  const save = l => { try { localStorage.setItem(KEY, l); } catch {} };
+  const ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5"/><path d="M3 10.5V3.8C3 3.3 3.3 3 3.8 3h6.7"/></svg>';
+  let lang;
+  function apply(l) {
+    lang = T[l] ? l : 'en'; const t = T[lang];
+    document.documentElement.lang = lang; document.title = t.title;
+    document.querySelectorAll('[data-i]').forEach(e => { e.innerHTML = t[e.dataset.i]; });
+    document.querySelectorAll('[data-ia]').forEach(e => { const [a, k] = e.dataset.ia.split(':'); e.setAttribute(a, t[k]); });
+    document.querySelectorAll('.pr .c').forEach(e => { e.innerHTML = ICON + '<span>' + t.copy + '</span>'; });
+    document.querySelectorAll('.pr').forEach(e => e.classList.remove('done'));
+    document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  }
+  const q = new URLSearchParams(location.search).get('lang');
+  if (T[q]) save(q);
+  apply(T[q] ? q : saved() || 'en');
+  document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => { save(b.dataset.lang); apply(b.dataset.lang); }));
+
+  function fallback(text) {   // file:// pages without the async clipboard: a hidden textarea and execCommand
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch {} ta.remove(); return ok;
+  }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('.pr'); if (!b) return;
+    const text = b.querySelector('.q').textContent.trim(); let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch { ok = fallback(text); }
+    const c = b.querySelector('.c span');
+    if (ok) { b.classList.add('done'); c.textContent = T[lang].copied; }
+    else c.textContent = T[lang].copy_fail;
+    setTimeout(() => { b.classList.remove('done'); c.textContent = T[lang].copy; }, 1800);
+  });
+})();
+</script>
+</body>
+</html>

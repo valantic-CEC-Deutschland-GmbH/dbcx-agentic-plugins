@@ -1,0 +1,362 @@
+{
+ "_readme": [
+  "Analysis kinds of the tech-scoring method. `scoring` = one technology scored against every criterion (one scope per technology).",
+  "`shortlist` = the single consolidation: cross-technology calibration, ranking, shortlist with fit statements and partner explanations, guardrail table.",
+  "The marker CLAIMS embeds the engine claims table. Templates and schemas are generated per run with `dbcx md_to_json --generate`.",
+  "The score table's key is `criteria_scores`, not `scores`: the engine's semantic validator applies the CRITIC score rules (issue below 8, counter-evidence at 4) to any section keyed `scores`."
+ ],
+ "kinds": {
+  "scoring": {
+   "title": "Technology scoring: <technology>",
+   "file": "technology-scoring.md",
+   "output_dir": "analysis/scopes",
+   "id_prefix": "C-<scope>-",
+   "head": {
+    "technology": {
+     "t": "s",
+     "req": true
+    },
+    "pack": "n",
+    "version_or_plan": {
+     "t": "s",
+     "req": true
+    },
+    "agent": {
+     "t": "s",
+     "req": true
+    },
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "technology = the display name of the evaluated technology (the scope id is the short code T-nn); version_or_plan = the exact version, edition or subscription plan every score and capability refers to; pack = the knowledge pack folder name or empty; status = draft | final; round = the review round this version answers (0 = first version)",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "req": true,
+     "help": "4-8 plain-language sentences for the client: what this technology is, which of the client's needs it serves well, where it does not fit, and the one fact that decides its position. No vendor marketing, no comparison with other technologies (the consolidation does that)."
+    },
+    {
+     "heading": "Scores",
+     "key": "criteria_scores",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "criterion_id": {
+       "t": "s",
+       "req": true
+      },
+      "score": {
+       "t": "i",
+       "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+       ],
+       "req": true
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      },
+      "client_evidence": {
+       "t": "l",
+       "req": true
+      },
+      "vendor_evidence": {
+       "t": "l",
+       "req": true
+      },
+      "guardrail_hit": {
+       "t": "s",
+       "enum": [
+        "yes",
+        "no",
+        "not-applicable"
+       ],
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      }
+     },
+     "help": "exactly one row per criterion id in the CRITERIA block of your brief - no additions, no omissions. score 0-10 per SCORE ANCHORS. rationale names the MECHANISM (module, app, plan, setting, connector), never 'good fit'. client_evidence = requirement id / guardrail / context locator this score is measured against; vendor_evidence = documentation URL or PS-7-NNN that documents the mechanism (mandatory from score 8). guardrail_hit = yes | no | not-applicable, and where yes the rationale names the guardrail. confidence low where the evidence is thin - never a guess dressed as a fact."
+    },
+    {
+     "heading": "Capabilities",
+     "key": "capabilities",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "capability": {
+       "t": "s",
+       "req": true
+      },
+      "available": {
+       "t": "s",
+       "enum": [
+        "yes",
+        "partial",
+        "no",
+        "unknown"
+       ],
+       "req": true
+      },
+      "version_or_plan": {
+       "t": "s",
+       "req": true
+      },
+      "locator": {
+       "t": "l",
+       "req": true
+      },
+      "notes": "s"
+     },
+     "help": "the capability facts the scores rest on, one row per capability the client's requirements or guardrails ask for. available = yes | partial | no | unknown for the NAMED version or plan (a capability of a higher plan is `no` for the named plan, with the plan named in notes); locator = documentation URL or PS-7-NNN; `partial` and `unknown` name in notes what is missing or unconfirmed."
+    },
+    {
+     "heading": "Risks",
+     "key": "risks",
+     "type": "table",
+     "fields": {
+      "risk": {
+       "t": "s",
+       "req": true
+      },
+      "impact": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "req": true
+      },
+      "affects_criterion": "n",
+      "mitigation": "s",
+      "evidence": "l"
+     },
+     "help": "what would put the client's decision, timeline or budget at risk if this technology were chosen: licence metric that scales badly for the client's volumes, capability that only a partner add-on provides, end-of-maintenance date, no partner in the region. impact blocker = the client's guardrail or date cannot be held."
+    },
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": {
+       "t": "s",
+       "req": true
+      },
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "obsolete"
+       ],
+       "req": true
+      },
+      "answer": "s"
+     },
+     "help": "every unknown that changes a score: to = client (context, guardrail or requirement not decided - state the effect of the answer in the question) or vendor (capability the documentation does not settle). why_needed names the criterion id the answer moves. Never resolve an unknown by guessing: score it with confidence low and ask."
+    },
+    "CLAIMS"
+   ]
+  },
+  "shortlist": {
+   "title": "Technology shortlist and weighted ranking",
+   "file": "consolidated-SHORTLIST.md",
+   "output_dir": "analysis/consolidated",
+   "id_prefix": "C-SHORTLIST-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i",
+    "evaluated": {
+     "t": "i",
+     "req": true
+    },
+    "shortlist_size": {
+     "t": "i",
+     "req": true
+    }
+   },
+   "head_help": "evaluated = number of technologies with a final analysis; shortlist_size = SHORTLIST SIZE from the brief; status = draft | final; round = the review round this version answers",
+   "sections": [
+    {
+     "heading": "Ranking",
+     "key": "ranking",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "technology": {
+       "t": "s",
+       "req": true
+      },
+      "weighted_total_note": {
+       "t": "s",
+       "req": true
+      },
+      "rank": {
+       "t": "i",
+       "req": true
+      },
+      "shortlisted": {
+       "t": "b",
+       "req": true
+      },
+      "fit_statement": {
+       "t": "s",
+       "req": true
+      },
+      "partner_explanation": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per evaluated technology. The weighted total is a FORMULA in the workbook (SUMPRODUCT over the scores and the editable weights) - `weighted_total_note` says in one sentence what carries this technology's total (e.g. 'carried by C-01 and C-02, pulled down by C-05'), never a typed-in number. rank 1 = best; shortlisted yes for the top SHORTLIST SIZE. fit_statement (2-3 sentences) for a shortlisted technology says why it fits THIS client, including any guardrail hit; partner_explanation (2-3 sentences, partner-friendly, see PARTNER TONE) for every technology that is not shortlisted - strength first, then the context-specific limitation, then the conclusion. Fill both columns for every row: a shortlisted row's partner_explanation states what it does not cover."
+    },
+    {
+     "heading": "Calibration",
+     "key": "calibration",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "row_id": {
+       "t": "s",
+       "req": true
+      },
+      "technology": {
+       "t": "s",
+       "req": true
+      },
+      "criterion_id": {
+       "t": "s",
+       "req": true
+      },
+      "score_before": {
+       "t": "i",
+       "req": true
+      },
+      "score_after": {
+       "t": "i",
+       "req": true
+      },
+      "reason": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "every score you changed so that comparable rationales carry comparable scores, one row per changed score, row_id = <technology>/<criterion_id>. reason names the comparison that forced the change ('same mechanism as <technology> on C-04, which scored 7'). Internal calibration record: it stays in the analysis and never reaches the client workbook. An empty table means you compared every criterion and changed nothing - say so in the Summary claim."
+    },
+    {
+     "heading": "Guardrails",
+     "key": "guardrails",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "technology": {
+       "t": "s",
+       "req": true
+      },
+      "guardrail": {
+       "t": "s",
+       "req": true
+      },
+      "hit": {
+       "t": "s",
+       "enum": [
+        "yes",
+        "no",
+        "unclear"
+       ],
+       "req": true
+      },
+      "note": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per technology and client guardrail (CLIENT GUARDRAILS in the brief): hit = yes when this technology cannot hold the guardrail, no when it can, unclear when the evidence does not settle it (then an open question exists). note gives the one fact that decides it, with the claim id or locator behind it."
+    },
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": {
+       "t": "s",
+       "req": true
+      },
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "obsolete"
+       ],
+       "req": true
+      },
+      "answer": "s"
+     },
+     "help": "the questions the client must answer before the shortlist is decided, each with the effect of the answer in the question text ('... (effect of the answer: <what changes>)') so the workbook's question sheet carries it. to = client for context/guardrail/priority decisions, to = vendor for capability questions the documentation does not settle."
+    },
+    "CLAIMS"
+   ]
+  }
+ }
+}

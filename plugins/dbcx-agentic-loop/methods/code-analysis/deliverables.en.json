@@ -1,0 +1,3884 @@
+{
+ "_readme": [
+  "Excel deliverables of the code-analysis method (customer edition): at most two decision columns per sheet (`emphasis: decision` with `status`), result first (ID, title, phase/category, verdict, key statement, basis), detail groups collapsed (`emphasis: support` + `group`); formula and check columns and every confidence are `internal` (internal review workbook only). Data from methods/code-analysis/datasets.py DATASETS. Formula placeholders: {r}, {MAXR}, {rng:Sheet.col_id}, {col:col_id}, {cell:col_id}, {L:token}, {p:param}, {row}, {x:phase_in_scope}; text placeholders {engagement.client}, {target.platform}, {unit.noun} ... from the merged run configuration. deliverables.de.json has the same structure (same column ids/fields; only wording and sheet names are translated). Client-list columns that most lists lack (priority, owner) are not in the spec - add them per run with an override patch (insert_column after 'sources')."
+ ],
+ "deliverables": {
+  "D0": {
+   "title": "D0 Findings requiring client attention",
+   "requires": [
+    "d0"
+   ],
+   "purpose": "Findings about today's shop that are worth acting on independent of the platform decision: defects, security exposures, broken configuration, dead but costly residue. Each row names the {unit.noun_plural} concerned, the finding, its severity, the recommendation and its evidence.",
+   "sources": "analysis/consolidated/D0.json",
+   "sources_client": "Code analysis of the repository snapshot (findings requiring action from the {unit.noun} analyses)",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "KPIs (formulas), assessment and charts",
+     "kpis": [
+      {
+       "id": "findings",
+       "label": "Findings",
+       "formula": "=COUNTA({rng:Findings.id})",
+       "note": "sheet Findings"
+      },
+      {
+       "id": "high",
+       "label": "Severity {L:high}",
+       "formula": "=COUNTIF({rng:Findings.severity},\"{L:high}\")",
+       "note": "act now"
+      },
+      {
+       "id": "open",
+       "label": "Still to be settled",
+       "formula": "=COUNTIF({rng:Findings.settled},\"{L:false}\")",
+       "note": "the row names what settles it"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "findings",
+       "status": "neutral",
+       "label": "findings"
+      },
+      {
+       "kpi": "high",
+       "status": "rebuild",
+       "label": "severity {L:high}"
+      },
+      {
+       "kpi": "open",
+       "status": "assumption",
+       "label": "still to be settled"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "by_severity",
+       "title": "Findings by severity"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Findings",
+     "dataset": "d0",
+     "row_key": "id",
+     "readme": "One row per finding with severity, the {unit.noun_plural} concerned, recommendation and evidence",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 9
+      },
+      {
+       "header": "Finding",
+       "field": "finding",
+       "wrap": true,
+       "width": 70
+      },
+      {
+       "header": "Severity",
+       "field": "severity",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "high": "rebuild",
+        "medium": "rework",
+        "low": "standard"
+       },
+       "width": 11
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Recommendation",
+       "field": "recommendation",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 24
+      },
+      {
+       "header": "Settled from the repository",
+       "field": "settled",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "What settles it",
+       "field": "settles_by",
+       "wrap": true,
+       "width": 40,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Claim IDs",
+       "field": "claims",
+       "sep": ", ",
+       "width": 24,
+       "internal": true
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Overview",
+     "title": "Findings by severity (formulas over Findings)",
+     "readme": "Distribution by severity",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_severity",
+       "title": "By severity",
+       "row_header": "Severity",
+       "row_tokens": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Findings",
+         "formula": "=COUNTIF({rng:Findings.severity},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Findings by severity",
+        "status": {
+         "high": "rebuild",
+         "medium": "rework",
+         "low": "standard"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "D1": {
+   "title": "D1 {unit.noun} inventory and dependencies",
+   "requires": [
+    "inv"
+   ],
+   "purpose": "Module 1: complete inventory of the client's own {unit.noun_plural} with category, load state, size (total and cleaned LOC), dependencies, third-party packages in use, platform version and known deprecations towards {target.platform}.",
+   "sources": "analysis/inventory/inventory.json (automated scan), analysis/inventory/inventory_analysis.md (inventory assessment)",
+   "sources_client": "Automated scan of the repository snapshot (units, files, dependencies, deprecation hits) and the inventory assessment per {unit.noun}; vendor documentation",
+   "extra": "Dependency diagram: the files {deliverables.D1.diagram} (draw.io) and {deliverables.D1.diagram}.png show the same dependencies as the sheet Dependencies as a graphic. Cleaned LOC = maintained code (code, templates, JS, TS without tests, generated code and copies of the vendor template) of loaded {unit.noun_plural} without test {unit.noun_plural}; tests, configuration, data scripts, generated code and template copies count only in 'LOC total'. Deprecations lists source-code hits only; hits in comments, configuration, libraries, reports or tests are counted on Units.",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "KPIs (formulas), assessment and charts",
+     "kpis": [
+      {
+       "id": "units",
+       "label": "Custom {unit.noun_plural}",
+       "formula": "=COUNTA({rng:Units.name})",
+       "note": "own {unit.noun_plural} in the repository (sheet Units)"
+      },
+      {
+       "id": "not_loaded",
+       "label": "of which {L:dead|act}",
+       "formula": "=COUNTIF({rng:Units.activation},\"{L:dead|act}\")",
+       "note": "present but loaded by no configuration - candidates for retirement"
+      },
+      {
+       "id": "frontend",
+       "label": "of which {L:frontend}",
+       "formula": "=COUNTIF({rng:Units.category},\"{L:frontend}\")",
+       "note": "{unit.noun_plural} of today's storefront - replaced by {target.frontend}"
+      },
+      {
+       "id": "api",
+       "label": "of which {L:api}",
+       "formula": "=COUNTIF({rng:Units.category},\"{L:api}\")",
+       "note": "own API {unit.noun_plural} already present"
+      },
+      {
+       "id": "integration",
+       "label": "of which {L:integration}",
+       "formula": "=COUNTIF({rng:Units.category},\"{L:integration}\")",
+       "note": "interfaces to ERP, PIM, payment, third parties"
+      },
+      {
+       "id": "loc_clean",
+       "label": "Cleaned LOC",
+       "formula": "=SUM({rng:Units.loc_clean})",
+       "note": "maintained code of loaded {unit.noun_plural} without tests, generated code, template copies, configuration and data scripts - the size a rebuild moves",
+       "number_format": "#,##0"
+      },
+      {
+       "id": "loc_clean_cf",
+       "label": "Share of customer-facing code (cleaned LOC)",
+       "formula": "=IFERROR(SUMIF({rng:Units.reach},\"{L:_customer_facing}\",{rng:Units.loc_clean})/SUM({rng:Units.loc_clean}),0)",
+       "note": "{unit.noun_plural} of the categories {L:frontend} and {L:api}: the code customers experience in the shop",
+       "number_format": "0%"
+      },
+      {
+       "id": "loc_generated",
+       "label": "LOC generated or copied from the vendor template",
+       "formula": "=SUM({rng:Units.loc_generated})+SUM({rng:Units.loc_template_copy})",
+       "note": "belongs to the platform or is regenerated - not part of 'Cleaned LOC'",
+       "number_format": "#,##0"
+      },
+      {
+       "id": "loc_total",
+       "label": "LOC total",
+       "formula": "=SUM({rng:Units.total})",
+       "note": "all counted non-blank lines including tests, configuration and data scripts",
+       "number_format": "#,##0"
+      },
+      {
+       "id": "deps_custom",
+       "label": "Dependencies {L:custom} -> {L:custom}",
+       "formula": "=COUNTIF({rng:Dependencies.to_kind},\"{L:custom}\")",
+       "note": "edges in the dependency diagram"
+      },
+      {
+       "id": "dep_confirmed",
+       "label": "Deprecation findings ({L:deprecated} / {L:removed-in-target})",
+       "formula": "=COUNTIF({rng:Deprecations.status},\"{L:deprecated}\")+COUNTIF({rng:Deprecations.status},\"{L:removed-in-target}\")",
+       "note": "APIs/packages in use that are deprecated or removed in {target.platform}"
+      },
+      {
+       "id": "dep_unverified",
+       "label": "Deprecation findings ({L:unverified})",
+       "formula": "=COUNTIF({rng:Deprecations.status},\"{L:unverified}\")",
+       "note": "scan hits whose use in the code is not yet confirmed"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "units",
+       "status": "neutral",
+       "label": "custom {unit.noun_plural}"
+      },
+      {
+       "kpi": "loc_clean",
+       "status": "neutral",
+       "label": "cleaned LOC"
+      },
+      {
+       "kpi": "loc_clean_cf",
+       "status": "rework",
+       "label": "of which customer-facing"
+      },
+      {
+       "kpi": "not_loaded",
+       "status": "neutral",
+       "label": "{L:dead|act}"
+      },
+      {
+       "kpi": "dep_confirmed",
+       "status": "rebuild",
+       "label": "deprecations in target"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "by_category",
+       "title": "Cleaned LOC by category"
+      },
+      {
+       "type": "doughnut",
+       "block": "reach",
+       "title": "Customer-facing and internal code (cleaned LOC)"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Units",
+     "dataset": "units",
+     "row_key": "name",
+     "readme": "One row per custom {unit.noun}: category, load state, size (LOC total as a bar, cleaned LOC), customer reach; collapsed: LOC per kind, schema and extension counts, dependencies, evidence",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "name",
+       "width": 26
+      },
+      {
+       "header": "Category",
+       "field": "category",
+       "label": true,
+       "validation": "$unit.categories",
+       "width": 13
+      },
+      {
+       "header": "Load state",
+       "field": "activation",
+       "label": true,
+       "label_ctx": "act",
+       "width": 12
+      },
+      {
+       "header": "Description",
+       "field": "description",
+       "wrap": true,
+       "width": 44
+      },
+      {
+       "header": "LOC total",
+       "id": "total",
+       "formula": "=SUM({cell:code}:{cell:data_scripts})",
+       "databar": true,
+       "number_format": "#,##0",
+       "width": 12
+      },
+      {
+       "header": "Cleaned LOC",
+       "id": "loc_clean",
+       "formula": "=IF(OR({cell:activation}=\"{L:dead|act}\",{cell:activation}=\"{L:inactive|act}\",{cell:activation}=\"{L:stub|act}\",{cell:activation}=\"{L:declared-not-provisioned|act}\",{cell:category}=\"{L:test}\"),0,{cell:loc_maintained})",
+       "number_format": "#,##0",
+       "width": 11
+      },
+      {
+       "header": "Customer reach",
+       "field": "reach",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Required by (custom)",
+       "id": "required_by",
+       "width": 12,
+       "formula": "=COUNTIFS({rng:Dependencies.to},{cell:name},{rng:Dependencies.to_kind},\"{L:custom}\")"
+      },
+      {
+       "header": "Deprecation hits",
+       "id": "dep_hits",
+       "formula": "=COUNTIF({rng:Deprecations.unit},{cell:name})",
+       "width": 13
+      },
+      {
+       "header": "Notes",
+       "field": "notes",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "LOC maintained",
+       "field": "loc_maintained",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC generated",
+       "field": "loc_generated",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC template copy",
+       "field": "loc_template_copy",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC code (main)",
+       "field": "code",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC code (test)",
+       "field": "code_test",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC templates",
+       "field": "templates",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC JS",
+       "field": "js",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC TS",
+       "field": "ts",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC config",
+       "field": "config",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC data scripts",
+       "field": "data_scripts",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "Sub-categories",
+       "field": "sub_categories",
+       "sep": ", ",
+       "width": 20,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Template origin",
+       "field": "template_origin",
+       "width": 18,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Frontend entry points",
+       "field": "frontend_entry_points",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "API entry points",
+       "field": "api_entry_points",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Schema: new types",
+       "field": "schema_new_types",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Schema: standard types extended",
+       "field": "schema_extended_types",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Attributes on standard types",
+       "field": "schema_attributes_on_extended_types",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Relations",
+       "field": "schema_relations",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Enums",
+       "field": "schema_enums",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "DI definitions",
+       "field": "di_definitions",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Overrides standard beans (resolved)",
+       "field": "overrides_standard",
+       "label": true,
+       "width": 12,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Deprecation hits outside source code",
+       "field": "dep_hits_other",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Workflows (count)",
+       "field": "workflows_n",
+       "numeric": true,
+       "width": 9,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Custom content component types",
+       "field": "content_custom_component_types",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Integration signals",
+       "field": "integration_hits",
+       "sep": ", ",
+       "width": 24,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Requires (custom)",
+       "field": "requires_custom",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "deps"
+      },
+      {
+       "header": "Requires (standard)",
+       "field": "requires_standard",
+       "sep": ", ",
+       "width": 40,
+       "emphasis": "support",
+       "group": "deps"
+      },
+      {
+       "header": "Requires (unknown, count)",
+       "field": "requires_unknown_n",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "deps"
+      },
+      {
+       "header": "Path",
+       "field": "path",
+       "width": 40,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Loaded in",
+       "field": "loaded_in",
+       "label": true,
+       "sep": "; ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Dependencies",
+     "dataset": "dependencies",
+     "readme": "Declared dependencies ({L:custom} -> {L:custom}/{L:standard}/{L:unknown}) plus runtime, data and configuration references from the inventory assessment; base of the diagram",
+     "columns": [
+      {
+       "header": "From",
+       "field": "from",
+       "width": 28
+      },
+      {
+       "header": "To",
+       "field": "to",
+       "width": 28
+      },
+      {
+       "header": "Target kind",
+       "field": "to_kind",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Kind of dependency",
+       "field": "type",
+       "label": true,
+       "label_ctx": "deptype",
+       "width": 26
+      },
+      {
+       "header": "Note",
+       "field": "note",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Packages",
+     "dataset": "packages",
+     "readme": "Vendor add-ons, marketplace and partner packages in use",
+     "columns": [
+      {
+       "header": "Package",
+       "field": "name",
+       "width": 32
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "width": 14
+      },
+      {
+       "header": "Installed on / used by",
+       "field": "installed_on",
+       "sep": ", ",
+       "width": 30
+      },
+      {
+       "header": "Notes",
+       "field": "notes",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Evidence",
+       "field": "source",
+       "evidence": true,
+       "width": 50
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Platform",
+     "dataset": "platform",
+     "readme": "Platform version, runtime, hosting, storefront technology, build facts",
+     "columns": [
+      {
+       "header": "Attribute",
+       "field": "key",
+       "label": true,
+       "label_ctx": "pf",
+       "width": 30
+      },
+      {
+       "header": "Value",
+       "field": "value",
+       "wrap": true,
+       "width": 90
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 60
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Deprecations",
+     "dataset": "deprecations",
+     "row_key": "id",
+     "readme": "Deprecated, removed-in-target and risky API and package usages with status, replacement and evidence",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 22
+      },
+      {
+       "header": "Finding",
+       "field": "title",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 24
+      },
+      {
+       "header": "Status",
+       "field": "status",
+       "label": true,
+       "validation": [
+        "deprecated",
+        "removed-in-target",
+        "risky",
+        "false-positive",
+        "unverified"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "removed-in-target": "rebuild",
+        "deprecated": "rework",
+        "risky": "rework"
+       },
+       "width": 16
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Replacement",
+       "field": "replacement",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Deprecated since",
+       "field": "since",
+       "width": 16
+      },
+      {
+       "header": "Evidence (code snippet)",
+       "field": "snippet",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Evidence",
+       "field": "locator",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Verified against",
+       "field": "verified_against",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Overview",
+     "title": "Inventory overview (formulas over sheet Units)",
+     "readme": "Formula-based sums per category, customer-facing code, deprecations",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_category",
+       "row_header": "Category",
+       "row_tokens": "$unit.categories",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Units.category},{row})"
+        },
+        {
+         "header": "Cleaned LOC",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.loc_clean})"
+        },
+        {
+         "header": "LOC generated / template copy",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.loc_generated})+SUMIF({rng:Units.category},{row},{rng:Units.loc_template_copy})"
+        },
+        {
+         "header": "LOC templates",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.templates})"
+        },
+        {
+         "header": "LOC JS+TS",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.js})+SUMIF({rng:Units.category},{row},{rng:Units.ts})"
+        },
+        {
+         "header": "LOC total",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.total})"
+        },
+        {
+         "header": "Schema: new types",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.schema_new_types})"
+        },
+        {
+         "header": "Standard types extended",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.schema_extended_types})"
+        },
+        {
+         "header": "Deprecation hits",
+         "formula": "=SUMIF({rng:Units.category},{row},{rng:Units.dep_hits})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 2,
+        "title": "Cleaned LOC by category"
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "reach",
+       "title": "Customer-facing and internal code",
+       "row_header": "Customer reach",
+       "row_tokens": [
+        "_customer_facing",
+        "_internal"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Units.reach},{row})"
+        },
+        {
+         "header": "Cleaned LOC",
+         "formula": "=SUMIF({rng:Units.reach},{row},{rng:Units.loc_clean})"
+        }
+       ],
+       "chart": {
+        "type": "doughnut",
+        "column": 2,
+        "title": "Cleaned LOC by customer reach",
+        "status": {
+         "_customer_facing": "rework",
+         "_internal": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "deprecations",
+       "title": "Deprecations by status",
+       "row_header": "Status",
+       "row_tokens": [
+        "removed-in-target",
+        "deprecated",
+        "risky",
+        "unverified",
+        "false-positive"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Findings",
+         "formula": "=COUNTIF({rng:Deprecations.status},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Deprecations by status",
+        "status": {
+         "removed-in-target": "rebuild",
+         "deprecated": "rework",
+         "risky": "rework",
+         "unverified": "neutral",
+         "false-positive": "neutral"
+        }
+       }
+      },
+      {
+       "type": "kv",
+       "rows": [
+        {
+         "label": "Dependencies {L:custom} -> {L:custom}",
+         "formula": "=COUNTIF({rng:Dependencies.to_kind},\"{L:custom}\")"
+        },
+        {
+         "label": "Dependencies {L:custom} -> {L:standard}",
+         "formula": "=COUNTIF({rng:Dependencies.to_kind},\"{L:standard}\")"
+        },
+        {
+         "label": "Dependencies {L:custom} -> {L:unknown}",
+         "formula": "=COUNTIF({rng:Dependencies.to_kind},\"{L:unknown}\")"
+        },
+        {
+         "label": "Packages: {L:standard}",
+         "formula": "=COUNTIF({rng:Packages.kind},\"{L:standard}\")"
+        },
+        {
+         "label": "Packages: {L:third-party}",
+         "formula": "=COUNTIF({rng:Packages.kind},\"{L:third-party}\")"
+        },
+        {
+         "label": "Packages: {L:custom}",
+         "formula": "=COUNTIF({rng:Packages.kind},\"{L:custom}\")"
+        },
+        {
+         "label": "{unit.noun_plural}: {L:dead|act}",
+         "formula": "=COUNTIF({rng:Units.activation},\"{L:dead|act}\")"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Claims",
+     "scopes": "D1",
+     "readme": "All statements with reviewer scores (full edition only)"
+    }
+   ]
+  },
+  "D2": {
+   "title": "D2 Customization depth (heat map)",
+   "requires": [
+    "units"
+   ],
+   "purpose": "Module 2: per {unit.noun} the deviation from the {source.platform} standard (overridden, extended and new code units, schema delta, customized workflows and data scripts, patches of standard behaviour), a classification low / medium / heavy / rewrite and the migration guideline (disposition); plus the security and operations findings about today's shop.",
+   "sources": "analysis/units/<unit>.md, analysis/inventory/inventory.json",
+   "sources_client": "Code analysis per {unit.noun} of the repository snapshot (evidence per row); automated scan; vendor documentation",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "KPIs (formulas), assessment and charts",
+     "kpis": [
+      {
+       "id": "units",
+       "label": "Analysed {unit.noun_plural}",
+       "formula": "=COUNTA({rng:Depth.unit})",
+       "note": "one row per {unit.noun} (sheet Depth)"
+      },
+      {
+       "id": "clean_core",
+       "label": "Clean core: share of {unit.noun_plural} without patches of standard behaviour",
+       "formula": "=IFERROR(COUNTIF({rng:Depth.patched},0)/COUNTA({rng:Depth.unit}),0)",
+       "note": "sheet Depth, patches of standard behaviour = 0 - the higher, the closer to the standard",
+       "number_format": "0%"
+      },
+      {
+       "id": "rewrite",
+       "label": "Classification '{L:rewrite}'",
+       "formula": "=COUNTIF({rng:Depth.depth},\"{L:rewrite}\")",
+       "note": "{unit.noun_plural} that patch/shadow the standard or cannot be carried over to {target.platform} as they are"
+      },
+      {
+       "id": "heavy",
+       "label": "Classification '{L:heavy}'",
+       "formula": "=COUNTIF({rng:Depth.depth},\"{L:heavy}\")",
+       "note": "standard behaviour replaced or large own domain logic"
+      },
+      {
+       "id": "medium",
+       "label": "Classification '{L:medium}'",
+       "formula": "=COUNTIF({rng:Depth.depth},\"{L:medium}\")",
+       "note": "standard extended, types added, no replacement of standard behaviour"
+      },
+      {
+       "id": "low",
+       "label": "Classification '{L:low}'",
+       "formula": "=COUNTIF({rng:Depth.depth},\"{L:low}\")",
+       "note": "configuration, data, thin glue"
+      },
+      {
+       "id": "patched",
+       "label": "Patches of standard behaviour",
+       "formula": "=SUM({rng:Depth.patched})",
+       "note": "sheet Patched"
+      },
+      {
+       "id": "patched_high",
+       "label": "of which upgrade risk {L:high}",
+       "formula": "=COUNTIF({rng:Patched.risk},\"{L:high}\")",
+       "note": "sheet Patched"
+      },
+      {
+       "id": "patched_security",
+       "label": "of which security relevant",
+       "formula": "=IF(COUNTIF({rng:Patched.security_relevant},\"{L:not-assessed}\")>0,COUNTIF({rng:Patched.security_relevant},\"{L:true}\")&\" (\"&COUNTIF({rng:Patched.security_relevant},\"{L:not-assessed}\")&\" {L:not-assessed})\",COUNTIF({rng:Patched.security_relevant},\"{L:true}\"))",
+       "note": "sheet Patched, column Security relevant"
+      },
+      {
+       "id": "secops",
+       "label": "Security and operations findings",
+       "formula": "=COUNTA({rng:Security_and_operations.id})",
+       "note": "sheet Security_and_operations - action needed in today's shop, independent of the platform decision"
+      },
+      {
+       "id": "secops_high",
+       "label": "of which severity {L:high}",
+       "formula": "=COUNTIF({rng:Security_and_operations.severity},\"{L:high}\")",
+       "note": "act now"
+      },
+      {
+       "id": "secops_more",
+       "label": "Further flagged findings (detail sheets only)",
+       "formula": "=MAX(0,{x:secops_flagged}-COUNTA({rng:Security_and_operations.id}))",
+       "note": "the sheet Security_and_operations shows the most severe findings; the rest are on the sheet Patched or counted as migration concerns per {unit.noun} on the sheet Depth"
+      },
+      {
+       "id": "overridden",
+       "label": "Overridden standard services/classes",
+       "formula": "=SUM({rng:Depth.overridden})",
+       "note": "sheet Code_units, kind = {L:overridden}"
+      },
+      {
+       "id": "shadowed",
+       "label": "Shadowed standard classes",
+       "formula": "=SUM({rng:Depth.shadowed})",
+       "note": "highest upgrade risk"
+      },
+      {
+       "id": "std_types_ext",
+       "label": "Standard types extended",
+       "formula": "=SUM({rng:Depth.std_types_ext})",
+       "note": "schema delta against the standard data model"
+      },
+      {
+       "id": "disp_refactor",
+       "label": "Disposition '{L:refactor-to-standard}'",
+       "formula": "=COUNTIF({rng:Depth.disposition},\"{L:refactor-to-standard}\")",
+       "note": "sheet Depth, column Disposition - the migration guideline per {unit.noun}"
+      },
+      {
+       "id": "disp_rebuild",
+       "label": "Disposition '{L:rebuild-frontend}'",
+       "formula": "=COUNTIF({rng:Depth.disposition},\"{L:rebuild-frontend}\")",
+       "note": "sheet Depth, column Disposition - the migration guideline per {unit.noun}"
+      },
+      {
+       "id": "disp_keep",
+       "label": "Disposition '{L:keep}' / '{L:adapt-api}'",
+       "formula": "=COUNTIF({rng:Depth.disposition},\"{L:keep}\")&\" / \"&COUNTIF({rng:Depth.disposition},\"{L:adapt-api}\")",
+       "note": "sheet Depth, column Disposition - the migration guideline per {unit.noun}"
+      },
+      {
+       "id": "disp_retire",
+       "label": "Disposition '{L:retire}' / '{L:third-party-replace}'",
+       "formula": "=COUNTIF({rng:Depth.disposition},\"{L:retire}\")&\" / \"&COUNTIF({rng:Depth.disposition},\"{L:third-party-replace}\")",
+       "note": "sheet Depth, column Disposition - the migration guideline per {unit.noun}"
+      },
+      {
+       "id": "data_migrate",
+       "label": "Data types that must be migrated",
+       "formula": "=COUNTIF({rng:Data_model.data_class},\"{L:transactional}\")+COUNTIF({rng:Data_model.data_class},\"{L:master-shop-owned}\")",
+       "note": "sheet Data_model: data class {L:transactional} or {L:master-shop-owned}"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "clean_core",
+       "status": "standard",
+       "label": "clean core"
+      },
+      {
+       "kpi": "rewrite",
+       "status": "rebuild",
+       "label": "{L:rewrite}"
+      },
+      {
+       "kpi": "patched_high",
+       "status": "rework",
+       "label": "patches with upgrade risk {L:high}"
+      },
+      {
+       "kpi": "patched_security",
+       "status": "rebuild",
+       "label": "security-relevant patches"
+      },
+      {
+       "kpi": "secops_high",
+       "status": "rebuild",
+       "label": "findings severity {L:high}"
+      }
+     ],
+     "charts": [
+      {
+       "type": "doughnut",
+       "block": "clean_core",
+       "title": "Clean core: {unit.noun_plural} with and without patches"
+      },
+      {
+       "type": "bar",
+       "block": "by_class",
+       "title": "{unit.noun_plural} by classification"
+      },
+      {
+       "type": "bar",
+       "block": "by_disposition",
+       "title": "{unit.noun_plural} by disposition"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "parameters",
+     "name": "Parameters",
+     "headers": [
+      "Parameter",
+      "Value",
+      "Meaning"
+     ],
+     "readme": "Weights and thresholds of the deviation index - editable, all sheets recalculate",
+     "rows": [
+      {
+       "name": "Weight overridden",
+       "value": 3,
+       "meaning": "weight per overridden standard service/class"
+      },
+      {
+       "name": "Weight shadowed",
+       "value": 5,
+       "meaning": "weight per shadowed standard class"
+      },
+      {
+       "name": "Weight extended",
+       "value": 1,
+       "meaning": "weight per class extending a standard class"
+      },
+      {
+       "name": "Weight new",
+       "value": 0.2,
+       "meaning": "weight per new class"
+      },
+      {
+       "name": "Weight standard type extended",
+       "value": 2,
+       "meaning": "weight per extended standard type"
+      },
+      {
+       "name": "Weight attribute on standard type",
+       "value": 0.5,
+       "meaning": "weight per attribute on a standard type"
+      },
+      {
+       "name": "Weight new type",
+       "value": 0.5,
+       "meaning": "weight per new type"
+      },
+      {
+       "name": "Weight workflow customized",
+       "value": 4,
+       "meaning": "weight per customized standard workflow"
+      },
+      {
+       "name": "Weight workflow new",
+       "value": 2,
+       "meaning": "weight per new workflow"
+      },
+      {
+       "name": "Weight standard data customized",
+       "value": 1,
+       "meaning": "weight per data script area customizing standard data"
+      },
+      {
+       "name": "Weight patch of standard behaviour",
+       "value": 4,
+       "meaning": "weight per patch of standard behaviour"
+      },
+      {
+       "name": "Threshold medium",
+       "value": 10,
+       "meaning": "deviation index from this value -> {L:medium}"
+      },
+      {
+       "name": "Threshold heavy",
+       "value": 40,
+       "meaning": "deviation index from this value -> {L:heavy}"
+      },
+      {
+       "name": "Threshold rewrite",
+       "value": 120,
+       "meaning": "deviation index from this value -> {L:rewrite} (or share overridden+shadowed from 'Share rewrite')"
+      },
+      {
+       "name": "Share rewrite",
+       "value": 0.5,
+       "meaning": "share of overridden+shadowed among all code units that alone means {L:rewrite} (from 5 code units)"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Depth",
+     "dataset": "depth",
+     "row_key": "unit",
+     "readme": "One row per {unit.noun}: disposition and classification with key statement and basis, deviation index (colour scale) and patches of standard behaviour; collapsed: the formula counts from the detail sheets and the evidence",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 26
+      },
+      {
+       "header": "Category",
+       "field": "category",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Disposition",
+       "field": "disposition",
+       "label": true,
+       "validation": [
+        "keep",
+        "adapt-api",
+        "refactor-to-standard",
+        "third-party-replace",
+        "rebuild-frontend",
+        "retire"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "keep": "standard",
+        "adapt-api": "rework",
+        "refactor-to-standard": "rework",
+        "third-party-replace": "rework",
+        "rebuild-frontend": "rebuild",
+        "retire": "neutral"
+       },
+       "width": 20
+      },
+      {
+       "header": "Classification",
+       "field": "depth",
+       "label": true,
+       "validation": [
+        "low",
+        "medium",
+        "heavy",
+        "rewrite"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "low": "standard",
+        "medium": "rework",
+        "heavy": "rebuild",
+        "rewrite": "rebuild"
+       },
+       "width": 14,
+       "id": "depth"
+      },
+      {
+       "header": "Key statement",
+       "field": "key_statement",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Deviation index",
+       "id": "score",
+       "formula": "={cell:new}*{p:Weight new}+{cell:extended}*{p:Weight extended}+{cell:overridden}*{p:Weight overridden}+{cell:shadowed}*{p:Weight shadowed}+{cell:new_types}*{p:Weight new type}+{cell:std_types_ext}*{p:Weight standard type extended}+{cell:attrs_on_std}*{p:Weight attribute on standard type}+{cell:wf_custom}*{p:Weight workflow customized}+{cell:wf_new}*{p:Weight workflow new}+{cell:data_custom}*{p:Weight standard data customized}+{cell:patched}*{p:Weight patch of standard behaviour}",
+       "scale": {
+        "min": 0,
+        "mid": 40,
+        "max": 120
+       },
+       "number_format": "0",
+       "width": 13
+      },
+      {
+       "header": "Standard patches",
+       "id": "patched",
+       "formula": "=COUNTIF({rng:Patched.unit},{cell:unit})",
+       "width": 16
+      },
+      {
+       "header": "Clean core",
+       "id": "core_state",
+       "formula": "=IF({cell:patched}=0,\"{L:_clean_core}\",\"{L:_patches_standard}\")",
+       "width": 14
+      },
+      {
+       "header": "Classification rationale",
+       "field": "rationale",
+       "width": 60,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Disposition rationale",
+       "field": "disposition_rationale",
+       "width": 60,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Migration relevance",
+       "field": "migration_relevance",
+       "label": true,
+       "width": 14,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "New",
+       "id": "new",
+       "formula": "=SUMIFS({rng:Code_units.count},{rng:Code_units.unit},{cell:unit},{rng:Code_units.kind},\"{L:new}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Extended",
+       "id": "extended",
+       "formula": "=SUMIFS({rng:Code_units.count},{rng:Code_units.unit},{cell:unit},{rng:Code_units.kind},\"{L:extended}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Overridden",
+       "id": "overridden",
+       "formula": "=SUMIFS({rng:Code_units.count},{rng:Code_units.unit},{cell:unit},{rng:Code_units.kind},\"{L:overridden}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Shadowed",
+       "id": "shadowed",
+       "formula": "=SUMIFS({rng:Code_units.count},{rng:Code_units.unit},{cell:unit},{rng:Code_units.kind},\"{L:shadowed}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Code units total",
+       "id": "total",
+       "formula": "=SUMIFS({rng:Code_units.count},{rng:Code_units.unit},{cell:unit})",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Share overridden+shadowed",
+       "id": "share",
+       "formula": "=IF({cell:total}=0,0,({cell:overridden}+{cell:shadowed})/{cell:total})",
+       "number_format": "0%",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "New types",
+       "id": "new_types",
+       "formula": "=COUNTIFS({rng:Data_model.unit},{cell:unit},{rng:Data_model.kind},\"{L:new-type}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Standard types extended",
+       "id": "std_types_ext",
+       "formula": "=COUNTIFS({rng:Data_model.unit},{cell:unit},{rng:Data_model.kind},\"{L:extended-standard-type}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Attributes on standard types",
+       "id": "attrs_on_std",
+       "formula": "=SUMIFS({rng:Data_model.attributes_added},{rng:Data_model.unit},{cell:unit},{rng:Data_model.kind},\"{L:extended-standard-type}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "New relations",
+       "id": "new_rel",
+       "formula": "=COUNTIFS({rng:Data_model.unit},{cell:unit},{rng:Data_model.kind},\"{L:new-relation}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Workflows customized",
+       "id": "wf_custom",
+       "formula": "=COUNTIFS({rng:Workflows.unit},{cell:unit},{rng:Workflows.group},\"{L:workflow}\",{rng:Workflows.kind},\"{L:customized-standard}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Workflows new",
+       "id": "wf_new",
+       "formula": "=COUNTIFS({rng:Workflows.unit},{cell:unit},{rng:Workflows.group},\"{L:workflow}\",{rng:Workflows.kind},\"{L:new}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Data scripts customizing standard data",
+       "id": "data_custom",
+       "formula": "=COUNTIFS({rng:Workflows.unit},{cell:unit},{rng:Workflows.group},\"{L:data_script}\",{rng:Workflows.kind},\"{L:customizes-standard-data}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Migration concerns ({L:blocker|impact}/{L:major|impact})",
+       "field": "concerns_major",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Classification (formula)",
+       "id": "depth_formula",
+       "formula": "=IF(OR({cell:score}>={p:Threshold rewrite},AND({cell:share}>={p:Share rewrite},{cell:total}>=5)),\"{L:rewrite}\",IF({cell:score}>={p:Threshold heavy},\"{L:heavy}\",IF({cell:score}>={p:Threshold medium},\"{L:medium}\",\"{L:low}\")))",
+       "width": 13,
+       "internal": true
+      },
+      {
+       "header": "Check",
+       "id": "check",
+       "formula": "=IF({cell:depth_formula}={cell:depth},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Confidence",
+       "field": "confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      },
+      {
+       "header": "Open questions",
+       "field": "open_questions",
+       "numeric": true,
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Analysis document",
+       "field": "document",
+       "width": 34,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Patched",
+     "dataset": "patched",
+     "row_key": "unit",
+     "readme": "Changed standard behaviour (service overrides, shadowing, AOP/plugins, config and template overrides, core patches) with upgrade risk, security relevance and consequence for {engagement.client}",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "What",
+       "field": "what",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Upgrade risk",
+       "field": "risk_for_upgrade",
+       "label": true,
+       "label_ctx": "c",
+       "emphasis": "decision",
+       "status": {
+        "high": "rebuild",
+        "medium": "rework",
+        "low": "standard"
+       },
+       "width": 12,
+       "id": "risk"
+      },
+      {
+       "header": "Security relevant",
+       "field": "security_relevant",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "true": "rebuild"
+       },
+       "width": 17
+      },
+      {
+       "header": "Consequence for {engagement.client}",
+       "field": "consequence",
+       "wrap": true,
+       "width": 44
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "How",
+       "field": "how",
+       "label": true,
+       "label_ctx": "p",
+       "width": 18
+      },
+      {
+       "header": "Standard behaviour",
+       "field": "standard_behaviour",
+       "width": 44,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Custom behaviour",
+       "field": "custom_behaviour",
+       "width": 44,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Evidence",
+       "field": "locator",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Lines",
+       "field": "lines",
+       "width": 14,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Security_and_operations",
+     "dataset": "security_operations",
+     "row_key": "id",
+     "readme": "The most severe security and operations findings about today's shop (at most 25 rows) that need action independent of the platform decision - only explicitly flagged patches of standard behaviour and risks of the {unit.noun} analyses, sorted by severity and {unit.noun}; the overview counts the rest",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 9
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "label_ctx": "sec",
+       "width": 12
+      },
+      {
+       "header": "Finding",
+       "field": "finding",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Severity",
+       "field": "severity",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "high": "rebuild",
+        "medium": "rework",
+        "low": "standard"
+       },
+       "width": 11
+      },
+      {
+       "header": "Consequence for {engagement.client}",
+       "field": "consequence",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Recommendation",
+       "field": "recommendation",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 24
+      },
+      {
+       "header": "Origin",
+       "field": "origin",
+       "label": true,
+       "label_ctx": "origin",
+       "width": 20,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Code_units",
+     "dataset": "code_units",
+     "readme": "Every analysed class/service/component: new / extended / overridden / shadowed with standard counterpart",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "Code unit (FQN)",
+       "field": "fqn",
+       "width": 50
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "width": 16
+      },
+      {
+       "header": "Standard counterpart",
+       "field": "standard_counterpart",
+       "width": 40
+      },
+      {
+       "header": "Purpose",
+       "field": "purpose",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Count",
+       "field": "count",
+       "numeric": true,
+       "width": 7
+      },
+      {
+       "header": "File",
+       "field": "file",
+       "width": 60,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Lines",
+       "field": "lines",
+       "width": 10,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Data_model",
+     "dataset": "data_model",
+     "readme": "Schema delta: new types, extended standard types, attributes, relations, data class for the migration",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "Type",
+       "field": "type",
+       "width": 26
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "label_ctx": "dm",
+       "width": 20
+      },
+      {
+       "header": "Base type",
+       "field": "base",
+       "width": 20
+      },
+      {
+       "header": "Attributes added",
+       "field": "attributes_added",
+       "numeric": true,
+       "width": 9
+      },
+      {
+       "header": "Purpose",
+       "field": "purpose",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Data class (migration)",
+       "field": "data_class",
+       "label": true,
+       "validation": [
+        "master-reloadable",
+        "master-shop-owned",
+        "transactional",
+        "config",
+        "derived"
+       ],
+       "width": 20,
+       "id": "data_class"
+      },
+      {
+       "header": "Source of truth",
+       "field": "source_of_truth",
+       "width": 18
+      },
+      {
+       "header": "Attributes",
+       "field": "attributes",
+       "sep": ", ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Standard alternative",
+       "field": "standard_alternative",
+       "width": 40,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "File",
+       "field": "file",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Workflows",
+     "dataset": "workflows_jobs_scripts",
+     "readme": "Workflows, scheduled jobs and data scripts, new or customizing the standard",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "Group",
+       "field": "group",
+       "label": true,
+       "width": 14
+      },
+      {
+       "header": "Name / area",
+       "field": "name",
+       "width": 30
+      },
+      {
+       "header": "New or customized",
+       "field": "kind",
+       "label": true,
+       "width": 20
+      },
+      {
+       "header": "Standard counterpart / job class",
+       "field": "counterpart",
+       "width": 34
+      },
+      {
+       "header": "Purpose / note",
+       "field": "purpose",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Files",
+       "field": "files",
+       "sep": "; ",
+       "width": 60,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Overview",
+     "title": "Distribution of classifications, dispositions and findings (formulas over Depth)",
+     "readme": "Formula-based distributions: classification, disposition, clean core, security and operations",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_class",
+       "title": "By classification",
+       "row_header": "Classification",
+       "row_tokens": [
+        "low",
+        "medium",
+        "heavy",
+        "rewrite"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Depth.depth},{row})"
+        },
+        {
+         "header": "Code units total",
+         "formula": "=SUMIF({rng:Depth.depth},{row},{rng:Depth.total})"
+        },
+        {
+         "header": "Patches of standard behaviour",
+         "formula": "=SUMIF({rng:Depth.depth},{row},{rng:Depth.patched})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "{unit.noun_plural} by classification",
+        "status": {
+         "low": "standard",
+         "medium": "rework",
+         "heavy": "rebuild",
+         "rewrite": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "by_disposition",
+       "title": "By disposition",
+       "row_header": "Disposition",
+       "row_tokens": [
+        "keep",
+        "adapt-api",
+        "refactor-to-standard",
+        "third-party-replace",
+        "rebuild-frontend",
+        "retire"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Depth.disposition},{row})"
+        },
+        {
+         "header": "Code units total",
+         "formula": "=SUMIF({rng:Depth.disposition},{row},{rng:Depth.total})"
+        },
+        {
+         "header": "Patches of standard behaviour",
+         "formula": "=SUMIF({rng:Depth.disposition},{row},{rng:Depth.patched})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "{unit.noun_plural} by disposition",
+        "status": {
+         "keep": "standard",
+         "adapt-api": "rework",
+         "refactor-to-standard": "rework",
+         "third-party-replace": "rework",
+         "rebuild-frontend": "rebuild",
+         "retire": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "clean_core",
+       "title": "Clean core",
+       "row_header": "Patch of standard behaviour",
+       "row_tokens": [
+        "_clean_core",
+        "_patches_standard"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Depth.core_state},{row})"
+        },
+        {
+         "header": "Code units total",
+         "formula": "=SUMIF({rng:Depth.core_state},{row},{rng:Depth.total})"
+        }
+       ],
+       "chart": {
+        "type": "doughnut",
+        "column": 1,
+        "title": "Clean core",
+        "status": {
+         "_clean_core": "standard",
+         "_patches_standard": "rework"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "secops",
+       "title": "Security and operations by severity",
+       "row_header": "Severity",
+       "row_tokens": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Findings",
+         "formula": "=COUNTIF({rng:Security_and_operations.severity},{row})"
+        },
+        {
+         "header": "of which {L:security|sec}",
+         "formula": "=COUNTIFS({rng:Security_and_operations.severity},{row},{rng:Security_and_operations.kind},\"{L:security|sec}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Findings by severity",
+        "status": {
+         "high": "rebuild",
+         "medium": "rework",
+         "low": "standard"
+        }
+       }
+      },
+      {
+       "type": "kv",
+       "rows": [
+        {
+         "label": "Further flagged security and operations findings (detail sheets only)",
+         "formula": "=MAX(0,{x:secops_flagged}-COUNTA({rng:Security_and_operations.id}))"
+        },
+        {
+         "label": "{unit.noun_plural} without patches of standard behaviour",
+         "formula": "=COUNTIF({rng:Depth.patched},0)"
+        },
+        {
+         "label": "Patches of standard behaviour, security relevant",
+         "formula": "=COUNTIF({rng:Patched.security_relevant},\"{L:true}\")"
+        },
+        {
+         "label": "Patches of standard behaviour, security relevance {L:not-assessed}",
+         "formula": "=COUNTIF({rng:Patched.security_relevant},\"{L:not-assessed}\")"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Claims",
+     "scopes": "units",
+     "readme": "All statements with reviewer scores (full edition only)"
+    }
+   ]
+  },
+  "D3": {
+   "title": "D3 Requirements coverage",
+   "requires": [
+    "req",
+    "d3"
+   ],
+   "purpose": "Module 3: the client's requirement list - every row unchanged - extended by our assessment: the recommendation per requirement (use standard / refactor to standard / keep custom / build new / pending confirmation) with key statement and basis, how today's shop meets it, whether the target standard ({target.platform} {target.version} with {target.frontend}) covers it, the business effect, description gaps and the frontend readiness; plus the new requirements derived from the code (NR-nnn) for the client's decision.",
+   "sources": "state/requirements.json, analysis/consolidated/D3.md, analysis/consolidated/D4.md",
+   "sources_client": "{engagement.client}'s requirement list (every row unchanged); code analysis of the repository snapshot; vendor documentation",
+   "extra": "Target version for 'target standard' and 'standard alternative': {target.platform} {target.version} with {target.frontend}. The frontend columns roll up the feature rows of sheet Frontend_features per requirement (worst verdict); the full feature detail is in D4. The columns of the requirement list are collapsed (plus sign above the column bar).",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "KPIs (formulas), assessment and charts",
+     "kpis": [
+      {
+       "id": "reqs",
+       "label": "Requirements total",
+       "formula": "=COUNTA({rng:Requirements.id})",
+       "note": "the client's requirement list, every row unchanged (sheet Requirements)"
+      },
+      {
+       "id": "rec_std",
+       "label": "Recommendation '{L:use-standard}'",
+       "formula": "=COUNTIF({rng:Requirements.recommendation},\"{L:use-standard}\")",
+       "note": "the standard covers the requirement; standard today or not implemented"
+      },
+      {
+       "id": "rec_refactor",
+       "label": "Recommendation '{L:refactor-to-standard}'",
+       "formula": "=COUNTIF({rng:Requirements.recommendation},\"{L:refactor-to-standard}\")",
+       "note": "custom code today, replaceable by the standard in the target - the standardisation potential"
+      },
+      {
+       "id": "rec_keep",
+       "label": "Recommendation '{L:keep-custom}'",
+       "formula": "=COUNTIF({rng:Requirements.recommendation},\"{L:keep-custom}\")",
+       "note": "custom code today without a full standard: the logic is carried over"
+      },
+      {
+       "id": "rec_new",
+       "label": "Recommendation '{L:build-new}'",
+       "formula": "=COUNTIF({rng:Requirements.recommendation},\"{L:build-new}\")",
+       "note": "not implemented today and no full standard"
+      },
+      {
+       "id": "rec_confirm",
+       "label": "Recommendation '{L:clarify}'",
+       "formula": "=COUNTIF({rng:Requirements.recommendation},\"{L:clarify}\")",
+       "note": "the recommendation follows once {engagement.client} confirms the named assumption (sheet Assumptions)"
+      },
+      {
+       "id": "on_assumption",
+       "label": "Requirements whose result rests on an assumption",
+       "formula": "=COUNTIF({rng:Requirements.grundlage},\"Assumption*\")",
+       "note": "column Basis = assumption - once {engagement.client} confirms or rejects the assumption, the result is settled"
+      },
+      {
+       "id": "std_potential",
+       "label": "Standardisation potential (today {L:custom}, target standard {L:full})",
+       "formula": "=COUNTIFS({rng:Requirements.today},\"{L:custom}\",{rng:Requirements.target_standard},\"{L:full}\")",
+       "note": "requirements whose own code can be replaced by standard functionality"
+      },
+      {
+       "id": "cov_std",
+       "label": "{L:covered-standard}",
+       "formula": "=COUNTIF({rng:Requirements.verdict},\"{L:covered-standard}\")",
+       "note": "the {target.platform} standard covers the requirement"
+      },
+      {
+       "id": "cov_custom",
+       "label": "{L:covered-custom}",
+       "formula": "=COUNTIF({rng:Requirements.verdict},\"{L:covered-custom}\")",
+       "note": "today's custom code covers the requirement"
+      },
+      {
+       "id": "cov_partial",
+       "label": "{L:partial}",
+       "formula": "=COUNTIF({rng:Requirements.verdict},\"{L:partial}\")",
+       "note": "partly covered"
+      },
+      {
+       "id": "cov_gap",
+       "label": "{L:gap}",
+       "formula": "=COUNTIF({rng:Requirements.verdict},\"{L:gap}\")",
+       "note": "neither today's code nor standard"
+      },
+      {
+       "id": "gap_scope",
+       "label": "of which in scope ({x:phase_in_scope}) with {L:gap}",
+       "formula": "=COUNTIFS({rng:Requirements.phase},\"{x:phase_in_scope}\",{rng:Requirements.verdict},\"{L:gap}\")",
+       "note": "critical for the first go-live"
+      },
+      {
+       "id": "today",
+       "label": "Today in the shop: {L:custom} / {L:standard-in-use} / {L:partial} / {L:none}",
+       "formula": "=COUNTIF({rng:Requirements.today},\"{L:custom}\")&\" / \"&COUNTIF({rng:Requirements.today},\"{L:standard-in-use}\")&\" / \"&COUNTIF({rng:Requirements.today},\"{L:partial}\")&\" / \"&COUNTIF({rng:Requirements.today},\"{L:none}\")",
+       "note": "column 'Today (current shop)' - how the current shop meets the requirement"
+      },
+      {
+       "id": "target",
+       "label": "Target standard covers: {L:full} / {L:partial} / {L:none}",
+       "formula": "=COUNTIF({rng:Requirements.target_standard},\"{L:full}\")&\" / \"&COUNTIF({rng:Requirements.target_standard},\"{L:partial}\")&\" / \"&COUNTIF({rng:Requirements.target_standard},\"{L:none}\")",
+       "note": "column 'Target standard' - {target.platform} {target.version} with {target.frontend}"
+      },
+      {
+       "id": "desc_gap",
+       "label": "Requirements with a description gap (code does more than described)",
+       "formula": "=COUNTIF({rng:Requirements.description_gap},\"?*\")",
+       "note": "the requirement exists but does not describe everything the shop does today"
+      },
+      {
+       "id": "new_reqs",
+       "label": "New requirements from the code ({engagement.client} decision open)",
+       "formula": "=COUNTA({rng:New_requirements.id})",
+       "note": "sheet New_requirements - behaviour of today's shop that no requirement describes"
+      },
+      {
+       "id": "fe_part",
+       "label": "Requirements with a frontend part",
+       "formula": "=COUNTIF({rng:Requirements.fe_part},\"{L:true}\")",
+       "note": "at least one user-facing feature assigned (sheet Frontend_features)"
+      },
+      {
+       "id": "fe_ready",
+       "label": "Frontend readiness per requirement: {L:ready} / {L:needs-api-work} / {L:needs-redesign}",
+       "formula": "=COUNTIF({rng:Requirements.fe_ready},\"{L:ready}\")&\" / \"&COUNTIF({rng:Requirements.fe_ready},\"{L:needs-api-work}\")&\" / \"&COUNTIF({rng:Requirements.fe_ready},\"{L:needs-redesign}\")",
+       "note": "worst feature verdict per requirement (column 'Frontend readiness')"
+      },
+      {
+       "id": "not_assessed",
+       "label": "{L:NOT-ASSESSED}",
+       "formula": "=COUNTIF({rng:Requirements.verdict},\"{L:NOT-ASSESSED}\")",
+       "note": "must be 0"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "rec_std",
+       "status": "standard",
+       "label": "{L:use-standard}"
+      },
+      {
+       "kpi": "rec_refactor",
+       "status": "rework",
+       "label": "{L:refactor-to-standard}"
+      },
+      {
+       "kpi": "rec_new",
+       "status": "rebuild",
+       "label": "{L:build-new}"
+      },
+      {
+       "kpi": "on_assumption",
+       "status": "assumption",
+       "label": "rests on an assumption"
+      },
+      {
+       "kpi": "std_potential",
+       "status": "standard",
+       "label": "standardisation potential"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "by_rec",
+       "title": "Recommendation per requirement"
+      },
+      {
+       "type": "stacked",
+       "block": "today_target",
+       "title": "Today x target standard (standardisation potential)"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Requirements",
+     "dataset": "coverage",
+     "row_key": "req_id",
+     "readme": "Per requirement the result first - recommendation, key statement, basis, today's shop, target standard, business effect -, then collapsed: the text of the requirement list (unchanged), the assessment detail, the frontend readiness (formulas over Frontend_features) and the evidence",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "req_id",
+       "width": 9,
+       "id": "id"
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "wrap": true,
+       "width": 28
+      },
+      {
+       "header": "Phase",
+       "field": "phase",
+       "width": 11,
+       "id": "phase"
+      },
+      {
+       "header": "Recommendation",
+       "field": "recommendation",
+       "label": true,
+       "validation": [
+        "use-standard",
+        "refactor-to-standard",
+        "keep-custom",
+        "build-new",
+        "clarify"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "use-standard": "standard",
+        "refactor-to-standard": "rework",
+        "build-new": "rebuild",
+        "clarify": "assumption"
+       },
+       "width": 18,
+       "id": "recommendation"
+      },
+      {
+       "header": "Key statement",
+       "field": "key_statement",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Today (current shop)",
+       "field": "today",
+       "label": true,
+       "validation": [
+        "custom",
+        "standard-in-use",
+        "partial",
+        "none"
+       ],
+       "width": 14,
+       "id": "today"
+      },
+      {
+       "header": "Target standard",
+       "field": "target_standard",
+       "label": true,
+       "validation": [
+        "full",
+        "partial",
+        "none"
+       ],
+       "width": 12,
+       "id": "target_standard"
+      },
+      {
+       "header": "Coverage",
+       "field": "verdict",
+       "label": true,
+       "validation": [
+        "covered-standard",
+        "covered-custom",
+        "partial",
+        "gap",
+        "NOT-ASSESSED"
+       ],
+       "width": 18,
+       "id": "verdict"
+      },
+      {
+       "header": "Business effect",
+       "field": "business_effect",
+       "wrap": true,
+       "width": 44
+      },
+      {
+       "header": "Group",
+       "field": "group",
+       "width": 10,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 22,
+       "emphasis": "support",
+       "group": "client",
+       "id": "epic"
+      },
+      {
+       "header": "Description",
+       "field": "description",
+       "width": 50,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Acceptance criteria",
+       "field": "acceptance_criteria",
+       "width": 40,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Exclusions",
+       "field": "exclusions",
+       "width": 30,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "References",
+       "field": "references",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Sources (client list)",
+       "field": "sources",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Target standard (feature, version)",
+       "field": "target_standard_ref",
+       "width": 40,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Description gap (code does more than described)",
+       "field": "description_gap",
+       "width": 50,
+       "emphasis": "support",
+       "group": "assess",
+       "id": "description_gap"
+      },
+      {
+       "header": "Current state (today's shop)",
+       "field": "current_state_note",
+       "width": 50,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Standard alternative",
+       "field": "standard_alternative_flag",
+       "label": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "assess",
+       "id": "flag"
+      },
+      {
+       "header": "Standard alternative (feature, version)",
+       "field": "standard_alternative",
+       "width": 40,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Rationale",
+       "field": "rationale",
+       "width": 60,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Implementing {unit.noun_plural} (count)",
+       "id": "n_units",
+       "formula": "=IF({cell:units}=\"\",0,LEN({cell:units})-LEN(SUBSTITUTE({cell:units},\",\",\"\"))+1)",
+       "width": 10,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Implementing {unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "assess",
+       "id": "units"
+      },
+      {
+       "header": "Frontend part",
+       "id": "fe_part",
+       "formula": "=IF(COUNTIF({rng:Frontend_features.primary_requirement},{cell:id})>0,\"{L:true}\",\"{L:false}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Frontend features (count)",
+       "id": "fe_n",
+       "formula": "=COUNTIF({rng:Frontend_features.primary_requirement},{cell:id})",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Frontend readiness (worst feature)",
+       "id": "fe_ready",
+       "formula": "=IF(COUNTIF({rng:Frontend_features.primary_requirement},{cell:id})=0,\"{L:_no_frontend}\",IF(COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.verdict},\"{L:needs-redesign}\")>0,\"{L:needs-redesign}\",IF(COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.verdict},\"{L:needs-api-work}\")>0,\"{L:needs-api-work}\",\"{L:ready}\")))",
+       "width": 18,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "{target.api_name} coverage (minimum)",
+       "id": "fe_cov",
+       "formula": "=IF(COUNTIF({rng:Frontend_features.primary_requirement},{cell:id})=0,\"{L:_no_frontend}\",IF(COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.target_api_coverage},\"{L:none}\")>0,\"{L:none}\",IF(COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.target_api_coverage},\"{L:partial}\")>0,\"{L:partial}\",\"{L:full}\")))",
+       "width": 14,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Features needing custom API work",
+       "id": "fe_api",
+       "formula": "=COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.custom_api_needed_flag},\"{L:true}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Features with custom content",
+       "id": "fe_cc",
+       "formula": "=COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.content_dependency},\"{L:custom-components}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Features with server-side state",
+       "id": "fe_state",
+       "formula": "=COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.state_dependency},\"{L:server-side-view-state}\")+COUNTIFS({rng:Frontend_features.primary_requirement},{cell:id},{rng:Frontend_features.state_dependency},\"{L:session-attributes}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Recommendation (formula)",
+       "id": "rec_formula",
+       "formula": "=IF({cell:today}=\"{L:standard-in-use}\",\"{L:use-standard}\",IF({cell:today}=\"{L:none}\",IF({cell:target_standard}=\"{L:full}\",\"{L:use-standard}\",\"{L:build-new}\"),IF({cell:target_standard}=\"{L:full}\",\"{L:refactor-to-standard}\",\"{L:keep-custom}\")))",
+       "width": 18,
+       "internal": true
+      },
+      {
+       "header": "Check",
+       "id": "rec_check",
+       "formula": "=IF({cell:rec_formula}={cell:recommendation},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Confidence target standard",
+       "field": "target_standard_confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      },
+      {
+       "header": "Confidence alt.",
+       "field": "standard_alternative_confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      },
+      {
+       "header": "Confidence",
+       "field": "confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Frontend_features",
+     "dataset": "frontend_features",
+     "row_key": "feature_id",
+     "readme": "Detail sheet behind the frontend columns of sheet Requirements: one user-facing feature per row, assigned to its primary requirement, with verdict and {target.api_name} coverage - the full feature detail is in D4",
+     "columns": [
+      {
+       "header": "Feature ID",
+       "field": "feature_id",
+       "width": 10,
+       "id": "feature_id"
+      },
+      {
+       "header": "Feature",
+       "field": "feature",
+       "wrap": true,
+       "width": 36
+      },
+      {
+       "header": "Primary requirement",
+       "field": "primary_requirement",
+       "width": 14,
+       "id": "primary_requirement"
+      },
+      {
+       "header": "Verdict",
+       "field": "verdict",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "ready": "standard",
+        "needs-api-work": "rework",
+        "needs-redesign": "rebuild"
+       },
+       "width": 16,
+       "id": "verdict"
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "{target.api_name} standard coverage",
+       "field": "target_api_coverage",
+       "label": true,
+       "width": 14,
+       "id": "target_api_coverage"
+      },
+      {
+       "header": "Custom API needed",
+       "field": "custom_api_needed_flag",
+       "label": true,
+       "width": 10,
+       "id": "custom_api_needed_flag"
+      },
+      {
+       "header": "Content dependency",
+       "field": "content_dependency",
+       "label": true,
+       "width": 16,
+       "id": "content_dependency"
+      },
+      {
+       "header": "State dependency",
+       "field": "state_dependency",
+       "label": true,
+       "width": 16,
+       "id": "state_dependency"
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Further requirements",
+       "field": "related_requirements",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "New_requirements",
+     "dataset": "new_requirements",
+     "row_key": "id",
+     "readme": "Part 2 of the joint requirement list: behaviour of today's shop that no requirement of the client's list describes - with a proposal and an empty column for {engagement.client}'s decision; collapsed: the fields in the client list's format",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 9,
+       "id": "id"
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Proposal",
+       "field": "proposed_handling",
+       "label": true,
+       "validation": [
+        "keep-in-scope",
+        "drop",
+        "merge-into-existing"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "keep-in-scope": "standard",
+        "merge-into-existing": "rework",
+        "drop": "neutral"
+       },
+       "width": 22,
+       "id": "proposed_handling"
+      },
+      {
+       "header": "Client decision",
+       "id": "client_decision",
+       "const": "",
+       "validation": [
+        "keep-in-scope",
+        "drop",
+        "merge-into-existing"
+       ],
+       "width": 22
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Description",
+       "field": "description",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Why no requirement describes it",
+       "field": "rationale",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 24,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Acceptance criteria (derived from code)",
+       "field": "acceptance_criteria",
+       "width": 50,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Exclusions",
+       "field": "exclusions",
+       "width": 30,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "References (FR/TR)",
+       "field": "references",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Phase",
+       "field": "phase",
+       "width": 10,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Implementing {unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 24,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Confidence",
+       "field": "confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Overview",
+     "title": "Coverage by recommendation, verdict, frontend readiness, phase and epic (formulas over Requirements)",
+     "readme": "Formula-based distributions",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_rec",
+       "title": "By recommendation",
+       "row_header": "Recommendation",
+       "row_tokens": [
+        "use-standard",
+        "refactor-to-standard",
+        "keep-custom",
+        "build-new",
+        "clarify"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Requirements",
+         "formula": "=COUNTIF({rng:Requirements.recommendation},{row})"
+        },
+        {
+         "header": "of which in scope ({x:phase_in_scope})",
+         "formula": "=COUNTIFS({rng:Requirements.recommendation},{row},{rng:Requirements.phase},\"{x:phase_in_scope}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Recommendation per requirement",
+        "status": {
+         "use-standard": "standard",
+         "refactor-to-standard": "rework",
+         "build-new": "rebuild",
+         "clarify": "assumption",
+         "keep-custom": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "today_target",
+       "title": "Today x target standard",
+       "row_header": "Today (current shop)",
+       "row_tokens": [
+        "custom",
+        "standard-in-use",
+        "partial",
+        "none"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Target standard {L:full}",
+         "formula": "=COUNTIFS({rng:Requirements.today},{row},{rng:Requirements.target_standard},\"{L:full}\")"
+        },
+        {
+         "header": "Target standard {L:partial}",
+         "formula": "=COUNTIFS({rng:Requirements.today},{row},{rng:Requirements.target_standard},\"{L:partial}\")"
+        },
+        {
+         "header": "Target standard {L:none}",
+         "formula": "=COUNTIFS({rng:Requirements.today},{row},{rng:Requirements.target_standard},\"{L:none}\")"
+        }
+       ],
+       "chart": {
+        "type": "stacked",
+        "columns": [
+         1,
+         2,
+         3
+        ],
+        "title": "Today x target standard",
+        "status": {
+         "Target standard full": "standard",
+         "Target standard partial": "rework",
+         "Target standard none": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "by_verdict",
+       "title": "By coverage",
+       "row_header": "Coverage",
+       "row_tokens": [
+        "covered-standard",
+        "covered-custom",
+        "partial",
+        "gap"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Requirements",
+         "formula": "=COUNTIF({rng:Requirements.verdict},{row})"
+        },
+        {
+         "header": "Standard alternative available",
+         "formula": "=COUNTIFS({rng:Requirements.verdict},{row},{rng:Requirements.flag},\"{L:true}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Coverage",
+        "status": {
+         "covered-standard": "standard",
+         "covered-custom": "neutral",
+         "partial": "rework",
+         "gap": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "fe_ready",
+       "title": "Frontend readiness per requirement",
+       "row_header": "Frontend readiness",
+       "row_tokens": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign",
+        "_no_frontend"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Requirements",
+         "formula": "=COUNTIF({rng:Requirements.fe_ready},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Frontend readiness",
+        "status": {
+         "ready": "standard",
+         "needs-api-work": "rework",
+         "needs-redesign": "rebuild",
+         "_no_frontend": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "By phase",
+       "row_header": "Phase",
+       "row_values_from": "coverage.phase",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Requirements",
+         "formula": "=COUNTIF({rng:Requirements.phase},{row})"
+        },
+        {
+         "header": "{L:use-standard}",
+         "formula": "=COUNTIFS({rng:Requirements.phase},{row},{rng:Requirements.recommendation},\"{L:use-standard}\")"
+        },
+        {
+         "header": "{L:refactor-to-standard}",
+         "formula": "=COUNTIFS({rng:Requirements.phase},{row},{rng:Requirements.recommendation},\"{L:refactor-to-standard}\")"
+        },
+        {
+         "header": "{L:keep-custom}",
+         "formula": "=COUNTIFS({rng:Requirements.phase},{row},{rng:Requirements.recommendation},\"{L:keep-custom}\")"
+        },
+        {
+         "header": "{L:build-new}",
+         "formula": "=COUNTIFS({rng:Requirements.phase},{row},{rng:Requirements.recommendation},\"{L:build-new}\")"
+        },
+        {
+         "header": "{L:clarify}",
+         "formula": "=COUNTIFS({rng:Requirements.phase},{row},{rng:Requirements.recommendation},\"{L:clarify}\")"
+        }
+       ],
+       "chart": {
+        "type": "stacked",
+        "columns": [
+         2,
+         3,
+         4,
+         5,
+         6
+        ],
+        "title": "Recommendation by phase",
+        "status": {
+         "use standard": "standard",
+         "refactor to standard": "rework",
+         "keep custom": "neutral",
+         "build new": "rebuild",
+         "pending confirmation": "assumption"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "By epic",
+       "row_header": "Epic",
+       "row_values_from": "coverage.epic",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Requirements",
+         "formula": "=COUNTIF({rng:Requirements.epic},{row})"
+        },
+        {
+         "header": "{L:use-standard}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.recommendation},\"{L:use-standard}\")"
+        },
+        {
+         "header": "{L:refactor-to-standard}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.recommendation},\"{L:refactor-to-standard}\")"
+        },
+        {
+         "header": "{L:keep-custom}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.recommendation},\"{L:keep-custom}\")"
+        },
+        {
+         "header": "{L:build-new}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.recommendation},\"{L:build-new}\")"
+        },
+        {
+         "header": "{L:clarify}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.recommendation},\"{L:clarify}\")"
+        }
+       ],
+       "chart": false
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Source_abbreviations",
+     "dataset": "req_sources",
+     "tab": "reference",
+     "readme": "The source abbreviations of the requirement list (column 'Sources (client list)') with the document they stand for - from the legend of the requirement list",
+     "columns": [
+      {
+       "header": "Abbreviation",
+       "field": "abbreviation",
+       "width": 12
+      },
+      {
+       "header": "Document",
+       "field": "document",
+       "wrap": true,
+       "width": 90
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Claims",
+     "scopes": "D3",
+     "readme": "All statements with reviewer scores (full edition only)"
+    }
+   ]
+  },
+  "D4": {
+   "title": "D4 Target readiness and migration tasks",
+   "requires": [
+    "d4"
+   ],
+   "purpose": "Module 4, the development team's workbook: per user-facing feature - assigned to the requirement it serves - the readiness verdict with key statement, coverage by the standard {target.api_name}, custom API work needed, content and state dependency; the {target.content_model_name}s in use and their support in {target.frontend}; the interfaces to external systems with target impact and operator; and the overarching migration tasks (impact, rank, sequence, dependencies) a migration plan is built from.",
+   "sources": "analysis/consolidated/D4.md",
+   "sources_client": "Code analysis of the repository snapshot, merged across all {unit.noun_plural}; vendor documentation",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "KPIs (formulas), assessment and charts",
+     "kpis": [
+      {
+       "id": "features",
+       "label": "User-facing features",
+       "formula": "=COUNTA({rng:Frontend_features.feature_id})",
+       "note": "exactly one primary requirement per feature (sheet Frontend_features)"
+      },
+      {
+       "id": "ready",
+       "label": "{L:ready}",
+       "formula": "=COUNTIF({rng:Frontend_features.verdict_assessed},\"{L:ready}\")",
+       "note": "the standard {target.api_name} covers the feature, {target.frontend} can show it without backend work"
+      },
+      {
+       "id": "api_work",
+       "label": "{L:needs-api-work}",
+       "formula": "=COUNTIF({rng:Frontend_features.verdict_assessed},\"{L:needs-api-work}\")",
+       "note": "own or extended API endpoints needed, business logic stays"
+      },
+      {
+       "id": "redesign",
+       "label": "{L:needs-redesign}",
+       "formula": "=COUNTIF({rng:Frontend_features.verdict_assessed},\"{L:needs-redesign}\")",
+       "note": "feature not portable as is (server-side state, template logic)"
+      },
+      {
+       "id": "tasks_blocker",
+       "label": "Migration tasks {L:blocker|impact}",
+       "formula": "=COUNTIF({rng:Migration_tasks.impact},\"{L:blocker|impact}\")",
+       "note": "nothing goes live without this task (sheet Migration_tasks, rank 1 first)"
+      },
+      {
+       "id": "tasks_major",
+       "label": "Migration tasks {L:major|impact}",
+       "formula": "=COUNTIF({rng:Migration_tasks.impact},\"{L:major|impact}\")",
+       "note": "sheet Migration_tasks - impact"
+      },
+      {
+       "id": "tasks_minor",
+       "label": "Migration tasks {L:minor|impact}",
+       "formula": "=COUNTIF({rng:Migration_tasks.impact},\"{L:minor|impact}\")",
+       "note": "sheet Migration_tasks - impact"
+      },
+      {
+       "id": "tasks_before",
+       "label": "Tasks {L:before|seq}",
+       "formula": "=COUNTIF({rng:Migration_tasks.sequence},\"{L:before|seq}\")",
+       "note": "prerequisites of the storefront rebuild"
+      },
+      {
+       "id": "cc_custom",
+       "label": "Custom content component types",
+       "formula": "=COUNTIF({rng:Content_components.kind},\"{L:custom}\")",
+       "note": "need own frontend components in {target.frontend}"
+      },
+      {
+       "id": "cc_unsupported",
+       "label": "Content components '{L:unsupported}'",
+       "formula": "=COUNTIF({rng:Content_components.target_support},\"{L:unsupported}\")",
+       "note": "no counterpart in {target.frontend}"
+      },
+      {
+       "id": "interfaces",
+       "label": "Interfaces to external systems",
+       "formula": "=COUNTA({rng:Integrations.system})",
+       "note": "sheet Integrations (per system and direction)"
+      },
+      {
+       "id": "if_custom",
+       "label": "of which custom implementation",
+       "formula": "=COUNTIF({rng:Integrations.implementation},\"{L:custom|impl}\")",
+       "note": "implementation = {L:custom|impl}"
+      },
+      {
+       "id": "if_changed",
+       "label": "Interfaces the storefront move rewires or rebuilds",
+       "formula": "=COUNTIF({rng:Integrations.target_impact},\"{L:frontend-rewire}\")+COUNTIF({rng:Integrations.target_impact},\"{L:rebuild}\")",
+       "note": "target impact = {L:frontend-rewire} or {L:rebuild}"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "tasks_blocker",
+       "status": "rebuild",
+       "label": "tasks {L:blocker|impact}"
+      },
+      {
+       "kpi": "redesign",
+       "status": "rebuild",
+       "label": "features {L:needs-redesign}"
+      },
+      {
+       "kpi": "api_work",
+       "status": "rework",
+       "label": "features {L:needs-api-work}"
+      },
+      {
+       "kpi": "ready",
+       "status": "standard",
+       "label": "features {L:ready}"
+      },
+      {
+       "kpi": "if_changed",
+       "status": "rework",
+       "label": "interfaces to rewire/rebuild"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "tasks_impact",
+       "title": "Migration tasks by impact"
+      },
+      {
+       "type": "bar",
+       "block": "verdict",
+       "title": "Features by verdict"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Frontend_features",
+     "dataset": "features",
+     "row_key": "feature_id",
+     "readme": "One row per user-facing feature, sorted by primary requirement: verdict with key statement and basis, {target.api_name} coverage, custom API needed; collapsed: today's implementation, target API detail, evidence",
+     "columns": [
+      {
+       "header": "Feature ID",
+       "field": "feature_id",
+       "width": 10,
+       "id": "feature_id"
+      },
+      {
+       "header": "Feature",
+       "field": "feature",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Primary requirement",
+       "field": "primary_requirement",
+       "width": 14,
+       "id": "primary_requirement"
+      },
+      {
+       "header": "Verdict",
+       "field": "verdict",
+       "label": true,
+       "validation": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "ready": "standard",
+        "needs-api-work": "rework",
+        "needs-redesign": "rebuild"
+       },
+       "width": 16,
+       "id": "verdict_assessed"
+      },
+      {
+       "header": "Key statement",
+       "field": "key_statement",
+       "wrap": true,
+       "width": 46
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 20
+      },
+      {
+       "header": "{target.api_name} standard coverage",
+       "field": "target_api_coverage",
+       "label": true,
+       "width": 14,
+       "id": "target_api_coverage"
+      },
+      {
+       "header": "Custom API needed (what)",
+       "field": "custom_api_needed",
+       "wrap": true,
+       "width": 36,
+       "id": "custom_api_needed"
+      },
+      {
+       "header": "Rationale",
+       "field": "rationale",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "today"
+      },
+      {
+       "header": "Today's implementation",
+       "field": "current_implementation",
+       "width": 50,
+       "emphasis": "support",
+       "group": "today"
+      },
+      {
+       "header": "Entry points",
+       "field": "entry_points",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "today"
+      },
+      {
+       "header": "Standard endpoints",
+       "field": "target_api_endpoints",
+       "sep": ", ",
+       "width": 40,
+       "emphasis": "support",
+       "group": "target"
+      },
+      {
+       "header": "Custom API exists",
+       "field": "custom_api_exists",
+       "label": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "target",
+       "id": "custom_api_exists"
+      },
+      {
+       "header": "Content dependency",
+       "field": "content_dependency",
+       "label": true,
+       "width": 16,
+       "emphasis": "support",
+       "group": "target",
+       "id": "content_dependency"
+      },
+      {
+       "header": "Content components",
+       "field": "content_components",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "target"
+      },
+      {
+       "header": "State dependency",
+       "field": "state_dependency",
+       "label": true,
+       "width": 16,
+       "emphasis": "support",
+       "group": "target",
+       "id": "state_dependency"
+      },
+      {
+       "header": "Further requirements",
+       "field": "related_requirements",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "target"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Verdict (formula)",
+       "id": "verdict_formula",
+       "formula": "=IF(OR({cell:state_dependency}=\"{L:server-side-view-state}\",AND({cell:target_api_coverage}=\"{L:none}\",{cell:content_dependency}=\"{L:custom-components}\")),\"{L:needs-redesign}\",IF(AND({cell:target_api_coverage}=\"{L:full}\",{cell:content_dependency}<>\"{L:custom-components}\",{cell:custom_api_needed}=\"\"),\"{L:ready}\",\"{L:needs-api-work}\"))",
+       "width": 14,
+       "internal": true
+      },
+      {
+       "header": "Check",
+       "id": "check",
+       "formula": "=IF({cell:verdict_formula}={cell:verdict_assessed},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Content_components",
+     "dataset": "content_components",
+     "row_key": "component_type",
+     "readme": "Content component types in use, {L:standard} or {L:custom}, with their support in {target.frontend}; '{L:not-counted}' = usages were not counted",
+     "columns": [
+      {
+       "header": "Component type",
+       "field": "component_type",
+       "width": 40
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "width": 12,
+       "id": "kind"
+      },
+      {
+       "header": "Support in {target.frontend}",
+       "field": "target_support",
+       "label": true,
+       "validation": [
+        "supported",
+        "needs-custom-mapping",
+        "unsupported",
+        "unknown"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "supported": "standard",
+        "needs-custom-mapping": "rework",
+        "unsupported": "rebuild",
+        "unknown": "neutral"
+       },
+       "width": 24,
+       "id": "target_support"
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27,
+       "grundlage_from": [
+        "evidence",
+        "notes"
+       ]
+      },
+      {
+       "header": "Usages",
+       "field": "usages",
+       "label": true,
+       "width": 14
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 30
+      },
+      {
+       "header": "Notes",
+       "field": "notes",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Integrations",
+     "dataset": "integrations",
+     "row_key": "system",
+     "readme": "The shop's interfaces to external systems (ERP, identity provider, middleware, search, procurement, file exchange): target impact, operator and responsibility in the target, mechanism and implementation",
+     "columns": [
+      {
+       "header": "System",
+       "field": "system",
+       "width": 26,
+       "id": "system"
+      },
+      {
+       "header": "Direction",
+       "field": "direction",
+       "label": true,
+       "label_ctx": "dir",
+       "width": 10
+      },
+      {
+       "header": "Target impact",
+       "field": "target_impact",
+       "label": true,
+       "validation": [
+        "unchanged",
+        "replace-by-standard",
+        "frontend-rewire",
+        "rebuild",
+        "retire"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "unchanged": "standard",
+        "replace-by-standard": "standard",
+        "frontend-rewire": "rework",
+        "rebuild": "rebuild",
+        "retire": "neutral"
+       },
+       "width": 20,
+       "id": "target_impact"
+      },
+      {
+       "header": "Operator / responsibility in the target",
+       "field": "operator",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Target note",
+       "field": "target_note",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Purpose",
+       "field": "purpose",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Mechanism",
+       "field": "mechanism",
+       "label": true,
+       "label_ctx": "mech",
+       "width": 18
+      },
+      {
+       "header": "Implementation",
+       "field": "implementation",
+       "label": true,
+       "label_ctx": "impl",
+       "width": 12,
+       "id": "implementation"
+      },
+      {
+       "header": "Data objects",
+       "field": "data_objects",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Trigger",
+       "field": "trigger",
+       "label": true,
+       "label_ctx": "trig",
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Requirements",
+       "field": "related_requirements",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Migration_tasks",
+     "dataset": "migration_tasks",
+     "row_key": "id",
+     "readme": "Overarching migration tasks for the migration plan, sorted by impact ({L:blocker|impact} -> {L:minor|impact}) and rank within the impact: task, dependencies, sequence, finding; collapsed: affected requirements and evidence. Rank = order within the impact class (tasks others depend on first, then sequence and the number of affected requirements). Deployment configuration refers to repository artefacts only; infrastructure operated by the platform vendor is out of scope of this analysis",
+     "columns": [
+      {
+       "header": "Task ID",
+       "field": "id",
+       "width": 10,
+       "id": "id"
+      },
+      {
+       "header": "Topic",
+       "field": "topic",
+       "label": true,
+       "label_ctx": "topic",
+       "width": 18,
+       "id": "topic"
+      },
+      {
+       "header": "Impact",
+       "field": "impact",
+       "label": true,
+       "label_ctx": "impact",
+       "validation": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "standard"
+       },
+       "width": 12,
+       "id": "impact"
+      },
+      {
+       "header": "Rank",
+       "field": "rank",
+       "width": 7
+      },
+      {
+       "header": "Task",
+       "field": "task",
+       "wrap": true,
+       "width": 56
+      },
+      {
+       "header": "Depends on",
+       "field": "depends_on",
+       "label": true,
+       "label_ctx": "dep",
+       "sep": ", ",
+       "width": 16
+      },
+      {
+       "header": "Sequence",
+       "field": "sequence",
+       "label": true,
+       "label_ctx": "seq",
+       "validation": [
+        "before",
+        "during",
+        "after"
+       ],
+       "width": 22,
+       "id": "sequence"
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Finding",
+       "field": "finding",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Affected requirements",
+       "field": "affected_requirements",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail",
+       "id": "affected_requirements"
+      },
+      {
+       "header": "Number of affected requirements",
+       "id": "n_affected",
+       "formula": "=IF({cell:affected_requirements}=\"\",0,LEN({cell:affected_requirements})-LEN(SUBSTITUTE({cell:affected_requirements},\",\",\"\"))+1)",
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Overview",
+     "title": "Target readiness (formulas over Frontend_features / Content_components / Migration_tasks / Integrations)",
+     "readme": "Formula-based distribution of verdicts, content support, tasks and interfaces",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "verdict",
+       "title": "Verdict",
+       "row_header": "Verdict",
+       "row_tokens": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Features",
+         "formula": "=COUNTIF({rng:Frontend_features.verdict_assessed},{row})"
+        },
+        {
+         "header": "of which custom API exists",
+         "formula": "=COUNTIFS({rng:Frontend_features.verdict_assessed},{row},{rng:Frontend_features.custom_api_exists},\"{L:true}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Features by verdict",
+        "status": {
+         "ready": "standard",
+         "needs-api-work": "rework",
+         "needs-redesign": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "content",
+       "title": "Content components",
+       "row_header": "Support in {target.frontend}",
+       "row_tokens": [
+        "supported",
+        "needs-custom-mapping",
+        "unsupported",
+        "unknown"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Component types",
+         "formula": "=COUNTIF({rng:Content_components.target_support},{row})"
+        },
+        {
+         "header": "of which {L:custom}",
+         "formula": "=COUNTIFS({rng:Content_components.target_support},{row},{rng:Content_components.kind},\"{L:custom}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Content components",
+        "status": {
+         "supported": "standard",
+         "needs-custom-mapping": "rework",
+         "unsupported": "rebuild",
+         "unknown": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "tasks_impact",
+       "title": "Migration tasks by impact",
+       "row_header": "Impact",
+       "row_tokens": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "label_ctx": "impact",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Tasks",
+         "formula": "=COUNTIF({rng:Migration_tasks.impact},{row})"
+        },
+        {
+         "header": "of which {L:before|seq}",
+         "formula": "=COUNTIFS({rng:Migration_tasks.impact},{row},{rng:Migration_tasks.sequence},\"{L:before|seq}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Migration tasks by impact",
+        "status": {
+         "blocker": "rebuild",
+         "major": "rework",
+         "minor": "standard"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "tasks_seq",
+       "title": "Migration tasks by sequence",
+       "row_header": "Sequence",
+       "row_tokens": [
+        "before",
+        "during",
+        "after"
+       ],
+       "label_ctx": "seq",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Tasks",
+         "formula": "=COUNTIF({rng:Migration_tasks.sequence},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Migration tasks by sequence"
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "interfaces",
+       "title": "Interfaces by target impact",
+       "row_header": "Target impact",
+       "row_tokens": [
+        "unchanged",
+        "replace-by-standard",
+        "frontend-rewire",
+        "rebuild",
+        "retire"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Interfaces",
+         "formula": "=COUNTIF({rng:Integrations.target_impact},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Interfaces by target impact",
+        "status": {
+         "unchanged": "standard",
+         "replace-by-standard": "standard",
+         "frontend-rewire": "rework",
+         "rebuild": "rebuild",
+         "retire": "neutral"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Claims",
+     "scopes": "D4",
+     "readme": "All statements with reviewer scores (full edition only)"
+    }
+   ]
+  }
+ },
+ "common": {
+  "readme": {
+   "glossary_text": "{unit.noun} = deployable module of the shop code. {target.api_name} = standard API of the target platform, base of the target storefront. {target.content_model_name} = configurable page building block. Service override = a standard component replaced by an own implementation. Shadowing = an own class with the same name and namespace overlays the standard class (high upgrade risk). Data script = import, migration or master-data script. Workflow = configured process (e.g. order processing). Clean core = {unit.noun} without patches of standard behaviour. Cleaned LOC = maintained code lines of loaded {unit.noun_plural} without tests, generated code, template copies, configuration and data scripts. Customer-facing = {unit.noun_plural} of the categories frontend and API. Key statement = one sentence on what the result means for {engagement.client}. Rank = order of a migration task within its impact class. Sources (client list) = abbreviations of the documents a requirement rests on (resolved on the sheet Source_abbreviations)."
+  }
+ }
+}

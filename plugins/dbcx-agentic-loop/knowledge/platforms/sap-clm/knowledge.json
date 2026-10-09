@@ -1,0 +1,87 @@
+{
+  "_readme": [
+    "SAP Customer Loyalty Management pack knowledge. Target-only SaaS: no unit lists, no deprecation regexes (nothing to scan).",
+    "target_api_endpoint_families: the four REST APIs of the Business Accelerator Hub package plus the few paths the help portal documents verbatim. Operation-level paths of the four APIs are NOT listed - the OpenAPI specifications need an SAP login and were not read; take them from api.sap.com before quoting.",
+    "target_content_component_types: CLM ships no CMS and no member UI; the list names the CLM objects that carry member-visible content and then the member-facing components a project builds itself.",
+    "target_capability_map status values: standard = documented feature usable as is; config = documented, needs configuration in the admin UI; integration = documented capability that needs a custom integration from the source system; custom = not documented, must be built outside CLM or is a gap. Every row cites the reference-cache section that verifies it."
+  ],
+  "target_api_endpoint_families": [
+    "Checkout Connect (REST, 1.0.0-beta): retrieve available promotions and discount codes during checkout, settle offer redemptions in the transaction, submit basket details for post-sales loyalty processing - the documented earn/burn path for POS and eCommerce",
+    "Wallet Connect (REST, 1.0.0-beta): wallets and identity, clubs, benefits, cards - for digital channels, marketing automation and customer service",
+    "Backend Services (REST, 1.0.0-beta): wallet processes, card adjustments, club management, engagement triggers - for decisioning, data and operational systems",
+    "Data Products (REST, 1.0.0-beta): master data import, resource access, transaction processing",
+    "Data Products transaction exports: GET /admin/dataproducts/v1/workspaces/{workspaceId}/exports/runs/{runId}, POST .../exports/runs/{runId}/download, GET .../exports/jobs/{jobId}/runs/latest (compressed CSV + JSON manifest, SAP-managed storage)",
+    "Wallet deletion: DELETE /workspaces/{workspaceId}/wallets/{walletId} (customer-run deletion after retention; CLM deletes no personal data itself)",
+    "S/4HANA Cloud Private Edition master data replication (inbound, DRF over RFC destination): /central/v1/sap/products/replication (CIC_PROD), /central/v1/sap/retailProductRegularSalesPrices/replication (CIC_SLSPRC), /central/v1/sap/plants/replication (CIC_PLANT), /central/v1/sap/merchandiseCategoryHierarchyNodes/replication (CIC_MCH)",
+    "Authentication: OAuth 2.0 client credentials via SAP Cloud Identity Services app-to-app (consumer application under the clm-sci-instance parent, dependency public_api); machine-to-machine only, HTTPS 443",
+    "Events / webhooks: none documented (the Business Accelerator Hub product has one content package with REST APIs only) *(verify)*"
+  ],
+  "target_content_component_types": [
+    "NO CMS and NO member-facing UI shipped - CLM's UI is an administration application for business users, specialists and service agents",
+    "CLM object with member-visible content: reward / point exchange offer (name, media asset, description, points, issuer) in the regional rewards bank",
+    "CLM object with member-visible content: promotion (discount, points offer, personal discount code) and journey (call to action, media asset)",
+    "CLM object with member-visible content: club and brand (name, logo), communication topics for opt-in",
+    "custom storefront component: enrolment and consent capture (terms of service, privacy) bound to the wallet",
+    "custom storefront component: points balance (current, available, pending), tier status and history",
+    "custom storefront component: rewards catalogue and redemption (point exchange to discount code)",
+    "custom storefront component: offers in the wallet and code application at checkout",
+    "custom storefront component: pay with points in checkout (minimum and block rules)",
+    "custom storefront component: group wallet management (only if group pooling is used)",
+    "service channel: SAP Service Cloud V2 HTML mashup of the CLM wallet lookup (documented)"
+  ],
+  "target_capability_map": [
+    {"capability": "Loyalty program, one main membership club per workspace, every customer a member", "status": "standard", "cache": "3"},
+    {"capability": "Additional clubs with own points/tier program (earn only, no spend)", "status": "config", "cache": "3"},
+    {"capability": "Multi-brand: loyalty program owner, member brands (sales organisation id), partner brands (business partner id), booking and redemption rates", "status": "config", "cache": "4"},
+    {"capability": "Points earning: base earn rate per currency unit of the member brand, rounding incl. fractions", "status": "config", "cache": "4"},
+    {"capability": "Points earning from orders: basket submission from POS/eCommerce through Checkout Connect", "status": "integration", "cache": "7"},
+    {"capability": "Points earning from ERP invoices / deliveries / distributor sell-through data", "status": "custom", "cache": "7"},
+    {"capability": "Pending points via 'Postponed' spending (fixed number of days, main program only)", "status": "config", "cache": "4"},
+    {"capability": "Points expiry (monthly after N months, or never)", "status": "config", "cache": "4"},
+    {"capability": "Returns / cancellations / credit notes reversing earned points", "status": "custom", "cache": "6"},
+    {"capability": "Earning, spending, gifting and goodwill limits", "status": "config", "cache": "4"},
+    {"capability": "Goodwill points (add in UI, remove via API)", "status": "standard", "cache": "4"},
+    {"capability": "Point transfer between members (API, atomic validation)", "status": "integration", "cache": "4"},
+    {"capability": "Pay with points at checkout (main program, minimum and blocks)", "status": "integration", "cache": "4"},
+    {"capability": "Tiers with status points; evaluation by thresholds and periodic staff evaluation; status points from journeys", "status": "config", "cache": "4"},
+    {"capability": "Automatic tier qualification / requalification periods", "status": "custom", "cache": "4"},
+    {"capability": "Rewards bank per region, rewards issued as discount codes, tier-specific point prices", "status": "config", "cache": "4"},
+    {"capability": "Physical premium catalogue with fulfilment", "status": "custom", "cache": "4"},
+    {"capability": "Promotions with approval, budget, funding, targeting by individual, segment or tier", "status": "config", "cache": "5"},
+    {"capability": "Personal discount codes with workspace code formats", "status": "config", "cache": "5"},
+    {"capability": "Journeys (brand and partner interactions, bonus or tier status points)", "status": "config", "cache": "5"},
+    {"capability": "Customer segments (bulk ingestion from a data platform or manual)", "status": "integration", "cache": "5"},
+    {"capability": "Consent and communication preference tracking (texts and messaging outside CLM)", "status": "integration", "cache": "5"},
+    {"capability": "Customer communication (email, SMS, push)", "status": "custom", "cache": "5"},
+    {"capability": "Group wallet pooling points of persons (one group per member)", "status": "standard", "cache": "3"},
+    {"capability": "Company / account-level wallet, organisation hierarchy, purchaser vs beneficiary", "status": "custom", "cache": "3"},
+    {"capability": "Receipt / purchase claim upload and validation", "status": "custom", "cache": "7"},
+    {"capability": "Append-only double-entry ledger with book types, liabilities dashboard, transaction exports (CSV, daily or manual)", "status": "standard", "cache": "6"},
+    {"capability": "Financial posting / accruals into SAP S/4HANA", "status": "custom", "cache": "6, 7"},
+    {"capability": "Master data from SAP S/4HANA Cloud Private Edition (products, prices, plants, product groups)", "status": "config", "cache": "7"},
+    {"capability": "Service agent wallet view in SAP Service Cloud V2 (mashup)", "status": "config", "cache": "7"},
+    {"capability": "SAP Commerce Cloud / composable storefront integration and member UI", "status": "custom", "cache": "7"},
+    {"capability": "SAP Customer Data Cloud identity linkage, SAP Customer Data Platform, SAP Emarsys integration", "status": "custom", "cache": "7"},
+    {"capability": "Analytics share to SAP Business Data Cloud", "status": "integration", "cache": "6"}
+  ],
+  "target_documented_integrations": [
+    "SAP S/4HANA Cloud Private Edition -> CLM: master data only (products, regular sales prices, plants as stores, merchandise category hierarchy as product groups); DRF replication over an HTTP RFC destination with OAuth profile CIC_OAUTH_PROFILE; accepted with HTTP 202, ingested on a system-controlled schedule, invalid records excluded",
+    "SAP Service Cloud Version 2: HTML mashup of the CLM wallet lookup; agents need the CLM role Service Agent and registration in the CLM identity authentication service",
+    "SAP Business Data Cloud: transaction data can be shared for analytics (no setup documented) *(verify)*",
+    "NOT documented (2026-10-05): SAP Commerce Cloud, composable storefront, SAP Customer Data Cloud, SAP Customer Data Platform, SAP Emarsys, SAP Integration Suite content, financial posting into SAP S/4HANA"
+  ],
+  "target_limits": [
+    "two workspaces per subscription; consumption metered across workspaces",
+    "one wallet per customer per workspace; a member belongs to at most one group wallet and owns at most one",
+    "personal discount code length 20-30 characters, prefix and suffix at most 4 characters, format not editable after save",
+    "workspace name 2-50 characters; workspace image up to 5 MB; brand and club logos below 2 MB",
+    "export download URLs expire after 60 seconds by default",
+    "API rate limits, payload limits and wallet volumes: not published *(verify)*"
+  ],
+  "_stamp": {
+    "date": "2026-10-05",
+    "product_state": "SAP Customer Loyalty Management cloud, help.sap.com version SHIP; APIs 1.0.0-beta (api.sap.com, modified 2026-09); composable storefront licensed release 221121.18.0 checked for loyalty libraries",
+    "refresh_with": "dbcx render brief research --out (researcher) - re-read the What's New Viewer and the api.sap.com package first",
+    "verify_first": "B2B wallet type availability, the operation-level API specifications (earn from orders, returns/reversals, idempotency keys), events/webhooks, financial posting to SAP S/4HANA, SAP Commerce Cloud / Customer Data Cloud / Emarsys integration status, price metric and API limits"
+  }
+}

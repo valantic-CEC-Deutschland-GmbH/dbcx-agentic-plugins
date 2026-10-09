@@ -1,0 +1,16 @@
+{
+  "name": "cx-reference",
+  "display": "CX / Commerce Reference Architecture",
+  "kind": "reference-architecture",
+  "roles": [
+    "reference_architecture"
+  ],
+  "_readme": "Vendor-neutral reference architecture for commerce and customer-experience landscapes: capability map, single-source-of-truth placement per data domain, integration styles, anti-patterns and target-architecture option patterns with their prerequisites. Hand-written from consulting practice, not from a product document; every row is reference guidance to be confirmed against the client's own systems and interfaces before it appears in a deliverable.",
+  "snippets": {
+    "reference_persona": "enterprise architect who has designed commerce and customer-experience landscapes across ERP, PIM, CRM, CMS, OMS and iPaaS and judges a landscape by where the single source of truth sits",
+    "reference_focus": "SSOT placement per data domain (which system may write an attribute, which only reads it), the integration style per interface and whether it fits the volume and latency it carries, capability coverage and the gaps between the capability map and the client's systems, duplicate mastership of one domain, point-to-point sprawl, whether the shop has quietly become a system of record for product, customer or order data, and whether a proposed target architecture states its organisational and technical prerequisites instead of assuming them",
+    "docs_domains": ""
+  },
+  "research_seed": "research-seed.md",
+  "reference_cache": "reference-cache.md"
+}

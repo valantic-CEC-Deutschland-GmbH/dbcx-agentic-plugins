@@ -1,0 +1,83 @@
+{
+  "name": "spryker",
+  "display": "Spryker Commerce OS",
+  "kind": "platform",
+  "roles": [
+    "source",
+    "target"
+  ],
+  "_readme": "Spryker Commerce OS as SOURCE (project code under src/Pyz over vendor/spryker*, Yves/Zed/Glue/Client/Shared/Service layers) and as TARGET (Glue API storefront/backend, Yves or a custom headless frontend). The as_source shape, override semantics, entry points and knowledge hints come from the platform's module conventions; the platform facts in research-seed.md are hypotheses until verified with a docs.spryker.com URL and a date. No adapter.py yet.",
+  "as_source": {
+    "platform": "Spryker Commerce OS",
+    "language_stack": "PHP 8.x / Symfony components; PostgreSQL or MySQL, Redis, Elasticsearch; layers Yves (storefront), Zed (back office and business logic), Glue (API), Client, Shared, Service",
+    "default_frontend": "Yves (Twig, Oryx/ShopUi component structure) from the B2B/B2C demo shops",
+    "unit": {
+      "noun": "Module",
+      "noun_plural": "Modules",
+      "manifest_file": "composer.json",
+      "repo_roots": [
+        "src/Pyz"
+      ],
+      "standard_dirs": [
+        "vendor/spryker",
+        "vendor/spryker-shop",
+        "vendor/spryker-eco"
+      ],
+      "categories": [
+        "frontend",
+        "api",
+        "plugin",
+        "admin",
+        "integration",
+        "facade",
+        "core",
+        "data",
+        "test",
+        "other"
+      ],
+      "unit_grouping_note": "Project modules under src/Pyz/<Layer>/<Module> usually have NO own composer.json, so manifest_file is only a fallback: one unit = one module NAME, merging its src/Pyz/{Zed,Yves,Glue,Client,Shared,Service}/<Module> folders. Category mapping: Yves -> frontend, Glue -> api, Zed GUI/Backoffice -> admin, *Connector / *Api modules with HTTP clients -> integration, Client and Service -> facade, Zed Business -> core."
+    },
+    "do_not_run": [
+      "vendor/bin/console setup:install (and any setup:* command)",
+      "vendor/bin/console propel:* / propel:install / propel:migrate",
+      "vendor/bin/console data:import",
+      "vendor/bin/console queue:worker:start / scheduler:setup",
+      "docker/sdk up|boot|build (Docker SDK bootstrap)",
+      "npm/yarn run yves|zed (frontend asset build)"
+    ],
+    "snippets": {
+      "version_markers": "composer.lock -> locked versions of spryker/kernel and the spryker/* , spryker-shop/* , spryker-eco/* packages (Spryker versions per MODULE, not one platform version: always name the module whose version you quote); composer.json require constraints are the intent, the lock file is the fact; deploy*.yml (deploy.dev.yml / deploy.prod.yml, Docker SDK) for the image, PHP version, applications and store setup; config/Shared/config_default*.php for the PHP-side configuration baseline; the release-app / product release group a project pins, if documented in the repository. A Spryker project has no single 'platform version' - report the kernel version plus the release group and say that module versions vary.",
+      "active_units_config": "Spryker has NO plugin activation table and no central module registry. A module is effectively active because it is WIRED: its plugins are registered in a *DependencyProvider (Yves, Zed, Glue, Client), its controller is reachable through the router/`config/Yves/routing`, its Zed GUI entry is in `navigation.xml`, or its console command is registered in `src/Pyz/Zed/Console/ConsoleDependencyProvider.php`. A folder under src/Pyz/<Layer>/<Module> whose plugins appear in no dependency provider and whose controllers are unrouted is DEAD code - state the dependency provider you checked. Which applications run at all comes from deploy*.yml (yves, zed, glue, backoffice, backend-gateway) and which stores exist from config/Shared/stores.php; a module that only serves a store or application that is not deployed is dead in practice.",
+      "package_sources": "composer.json require of the project root (spryker/*, spryker-shop/*, spryker-eco/*, third-party), composer.lock for resolved versions, `use Spryker\\...` / `use SprykerShop\\...` / `use SprykerEco\\...` imports across a module's PHP files to derive real module dependencies (project modules have no manifest to read them from), App Composition Platform (ACP) app registrations, and package.json for Yves/Zed frontend dependencies.",
+      "override_mechanisms": "In Spryker, extending the core by subclassing is the NORMAL pattern, so do not over-report it. extended = a `Pyz\\...` class extending or wrapping a Spryker class with the same short name (e.g. Pyz\\Zed\\Product\\Business\\ProductFacade extends Spryker\\Zed\\Product\\Business\\ProductFacade) - this is standard practice, weight it low. overridden = the vendor class is actually REPLACED in the wiring: a *DependencyProvider method returning a Pyz plugin/stack entry instead of the Spryker one, a removed or reordered plugin in a plugin stack, a Pyz factory/facade bound in place of the vendor one, a replaced Twig template at the same path in src/Pyz/Yves/ShopUi/Theme/<theme>, or a config_default.php value that switches a strategy. core-patch = a modified file under vendor/spryker*, or a project class declared inside a `Spryker\\` namespace - highest risk, always name the file. Also note transfer object extension (`*.transfer.xml` adding fields to a core transfer; `strict` mode changes the semantics) and Twig widget replacement (WidgetPlugin registered in place of a core widget).",
+      "schema_sources": "Propel schema: src/Pyz/Zed/<Module>/Persistence/Propel/Schema/*.schema.xml (a new `<table>` = a new table; adding columns to a core table in a project schema file is a schema MERGE, not a new table - say which it is), generated Propel classes under src/Orm/Zed/**; transfer objects: src/Pyz/Shared/<Module>/Transfer/*.transfer.xml (new transfers vs. fields added to a core transfer); Publish & Synchronize storage and search schemas (the *Storage / *Search modules and their Elasticsearch mappings, `_storage` / `_search` Propel tables) - these are derived read models and a frequent source of hidden complexity; Propel migration files under `data/`/`src/Orm` migrations if committed.",
+      "workflow_sources": "OMS state machines: config/Zed/oms/*.xml (per store subfolders) with their states, transitions, commands, conditions and timeouts - plus the Command/Condition plugin classes registered in OmsDependencyProvider; the state machine is the order process and its size is a direct complexity measure (count states and transitions). Also: cronjob definitions (config/Zed/cronjobs/jenkins.php or the scheduler configuration in deploy*.yml), queue adapters and worker configuration (QueueDependencyProvider, RabbitMQ queues), event listeners registered in EventDependencyProvider, and the Publish & Synchronize event triggers.",
+      "data_script_sources": "data/import/** (CSV files and the DataImport module: DataImporter plugins, DataSet step brokers, `data:import` console configuration in DataImportDependencyProvider), demo data shipped under vendor/spryker*/**/data/import (do not count it as project scope), glossary/translation CSVs, `config/Zed/*` seed configuration, and any project console command that writes data. Note whether an importer is idempotent - re-runnable importers are migration assets, one-shot scripts are not.",
+      "read_order": "composer.json + composer.lock, deploy*.yml, config/Shared/config_default*.php and config/Shared/stores.php, then per module: src/Pyz/<Layer>/<Module>/*DependencyProvider.php (the wiring - read this before any implementation class), *.transfer.xml, Persistence/Propel/Schema/*.schema.xml, Glue resource plugins and route plugins, Zed Business (Facade, BusinessFactory, Model/), Yves Controller and Widget classes plus the Twig theme under src/Pyz/Yves/ShopUi/Theme, config/Zed/oms/*.xml, data/import/**, navigation.xml, and tests last (intent only).",
+      "hosting_constraints": "Spryker Cloud Commerce OS (PaaS) or self-hosted, both container-based via the Docker SDK: no persistent local filesystem (media and imports through object storage such as S3), scheduled work through the platform scheduler (Jenkins/cron configured in deploy*.yml), not a hand-written crontab; queue workers run as their own application - anything long-running must be a queue consumer, not an inline request; separate applications (yves, zed, glue, backoffice) mean shared session/state assumptions across them break; image build is part of deployment, so runtime code changes are impossible; outbound access and secrets are environment-managed. Self-hosting means owning PostgreSQL/MySQL, Redis, Elasticsearch, RabbitMQ and the worker fleet.",
+      "api_families_hint": "Glue API (storefront and backend) - see knowledge target_api_endpoint_families"
+    }
+  },
+  "as_target": {
+    "platform": "Spryker Commerce OS",
+    "api_name": "Glue API (Storefront + Backend)",
+    "content_model_name": {
+      "en": "CMS block / page",
+      "de": "CMS-Block / Seite"
+    },
+    "default_frontend": "Yves (Twig, Oryx/ShopUi) from the B2B/B2C demo shop, or a custom headless frontend on the Glue API",
+    "snippets": {
+      "critic2_persona": "senior solution architect who has delivered several Spryker Commerce OS projects, is Spryker-certified, and knows the module catalogue, the release-group model, Glue API coverage and the Marketplace suite in detail - including which capability is a module you install versus a feature you build",
+      "docs_domains": "docs.spryker.com (module and feature documentation, integration guides per feature, Glue API reference, Marketplace suite, migration guides per module, release notes and release groups), github.com/spryker and github.com/spryker-shop (module source and CHANGELOGs - the only reliable place to check what a module version actually contains), spryker.com/en/news and the release-group notes for what a release brings. Always name the MODULE and its version for a feature claim: Spryker versions modules independently, so 'Spryker supports X' without a module name and version is unverifiable.",
+      "best_practice": "wire, do not patch: register project plugins through the *DependencyProvider stacks and keep Pyz classes thin; business logic in Zed behind a Facade (never in a Yves controller or a Glue resource), read models through Publish & Synchronize into Redis/Elasticsearch rather than live Propel queries in the storefront, transfer objects as the only cross-layer data contract; expose every capability that a frontend or a partner needs through a Glue resource so the platform stays headless-capable; keep the OMS state machine as the single source of truth for order state and put side effects into commands/conditions; long-running or external work into queue consumers; never modify anything under vendor/spryker*.",
+      "critic2_focus": "D1: which module and which module version a feature belongs to, plus the release group - never accept a version-less feature claim; deprecated modules and their successors. D2: is the named counterpart a real Spryker module/plugin (name it and its layer) or project code that only looks standard, given that subclassing is the normal pattern. D3: does the module really cover the requirement out of the box, or does it only provide the framework for it (Spryker ships many capabilities as an integration guide plus glue code the project must write) - and does the required frontend exist in the demo shop or must it be built. D4: exact Glue resource names and relationships, whether a resource exists in the Storefront API or only in the Backend API, whether the read model needs a new Publish & Synchronize pipeline, and which CMS/content types the target frontend renders.",
+      "expected_hotspots_d3": "requirements that assume a finished storefront: Spryker ships modules plus demo-shop reference implementations, so out-of-the-box UI breadth is thin and much of the storefront is project work; also personalisation and content authoring depth (CMS is blocks/pages/slots, not a page-builder experience), search merchandising, marketing/campaign tooling, customer self-service breadth, reporting and analytics, tax and compliance specifics, and any capability where the vendor answer is an integration guide rather than a working feature.",
+      "expected_blockers_d4": "build-your-own effort and team size - a Spryker programme needs an experienced PHP/Symfony team plus a dedicated frontend team for 6-12+ months, which is a staffing blocker before it is a technical one; no out-of-the-box storefront breadth (the demo shops are reference implementations, not products); Glue API coverage must be checked resource by resource, and a missing resource means a new resource plugin plus possibly a new Publish & Synchronize read model; separate Yves/Zed/Glue applications break any assumption of shared session state; the OMS state machine must be re-modelled rather than migrated; data migration of customers, orders, product data and custom entities is a first-class workstream; the smaller partner and extension ecosystem means fewer ready-made connectors than on Magento/Shopify.",
+      "content_model_notes": "Spryker's CMS is structural, not a page-builder: CMS Pages and CMS Blocks hold content, CMS Slots (with slot providers declared in the Twig templates) define WHERE a block may appear, and Content Items (banner, abstract product list, product set, file list, navigation) are typed, reusable content records referenced from blocks and pages through Twig content-item widgets. Content is DATA (Zed-maintained, published into Redis/Elasticsearch via Publish & Synchronize) and reaches the storefront as a published read model, so a headless frontend consumes it through Glue/storage rather than rendering Twig. Everything visual on top of that is project code: the Yves theme under ShopUi (atoms/molecules/organisms/templates/views) and Twig widgets. Consequence for a migration: a source system's page-builder layouts have no equivalent to import - they become CMS blocks plus slot placement plus new frontend components, and the authoring experience must be set against the merchant's expectations explicitly.",
+      "api_families_hint": "see knowledge target_api_endpoint_families"
+    }
+  },
+  "knowledge": "knowledge.json",
+  "research_seed": "research-seed.md",
+  "reference_cache": "reference-cache.md"
+}

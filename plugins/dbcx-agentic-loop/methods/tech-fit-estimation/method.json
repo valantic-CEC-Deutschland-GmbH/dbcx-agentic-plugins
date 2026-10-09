@@ -1,0 +1,1218 @@
+{
+ "name": "tech-fit-estimation",
+ "display": "Fit estimation of a requirement list against one or several solution options, or of one solution of several systems",
+ "version": "0.4.0",
+ "description": "Evidence-first fit and effort estimation of a client's requirement list against N solution options in one run (an option = technology x starting point: a brownfield migration and a greenfield rebuild on one platform, or two technologies side by side): per requirement and option the approach (greenfield standard | partial | custom; brownfield keep | adapt | convert-to-standard | rebuild | retire | new), the mechanism with its version, the evidence (vendor sources, handover rows of the code analysis, vendor standard code), a T-shirt size whose person days come from an editable mapping, estimation positions for anything above XXL, and the reading taken for a broad requirement as a client assumption. PM / SA / BA / QA are percentages on top per option, phases no requirement describes are fixed person days on top; every total and cost follows by formula. Unit of analysis = a chunk of the requirement list. rows of three classes - the client's requirements, technical migration rows (TM-nn) and refactoring rows (RF-nn, brownfield only) from a lead-approved classification of the code-analysis handover (`dbcx classify`); per row the integration platform effort in its own T-shirt column and, for a refactoring row, the migration effort it saves; scenario totals (run.json `scenarios`) with fixed phases per scenario; product-owner language (no code locator, class or extension name in any cell); client critic grounds with standard disputes routed to the standard critic. (run.json `systems`): one solution of several systems that add up, some with a shortlist of options that compete (scenarios = one option per system, requires / excludes, dependent systems estimated per parent option), systems estimated by a partner, the client or the team as empty input cells of their owner; an automatic scope step (pre-fill from the list and the interface ends + a triage agent) decides which systems every row touches, analysts estimate one system option each (work packages row x system x option, coverage standard | extension | gap, starting point), an architect agent with the customer's landscape routes every reported gap (overrule, another system of the run, a landscape system outside the run with a client assumption, reduction to the standard), the follow-ups run in the next wave; the workbook carries the client's own sheets with effort columns per system, a long-form estimate per work package with a derived 3-point range, views per system, release, epic and scenario, a completeness check and the open inputs per owner. Dashboard views 'Impact per system' and 'Gap decisions' (optional overrides); nothing waits for the lead.",
+ "knowledge_slots": {
+  "platform": {
+   "kind": "platform",
+   "role": "target",
+   "required": true,
+   "_readme": "the technology of the default option (and the first technology of run.json `options`); `dbcx init run --method tech-fit-estimation --knowledge platform=<pack>`. Further technologies of a comparison are named per option (`options[].pack`) - they are no knowledge slots (common.option_packs). Role `target` so the pack's as_target block lands in {target.*}."
+  },
+  "catalogue": {
+   "kind": "catalogue",
+   "role": "catalogue",
+   "required": false,
+   "_readme": "optional reference requirement catalogue of the system type; used to spot requirements the client list phrases in non-standard vocabulary"
+  }
+ },
+ "defaults": {
+  "target": {
+   "pack": "",
+   "platform": "",
+   "version": "",
+   "plan": "",
+   "frontend": "",
+   "api_name": "platform API",
+   "content_model_name": "content component"
+  },
+  "unit": {
+   "noun": "Requirement",
+   "noun_plural": "Requirements",
+   "chunk_noun": "Epic chunk",
+   "min_chunk": 5,
+   "max_chunk": 25,
+   "light_chunk": 8,
+   "context_budget": 100000,
+   "_readme": "chunk sizes for ONE option; `dbcx discover` divides max_chunk and light_chunk by the number of options (max_chunk at least min_chunk), because every chunk is estimated for every option. context_budget (run.json `systems`): the estimated tokens an agent's working set may take - the rows of a triage chunk and of an analyst chunk (rows, work packages, context rows, BASELINE; characters / 4) take at most half of it; `dbcx impact plan` and `dbcx discover` cut as few chunks as it allows. In system mode a chunk belongs to ONE system option: no division by the number of options, light = at most light_chunk work packages"
+  },
+  "requirements": {
+   "input_glob": "input/requirements/*.xlsx",
+   "mapping": "requirements_mapping.json",
+   "_readme": "decisions (run.json requirements.decisions): {<derived row id>: {\"merge_into\": \"<client id>\" | \"drop\": true, \"basis\": \"A-nn\"}} - the client's decision on a row the code analysis proposed (requirements-set extra.origin code-analysis): no estimation row of its own; a merged row joins the target's BASELINE and shows under it on the requirements sheet, a dropped row is one line of the exclusions. Undecided derived rows are candidates of `dbcx classify` (client-row into one row | drop | keep as its own row). Group keys of a sheet entry in requirements_mapping.json (opt-in): kind: interfaces (columns from / to / via = landscape ids or names of the interface ends; rows estimate by default), estimate: false (reference rows - context for the analysts, never estimation rows), systems_field: <column> (names the affected systems: run system ids or labels, landscape ids, names or aliases; separators , ; / line break), rollup_to_field: <column> (the id the row's effort rolls up to on a passthrough sheet; empty = its own id), passthrough: true (the sheet is carried into the workbook unchanged; needs columns.id). Names resolve against run.json systems (landscape_ids) and state/landscape.json (`dbcx landscape_import`); `dbcx build_excel --check` lists what does not resolve."
+  },
+  "estimation": {
+   "unit": "person day (PD)",
+   "unit_short": {
+    "de": "PT",
+    "en": "PD"
+   },
+   "currency": "EUR",
+   "day_rate": 1200,
+   "sizes": [
+    "0",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL"
+   ],
+   "tshirt_map": {
+    "0": 0,
+    "XS": 0.5,
+    "S": 1,
+    "M": 2,
+    "L": 5,
+    "XL": 10,
+    "XXL": 20
+   },
+   "size_status": {
+    "XXL": "rebuild",
+    "XL": "rework"
+   },
+   "size_term": {
+    "en": "T-shirt",
+    "de": "T-Shirt"
+   },
+   "size_column": {
+    "en": "T-Shirt",
+    "de": "T-Shirt"
+   },
+   "sprint_limit_pd": 20,
+   "surcharges": [
+    {
+     "role": "PM",
+     "pct": 15
+    },
+    {
+     "role": "SA",
+     "pct": 10
+    },
+    {
+     "role": "BA",
+     "pct": 10
+    },
+    {
+     "role": "QA",
+     "pct": 20
+    }
+   ],
+   "approaches": {
+    "greenfield": [
+     "standard",
+     "partial",
+     "custom"
+    ],
+    "brownfield": [
+     "keep",
+     "adapt",
+     "convert-to-standard",
+     "rebuild",
+     "retire",
+     "new"
+    ]
+   },
+   "lookup": {
+    "max_classes": 5,
+    "max_layers": 3,
+    "max_extra_extensions": 2,
+    "critic_sample": 3
+   },
+   "scenarios_max_auto": 6,
+   "range_factors": {
+    "high": {
+     "min": 0.9,
+     "max": 1.25
+    },
+    "medium": {
+     "min": 0.8,
+     "max": 1.5
+    },
+    "low": {
+     "min": 0.7,
+     "max": 2.0
+    }
+   },
+   "_readme": "sizes are labels of the scale `sizes` (smallest first; default the T-shirt sizes 0 ... XXL), person days by lookup against tshirt_map (the Parameter sheet table, editable). The scale is configurable per run or engagement: any number of labels, numeric labels in canonical form ('0.25', '8' - decimal point, no leading or trailing zeros), tshirt_map with exactly these labels and strictly ascending person days; size_status = {label: rebuild | rework} colours the size columns (without a matching entry: the largest label rebuild, the second largest rework); size_term.<lang> = the word for the scale in the workbook's texts and option headers, size_column.<lang> = the size column header of the system and position sheets (follows size_term when only that is set); `dbcx build_excel --check` refuses an inconsistent scale. L3: nothing above the largest label, rows at or above sprint_limit_pd are flagged (sprint_limit_pd at most the largest label's person days); L4: surcharges in % on top of the development total, per option (same start values); L6: day rate on the Parameter sheet (a run sets its own, e.g. 1350). No risk surcharge. lookup = the narrow code lookup budget of brownfield rows, checked by validate.py. unit = the unit in running text; unit_short.<lang> = the unit in column headers and KPI labels. scenarios_max_auto (run.json `systems`): the most scenarios the cartesian product of one option per system may give without run.json `scenarios` with `pick` - above it `dbcx build_excel --check` refuses. range_factors (run.json `systems`): the derived 3-point range of a work package - min / max = the likely person days x the factors of the row's confidence (high / medium / low; a run overrides single values under the same key; 0 < min <= 1 <= max, checked by `dbcx build_excel --check`); the workbook's Parameter sheet carries them."
+  },
+  "deliverables": {
+   "D1": {
+    "enabled": true,
+    "file": "Fit_Estimation.xlsx",
+    "_readme": "one formula-driven workbook: Management_Summary, README, Parameter (day rate, T-shirt mapping, surcharges per option, sprint limit), Anforderungen, Schaetzung (one row per requirement, one column block per option under a band header), Schaetzpositionen, Zuschlaege_und_Phasen, Summen, Vergleich, Abgrenzungen, Risiken, Annahmen, Quellen; full edition + Aussagen, Offene_Fragen. Name it after the subject at init (--deliverables-D1-file Fit_Estimation_<Subject>.xlsx)."
+   }
+  },
+  "models": {
+   "analyst": "code_analysis",
+   "analyst_light": "light_analysis",
+   "consolidator": "deep_reasoning",
+   "critic_client": "code_analysis",
+   "critic_standard": "balanced_review",
+   "critic_standard_consolidation": "deep_reasoning",
+   "gate": "balanced_review",
+   "classify": "deep_reasoning",
+   "triage": "deep_reasoning",
+   "architect": "deep_reasoning"
+  },
+  "scoring": {
+   "max_claims": 30,
+   "max_claims_light": 12,
+   "light_pass_size": 6,
+   "gate_personas": [
+    "cto",
+    "head_of_ecommerce",
+    "product_owner",
+    "cfo"
+   ],
+   "_readme": "caps for two options per chunk (chunks are smaller with more options, see unit._readme); raise max_claims per extra option only when a chunk's rows are all option-specific; dispute_routes: a client-critic row with ground standard-dispute is no score - score_aggregate routes it to the standard critic(s) of the claim",
+   "dispute_routes": {
+    "standard-dispute": "standard"
+   }
+  },
+  "rules": {
+   "do_not_run": [],
+   "no_client_requirements_to_external_services": true
+  },
+  "classification": {
+   "refactoring_dispositions": [
+    "refactor-to-standard",
+    "third-party-replace"
+   ],
+   "_readme": "dbcx classify draft: one candidate per customization-depth unit whose disposition is in this list and per target-readiness migration task; the lead approves the classes (client-row | tech-migration | refactoring | drop) before dbcx discover"
+  }
+ },
+ "init_fields": {
+  "target.version": "version / release of the technology of the default option, e.g. '2211'",
+  "target.plan": "plan / edition / licence tier the estimate assumes, e.g. 'CCv2' (write 'n/a' when the product has none)",
+  "target.frontend": "storefront / frontend technology assumed for the estimate (write 'n/a' when not applicable)",
+  "deliverables.D1.file": "workbook file name, e.g. Fit_Estimation_Migration_vs_Rebuild.xlsx"
+ },
+ "evidence_bases": [
+  {
+   "id": "requirements",
+   "kind": "workbook",
+   "roots": [
+    "input/requirements",
+    "state/requirements.json"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "the client's requirement list - the subject of every estimation row; read the exclusions, never rewrite a requirement"
+  },
+  {
+   "id": "client-docs",
+   "kind": "corpus",
+   "roots": [
+    "@project/corpus"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "orchestrator",
+    "analyst",
+    "critic-client"
+   ],
+   "note": "indexed client material (workshop notes, specifications, boards) with locators SRC-nnn#anchor; the standard critic has no access by design"
+  },
+  {
+   "id": "vendor-docs",
+   "kind": "web",
+   "domains": [],
+   "external": true,
+   "roles": [
+    "orchestrator",
+    "analyst",
+    "consolidator",
+    "critic-standard",
+    "researcher"
+   ],
+   "note": "documentation of the options' technologies (safe_web: the union of the option packs' docs domains); generic queries only (never the client name, a scope name or an internal locator)"
+  },
+  {
+   "id": "handover",
+   "kind": "handover",
+   "roots": [
+    "input/handover"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "frozen artefacts of earlier runs: requirements-set, the code analysis of a brownfield option (requirements-coverage, target-readiness, customization-depth, code-inventory) and client-assumptions; cited as HO-<type>#<id>, never restated as this run's own fact"
+  },
+  {
+   "id": "reference",
+   "kind": "reference",
+   "roots": [
+    "@project/reference"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "verified standard facts of this engagement; section 7 rows are cited by id PS-7-NNN"
+  },
+  {
+   "id": "analyses",
+   "kind": "derived",
+   "roots": [
+    "analysis"
+   ],
+   "read_only": false,
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "this run's own analysis files; an analyst owns exactly one chunk file and reads other chunks only through the orchestrator"
+  },
+  {
+   "id": "vendor-code",
+   "kind": "vendor-code",
+   "roots": [
+    "@project/reference/vendor-code"
+   ],
+   "read_only": true,
+   "external": false,
+   "note": "the vendor's standard code, version-pinned (dbcx vendor_code install, e.g. reference/vendor-code/composable-storefront/<version>/@spartacus/<lib>@<version>/...): cited as @scope/lib@version/path:line through a reference row PS-7-NNN, never copied into a deliverable, never sent to an external service; the client critic has no access"
+  },
+  {
+   "id": "client-repo",
+   "kind": "client-repo",
+   "roots": [
+    "{repo.path}"
+   ],
+   "read_only": true,
+   "external": false,
+   "note": "the client's frozen repository of a brownfield option (run.json repo.path; inert while unset): narrow lookups only - never for greenfield rows"
+  }
+ ],
+ "artefacts": {
+  "consumes": [
+   {
+    "type": "requirements-set",
+    "required": true,
+    "target": "state/requirements.json",
+    "import_tool": "requirements_to_json",
+    "note": "the client's requirements workbook (mapping in requirements_mapping.json) or a released requirements-set of a `requirements` run - without it there is nothing to estimate"
+   },
+   {
+    "type": "customization-depth",
+    "required": false,
+    "note": "the code analysis' unit classification and disposition (HO-customization-depth#<unit>): the BASELINE of every option and, for the dispositions of classification.refactoring_dispositions, the refactoring candidates of `dbcx classify`"
+   },
+   {
+    "type": "requirements-coverage",
+    "required": false,
+    "note": "coverage verdict, today's behaviour, description gap and implementing units per requirement (HO-requirements-coverage#<req_id>): the real scope of every requirement for every option"
+   },
+   {
+    "type": "target-readiness",
+    "required": false,
+    "note": "target API features and migration tasks (HO-target-readiness#<id>): the BASELINE of every option and, every migration task, a candidate of `dbcx classify` (technical migration row, refactoring row, part of a client row or dropped)"
+   },
+   {
+    "type": "code-inventory",
+    "required": false,
+    "note": "brownfield options: the custom units with their paths - the lookup budget check maps a locator to its extension through it"
+   },
+   {
+    "type": "client-assumptions",
+    "required": false,
+    "note": "the client's answers to an earlier run's assumptions (engine artefact): `dbcx questions import-handover input/handover/client-assumptions.json` BEFORE `dbcx intake`"
+   },
+   {
+    "type": "client-context",
+    "required": false,
+    "target": "state/client_context.json",
+    "note": "optional context of a shortlist / scoring run (guardrails, decision drivers), cited as HO-client-context#<id>"
+   },
+   {
+    "type": "landscape",
+    "required": false,
+    "target": "state/landscape.json",
+    "import_tool": "landscape_import",
+    "note": "ALL systems of the customer, also those this run does not estimate (systems [{id, name, kind, description, owner, aliases}], optional interfaces [{id, from, to, via}]): the names a systems_field or an interface end may use, and the architect's map; generic converter `dbcx landscape_import <file.csv|xlsx> [--sheet S] [--map id=..,name=..,kind=..]` (freeze the client's file first: `dbcx handover import <file> --as landscape`)"
+   },
+   {
+    "type": "system-inventory",
+    "required": false,
+    "note": "the system inventory of an ea-landscape run as the landscape's systems - `dbcx landscape_import input/handover/system-inventory.json [input/handover/data-flows.json]`"
+   },
+   {
+    "type": "data-flows",
+    "required": false,
+    "note": "the data flows of an ea-landscape run as the landscape's interfaces (together with its system-inventory, `dbcx landscape_import`)"
+   }
+  ],
+  "produces": [
+   {
+    "type": "fit-estimation",
+    "source": "analysis/consolidated/SUMMARY.json",
+    "scope": "SUMMARY"
+   }
+  ]
+ },
+ "scopes": {
+  "kind": "estimation",
+  "noun_key": "unit.chunk_noun",
+  "output_dir": "analysis/scopes",
+  "agent_prefix": "analyst-",
+  "discover": "discover",
+  "wave_rule": "parallel",
+  "_readme": "(run.json systems): `dbcx discover` writes scopes.json `wave_rule: after` (the engine's strict dependency rule) - the chunks of a dependent system run after every chunk of its parent; follow-up chunks of `dbcx discover --pickup` carry a `level` in the first wave that has not started (a dependent system's follow-up after every chunk of its parent)",
+  "state_key": "scopes",
+  "size_field": "size",
+  "id_prefix": "C-"
+ },
+ "inventory": null,
+ "consolidations": {
+  "SUMMARY": {
+   "kind": "summary",
+   "output": "analysis/consolidated/SUMMARY.md",
+   "digest_tables": [
+    "estimation",
+    "assumptions",
+    "assumptions_taken",
+    "open_questions"
+   ],
+   "deliverable": "D1",
+   "head_fields": {
+    "OPTIONS (head field `technology`)": "{target.platform} {target.version} {target.plan} (default option; the OPTIONS block lists every option of run.json `options`)"
+   }
+  }
+ },
+ "phases": [
+  {
+   "id": "preflight",
+   "type": "simple",
+   "hint": "dbcx check_fill; dbcx smoke tech-fit-estimation; handover imports (requirements-set; brownfield: requirements-coverage, target-readiness, customization-depth, code-inventory; client-assumptions -> dbcx questions import-handover input/handover/client-assumptions.json); dbcx md_to_json --generate; with run.json systems: the landscape (dbcx handover import <file> --as landscape -> dbcx landscape_import input/handover/<file>, or the system-inventory of an ea-landscape run) BEFORE dbcx requirements_to_json; dbcx requirements_to_json; dbcx build_excel --check (systems, group keys, interface ends); dbcx intake; dbcx status init; row classification when a customization-depth or target-readiness handover is imported (dbcx classify draft -> dbcx render brief classify --out -> dbcx md_to_json classification analysis/classification.md -> dbcx classify draft -> the lead edits work/classification.xlsx -> dbcx classify approve -> dbcx classify apply, or dbcx classify skip --reason); dbcx vendor_code resolve + install (composable storefront, when an option uses it); with run.json systems the scope step (automatic, holds nothing: dbcx impact plan -> per triage chunk dbcx render brief triage <chunk> --out -> spawn -> dbcx md_to_json triage analysis/triage/<chunk>.md -> dbcx impact apply; its claims run through the gauntlet beside the waves); dbcx discover (with run.json systems: work packages <row>@<system>:<option>[@<parent option>] chunked per system option under unit.context_budget, a dependent system's chunks after its parent's - scopes.json wave_rule after); dbcx plan_waves; researcher (dbcx render brief research --out)"
+  },
+  {
+   "id": "waves",
+   "type": "scopes",
+   "deliverable": "D1",
+   "before": "dbcx discover; dbcx plan_waves",
+   "after": "dbcx build_excel D1 --interim (checkpoint); after wave 1: measure the brownfield lookups (share of rows with a lookup, sizes a lookup moved) and decide whether the client repository stays open; early gate read; with run.json systems at every wave gate: open work-package changes (dbcx impact changes) and the architect's follow-ups (dbcx architect changes) -> dbcx discover --pickup -> dbcx plan_waves -> register the follow-up chunks"
+  },
+  {
+   "id": "consolidation_summary",
+   "type": "gauntlet",
+   "scope": "SUMMARY",
+   "deliverable": "D1",
+   "before": "dbcx render digest SUMMARY",
+   "after": "write analysis/summaries/D1.md; dbcx build_excel D1"
+  },
+  {
+   "id": "excel_build",
+   "type": "build"
+  },
+  {
+   "id": "final_gate",
+   "type": "gate"
+  }
+ ],
+ "deliverable_sources": {
+  "D1": [
+   "analysis/scopes/*.json",
+   "analysis/consolidated/SUMMARY.json",
+   "analysis/summaries/D1.md"
+  ]
+ },
+ "gauntlet": {
+  "pack_sections": {
+   "estimation": [
+    "Summary",
+    "Estimation"
+   ],
+   "summary": [
+    "Totals",
+    "Fixed phases"
+   ]
+  },
+  "row_tables": {
+   "estimation": [
+    [
+     "estimation",
+     "rid"
+    ],
+    [
+     "assumptions",
+     "id"
+    ],
+    [
+     "assumptions_taken",
+     "id"
+    ]
+   ],
+   "summary": [
+    [
+     "totals",
+     "key"
+    ],
+    [
+     "fixed_phases",
+     "id"
+    ],
+    [
+     "calibration",
+     "mechanism"
+    ],
+    [
+     "assumptions",
+     "id"
+    ],
+    [
+     "risks",
+     "id"
+    ]
+   ]
+  }
+ },
+ "briefs": {
+  "rows": [
+   [
+    "OPTIONS",
+    "every option of run.json `options` has its own TARGET block below; without `options` the one option is {target.platform} {target.version} ({target.plan}; frontend {target.frontend})",
+    "!system_mode"
+   ],
+   [
+    "EFFORT UNIT",
+    "{estimation.unit}; sizes are T-shirt tokens - the Parameter sheet maps them to person days, adds the PM/SA/BA/QA surcharges per option and prices at the day rate; never a person-day figure inside a row",
+    "!system_mode"
+   ],
+   [
+    "SYSTEMS",
+    "run.json `systems`: the systems of the solution, each with its options (a shortlist) or estimated outside the agents (partner, client, team); systems add up within a scenario, options compete - an analyst chunk estimates ONE system option (its TARGET block below)",
+    "system_mode"
+   ],
+   [
+    "EFFORT UNIT",
+    "{estimation.unit}; sizes are T-shirt tokens - the Parameter sheet maps them to person days, adds the PM/SA/BA/QA surcharges per system option (estimation.ontop.mode) and prices at the day rate; never a person-day figure inside a row",
+    "system_mode"
+   ],
+   [
+    "REQUIREMENT LIST",
+    "state/requirements.json (from {requirements.input_glob} via dbcx requirements_to_json)"
+   ]
+  ],
+  "notes_title": "TECHNOLOGY NOTES (from the technology pack and the method)",
+  "notes_keys": {
+   "analyst": [
+    "docs_domains",
+    "best_practice",
+    "expected_hotspots_d3",
+    "api_families_hint",
+    "content_model_notes"
+   ],
+   "consolidate:SUMMARY": [
+    "expected_hotspots_d3",
+    "best_practice"
+   ],
+   "critic-client": [],
+   "critic-standard": [
+    "critic2_persona",
+    "docs_domains",
+    "best_practice",
+    "critic2_focus",
+    "effort_rules"
+   ],
+   "gate": [],
+   "researcher": [
+    "docs_domains",
+    "research_focus"
+   ],
+   "classify": []
+  },
+  "analyst_inputs": {
+   "REQUIREMENTS": "state/requirements.json - the rows of YOUR chunk are listed in this brief; every other row belongs to another chunk",
+   "BASELINE (every option)": "input/handover/*.json - the rows naming your requirements (the real scope of every requirement, for every option) are listed in the BASELINE block below; cite them as HO-<type>#<id>",
+   "CLIENT DOCUMENTS": "corpus/index.json + corpus/text/SRC-nnn.md (cite as SRC-nnn#anchor); optional",
+   "TECHNOLOGY KNOWLEDGE": "dbcx knowledge show; reference/platform-standard.md section 7 (cite PS-7-NNN); vendor standard code under reference/vendor-code/ (search it freely, cite it through a PS-7 row)",
+   "LOCATOR CHECK": "dbcx evidence resolve \"<locator>\""
+  },
+  "consolidator_inputs": "analysis/consolidated/digest-SUMMARY.md (read FIRST), analysis/scopes/*.md (open only for rows the digest points to), state/requirements.json, input/handover/target-readiness.json (migration tasks without a requirement), reference/platform-standard.md, analysis/consolidated/estate_observations.json, state/scopes.json (which epics are in which chunk)",
+  "critic_client_persona": "the incumbent agency's lead developer, an expert of {target.platform}: they built and maintain the client's current shop and know its code, its customisations and every workaround. Standard capability and the need for customisation are settled by the verified reference rows (PS-7) and the standard critic - accept them; a doubt about a standard statement is a dispute (ground standard-dispute), never a lower score. The scoring ground is client fit: the reading of the requirement, what today's shop really does (HO rows, the lookup sample), missing effort drivers (sites, languages, variants, data, interfaces) and the plausibility of the size. Evidence base = the requirement list, the client documents, the handover rows of the code analysis and - for a sample of brownfield lookups - the classes the analyst read in the client repository; never vendor documentation or vendor code",
+  "critic_standard_persona_key": "critic2_persona",
+  "critic_standard_persona": "a solution architect of the technology under evaluation with delivery experience on it: knows which module / app / API / setting exists in which version and plan, what it does out of the box, where the extension points are and what a mechanism realistically costs to activate, configure, implement and test",
+  "extra_kinds": {
+   "classify": {
+    "role": "consolidator",
+    "agent": "consolidate-classification",
+    "model": "classify",
+    "text": "classify",
+    "_readme": "dbcx render brief classify --out: the classification agent (engine role consolidator: no client repository) proposes the class and the product-owner texts of every candidate of work/classification.json"
+   },
+   "triage": {
+    "role": "consolidator",
+    "agent": "consolidate-triage",
+    "model": "triage",
+    "text": "triage",
+    "gauntlet": {
+     "scope": "TRIAGE",
+     "output_dir": "analysis/triage"
+    },
+    "reads": [
+     "client-docs"
+    ],
+    "_readme": "scope step (system mode only): `dbcx render brief triage [TRIAGE | TRIAGE-n] [--round n] --out` - the triage agent (engine role consolidator; it also reads the corpus) assigns every estimating row the systems it touches with one impact text each; its claims run through the normal gauntlet (`dbcx extract_claims TRIAGE`, critics, `dbcx score_aggregate TRIAGE n`, recorded under STATUS steps.TRIAGE) beside the waves - nothing waits for it"
+   },
+   "architect": {
+    "role": "consolidator",
+    "agent": "consolidate-architect",
+    "model": "architect",
+    "text": "architect",
+    "gauntlet": {
+     "scope": "ARCHITECT",
+     "output_dir": "analysis/architect"
+    },
+    "reads": [
+     "client-docs"
+    ],
+    "_readme": "architect step (system mode only): after a wave whose analysts reported gaps, `dbcx architect plan` batches them (ARCHITECT-n, agent consolidate-architect-n) and `dbcx render brief architect ARCHITECT-n --out` briefs the architect (engine role consolidator; it also reads the corpus; the landscape and the impact matrix are in state/): one decision per gap - overrule | route-estimated | route-landscape | reduce-to-standard; its claims run through the normal gauntlet (scope ARCHITECT-n, STATUS steps.ARCHITECT-n) - nothing waits for it"
+   }
+  }
+ },
+ "snippets": {
+  "rulings_topics": "target-version: the target technology, version, edition and plan per option; estimation-basis: team model and what an estimate includes; customisation-policy: standard first or custom build per requirement class; scope-boundaries: phases, channels and integrations in scope",
+  "research_focus": "for every option's technology, version and plan: module / app / extension catalogue and what each covers out of the box, API families and their limits, settings that switch a requirement on, plan gates, extension mechanisms and their effort profile, published limits and end-of-life dates; for a frontend with pinned vendor code (composable storefront): which CMS component types have a standard mapping, which endpoints the storefront calls, which B2B features exist in the pinned release."
+ },
+ "research_topics": "Every technology of the run's options, for the exact version and plan named in the OPTIONS block: which requirements it covers out of the box (modules, first-party apps, documented APIs, settings), what each mechanism does and does not do, which features the named plan / edition excludes, the extension mechanisms and their realistic effort profile, published limits and end-of-life dates. Resolve every *(verify)* item with URL and date; a fact read in the vendor's standard code is a reference row whose address is the code locator (@scope/lib@version/path:line). A mechanism that cannot be confirmed for this version stays unverified and the estimate treats it as custom.",
+ "lint": {
+  "allow_terms": [
+   "activation effort",
+   "coverage class",
+   "effort basis",
+   "estimation assumption",
+   "estimation basis",
+   "plan and version",
+   "release version",
+   "size mapping",
+   "version and plan"
+  ],
+  "code_vocabulary": true
+ },
+ "progress": {
+  "size_weighted": true
+ },
+ "gate": {
+  "_readme": "Final-gate key questions: 3-5 per persona, each tied to the deliverables that should answer it. Tailored per engagement at `prepare` (run.json / engagement.json gate.key_questions.<persona>). verifier_strata: no code stratum - the verifier checks size against basis (requirement text, HO row, PS-7 row, assumption), no repository reading.",
+  "key_questions": {
+   "cto": [
+    {
+     "id": "T1",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "understand",
+      "act"
+     ],
+     "text": {
+      "en": "Per option: which requirements are kept, adapted, converted to standard or rebuilt (resp. standard, partial, custom), and does the approach follow from the evidence shown on the row?",
+      "de": "Je Option: welche Anforderungen werden beibehalten, angepasst, auf Standard umgestellt oder neu gebaut (bzw. Standard, teilweise, Eigenentwicklung), und folgt das Vorgehen aus der Grundlage in der Zeile?"
+     }
+    },
+    {
+     "id": "T2",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "prove"
+     ],
+     "text": {
+      "en": "Can I trace every size to its basis - vendor source, vendor standard code, the code analysis of today's shop or an assumption - without asking?",
+      "de": "Kann ich jede Größe ohne Rückfrage auf ihre Grundlage zurückführen - Herstellerquelle, Herstellerstandard, die Code-Analyse des heutigen Shops oder eine Annahme?"
+     }
+    },
+    {
+     "id": "T3",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "en": "Which requirements are too large for a sprint (XXL) and how are they cut into positions?",
+      "de": "Welche Anforderungen sind für einen Sprint zu groß (XXL), und wie sind sie in Positionen geschnitten?"
+     }
+    }
+   ],
+   "head_of_ecommerce": [
+    {
+     "id": "E1",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "understand"
+     ],
+     "text": {
+      "en": "What does each option mean for the shop's functions: what stays as it is, what changes for customers, what is new?",
+      "de": "Was bedeutet jede Option für die Funktionen des Shops: was bleibt, was ändert sich für die Kunden, was kommt neu?"
+     }
+    },
+    {
+     "id": "E2",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "en": "Which assumptions about our requirements do I have to confirm or deny, and what happens to the estimate if I deny one?",
+      "de": "Welche Annahmen zu unseren Anforderungen muss ich bestätigen oder verneinen, und was geschieht mit der Schätzung, wenn ich eine verneine?"
+     }
+    },
+    {
+     "id": "E3",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "understand",
+      "act"
+     ],
+     "text": {
+      "en": "Which option carries the first release with less effort, and where do the options differ most per epic?",
+      "de": "Welche Option trägt das erste Release mit weniger Aufwand, und wo unterscheiden sich die Optionen je Epic am stärksten?"
+     }
+    }
+   ],
+   "product_owner": [
+    {
+     "id": "P1",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "en": "Can I plan a backlog from the estimation: every requirement with a size per option, every XXL cut into sprint-sized positions?",
+      "de": "Kann ich aus der Schätzung ein Backlog planen: jede Anforderung mit Größe je Option, jedes XXL in sprinttaugliche Positionen geschnitten?"
+     }
+    },
+    {
+     "id": "P2",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "prove"
+     ],
+     "text": {
+      "en": "For a broadly written requirement: which reading does the estimate take, and is it registered as an assumption I can confirm?",
+      "de": "Bei einer breit formulierten Anforderung: welche Lesart nimmt die Schätzung an, und ist sie als Annahme registriert, die ich bestätigen kann?"
+     }
+    },
+    {
+     "id": "P3",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "understand"
+     ],
+     "text": {
+      "en": "Is it clear what is in no figure (exclusions) and what surcharges and fixed phases carry, so nothing is counted twice?",
+      "de": "Ist klar, was in keiner Zahl steckt (Abgrenzungen) und was Zuschläge und feste Phasen tragen, sodass nichts doppelt gezählt ist?"
+     }
+    },
+    {
+     "id": "P4",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "prove",
+      "understand"
+     ],
+     "text": {
+      "en": "Does each option's estimate include what today's shop does beyond the written requirement?",
+      "de": "Enthält die Schätzung jeder Option, was der heutige Shop über die geschriebene Anforderung hinaus tut?"
+     }
+    }
+   ],
+   "cfo": [
+    {
+     "id": "F1",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "understand"
+     ],
+     "text": {
+      "en": "What is the total per option - development, surcharges, fixed phases, person days and cost at the day rate - and does it follow from the workbook's formulas?",
+      "de": "Was ist die Summe je Option - Entwicklung, Zuschläge, feste Phasen, Personentage und Kosten zum Tagessatz - und folgt sie aus den Formeln der Datei?"
+     }
+    },
+    {
+     "id": "F2",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "understand",
+      "act"
+     ],
+     "text": {
+      "en": "What drives the difference between the options: which epics, which phases, which surcharges?",
+      "de": "Was treibt den Unterschied zwischen den Optionen: welche Epics, welche Phasen, welche Zuschläge?"
+     }
+    },
+    {
+     "id": "F3",
+     "deliverables": [
+      "D1"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "en": "Which assumptions move the totals, and can I change a parameter (day rate, size mapping, surcharge) and see every total follow?",
+      "de": "Welche Annahmen bewegen die Summen, und kann ich einen Parameter (Tagessatz, Größenzuordnung, Zuschlag) ändern und sehe jede Summe folgen?"
+     }
+    }
+   ]
+  },
+  "_readme_key_questions_when": "(run.json systems): the key questions per run shape - one scenario (system_single: cost per system and phase, what is open and with whom, which assumptions move the total) or several (system_multi: the comparison questions plus which systems drive the difference). The first block whose `when` holds replaces key_questions (engine gate.method_questions); a run without systems keeps key_questions.",
+  "key_questions_when": [
+   {
+    "when": "system_single",
+    "key_questions": {
+     "cto": [
+      {
+       "id": "T1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "Per system: what is standard, what an extension inside the system, what a gap - and does the approach follow from the basis shown on the row?",
+        "de": "Je System: was ist Standard, was Erweiterung im System, was eine Lücke - und folgt das Vorgehen aus der Grundlage in der Zeile?"
+       }
+      },
+      {
+       "id": "T2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "prove"
+       ],
+       "text": {
+        "en": "Can I trace every size to its basis - vendor source, the owner's input or an assumption - without asking?",
+        "de": "Kann ich jede Größe ohne Rückfrage auf ihre Grundlage zurückführen - Herstellerquelle, Eingabe des Eigentümers oder eine Annahme?"
+       }
+      },
+      {
+       "id": "T3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act",
+        "prove"
+       ],
+       "text": {
+        "en": "Where did each gap go (another system of this estimate, a system outside it, a reduction to the standard), and is the decision explained?",
+        "de": "Wohin ging jede Lücke (ein anderes System dieser Schätzung, ein System außerhalb, Reduktion auf den Standard), und ist die Entscheidung begründet?"
+       }
+      }
+     ],
+     "head_of_ecommerce": [
+      {
+       "id": "E1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand"
+       ],
+       "text": {
+        "en": "What changes in each system for our customers and editors, and do I find our own requirement list with the effort per system beside it?",
+        "de": "Was ändert sich in jedem System für unsere Kunden und Redakteure, und finde ich unsere eigene Anforderungsliste mit dem Aufwand je System daneben wieder?"
+       }
+      },
+      {
+       "id": "E2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act"
+       ],
+       "text": {
+        "en": "Which assumptions about our requirements do I have to confirm or deny, and what happens to the estimate if I deny one?",
+        "de": "Welche Annahmen zu unseren Anforderungen muss ich bestätigen oder verneinen, und was geschieht mit der Schätzung, wenn ich eine verneine?"
+       }
+      },
+      {
+       "id": "E3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "What does each system cost in the first release and what after it?",
+        "de": "Was kostet jedes System im ersten Release und was danach?"
+       }
+      }
+     ],
+     "product_owner": [
+      {
+       "id": "P1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act"
+       ],
+       "text": {
+        "en": "Can I plan a backlog per system from the estimation: every work package with a size, every XXL cut into sprint-sized positions?",
+        "de": "Kann ich aus der Schätzung ein Backlog je System planen: jedes Arbeitspaket mit Größe, jedes XXL in sprinttaugliche Positionen geschnitten?"
+       }
+      },
+      {
+       "id": "P2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "prove"
+       ],
+       "text": {
+        "en": "For a broadly written requirement: which reading does the estimate take, and is it registered as an assumption I can confirm?",
+        "de": "Bei einer breit formulierten Anforderung: welche Lesart nimmt die Schätzung an, und ist sie als Annahme registriert, die ich bestätigen kann?"
+       }
+      },
+      {
+       "id": "P3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "What is open and with whom: which cells do partners, the client or the team still have to fill, and which rows depend on a condition?",
+        "de": "Was ist offen und bei wem: welche Zellen müssen Partner, Kunde oder Team noch füllen, und welche Zeilen hängen an einer Bedingung?"
+       }
+      }
+     ],
+     "cfo": [
+      {
+       "id": "F1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand"
+       ],
+       "text": {
+        "en": "Are the costs per system and phase traceable - development, surcharges, fixed phases, person days and cost at the day rate, all as formulas?",
+        "de": "Sind die Kosten je System und Phase nachvollziehbar - Entwicklung, Zuschläge, feste Phasen, Personentage und Kosten zum Tagessatz, alles als Formel?"
+       }
+      },
+      {
+       "id": "F2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "What is open and with whom, and which part of the total effort is therefore still missing?",
+        "de": "Was ist offen und bei wem, und welcher Teil des Gesamtaufwands fehlt deshalb noch?"
+       }
+      },
+      {
+       "id": "F3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act"
+       ],
+       "text": {
+        "en": "Which assumptions move the total effort, and can I change a parameter (day rate, size mapping, surcharge, range) and see every total follow?",
+        "de": "Welche Annahmen bewegen den Gesamtaufwand, und kann ich einen Parameter (Tagessatz, Größenzuordnung, Zuschlag, Spanne) ändern und sehe jede Summe folgen?"
+       }
+      },
+      {
+       "id": "F4",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand"
+       ],
+       "text": {
+        "en": "How wide is the range per system, and which part depends on conditional rows or interim solutions?",
+        "de": "Wie groß ist die Spanne je System, und welcher Teil hängt an bedingten Zeilen oder Zwischenlösungen?"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "when": "system_multi",
+    "key_questions": {
+     "cto": [
+      {
+       "id": "T1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "Per system: what is standard, what an extension inside the system, what a gap - and does the approach follow from the basis shown on the row?",
+        "de": "Je System: was ist Standard, was Erweiterung im System, was eine Lücke - und folgt das Vorgehen aus der Grundlage in der Zeile?"
+       }
+      },
+      {
+       "id": "T2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "prove"
+       ],
+       "text": {
+        "en": "Can I trace every size to its basis - vendor source, the owner's input or an assumption - without asking?",
+        "de": "Kann ich jede Größe ohne Rückfrage auf ihre Grundlage zurückführen - Herstellerquelle, Eingabe des Eigentümers oder eine Annahme?"
+       }
+      },
+      {
+       "id": "T3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act",
+        "prove"
+       ],
+       "text": {
+        "en": "Where did each gap go (another system of this estimate, a system outside it, a reduction to the standard), and is the decision explained?",
+        "de": "Wohin ging jede Lücke (ein anderes System dieser Schätzung, ein System außerhalb, Reduktion auf den Standard), und ist die Entscheidung begründet?"
+       }
+      }
+     ],
+     "head_of_ecommerce": [
+      {
+       "id": "E1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand"
+       ],
+       "text": {
+        "en": "What changes in each system for our customers and editors, and do I find our own requirement list with the effort per system beside it?",
+        "de": "Was ändert sich in jedem System für unsere Kunden und Redakteure, und finde ich unsere eigene Anforderungsliste mit dem Aufwand je System daneben wieder?"
+       }
+      },
+      {
+       "id": "E2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act"
+       ],
+       "text": {
+        "en": "Which assumptions about our requirements do I have to confirm or deny, and what happens to the estimate if I deny one?",
+        "de": "Welche Annahmen zu unseren Anforderungen muss ich bestätigen oder verneinen, und was geschieht mit der Schätzung, wenn ich eine verneine?"
+       }
+      },
+      {
+       "id": "E3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "Which scenario carries the first release with less effort, and where do the scenarios differ most per epic?",
+        "de": "Welches Szenario trägt das erste Release mit weniger Aufwand, und wo unterscheiden sich die Szenarien je Epic am stärksten?"
+       }
+      }
+     ],
+     "product_owner": [
+      {
+       "id": "P1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act"
+       ],
+       "text": {
+        "en": "Can I plan a backlog per system from the estimation: every work package with a size, every XXL cut into sprint-sized positions?",
+        "de": "Kann ich aus der Schätzung ein Backlog je System planen: jedes Arbeitspaket mit Größe, jedes XXL in sprinttaugliche Positionen geschnitten?"
+       }
+      },
+      {
+       "id": "P2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "prove"
+       ],
+       "text": {
+        "en": "For a broadly written requirement: which reading does the estimate take, and is it registered as an assumption I can confirm?",
+        "de": "Bei einer breit formulierten Anforderung: welche Lesart nimmt die Schätzung an, und ist sie als Annahme registriert, die ich bestätigen kann?"
+       }
+      },
+      {
+       "id": "P3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "What is open and with whom: which cells do partners, the client or the team still have to fill, and which rows depend on a condition?",
+        "de": "Was ist offen und bei wem: welche Zellen müssen Partner, Kunde oder Team noch füllen, und welche Zeilen hängen an einer Bedingung?"
+       }
+      }
+     ],
+     "cfo": [
+      {
+       "id": "F1",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand"
+       ],
+       "text": {
+        "en": "What is the total per scenario - development, surcharges, fixed phases, person days and cost at the day rate - and does it follow from the workbook's formulas?",
+        "de": "Was ist der Gesamtaufwand je Szenario - Entwicklung, Zuschläge, feste Phasen, Personentage und Kosten zum Tagessatz - und folgt er aus den Formeln der Datei?"
+       }
+      },
+      {
+       "id": "F2",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "What drives the difference between the scenarios: which systems, which epics, which phases?",
+        "de": "Was treibt den Unterschied zwischen den Szenarien: welche Systeme, welche Epics, welche Phasen?"
+       }
+      },
+      {
+       "id": "F3",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "act"
+       ],
+       "text": {
+        "en": "Which assumptions move the totals, and can I change a parameter (day rate, size mapping, surcharge, range, scenario) and see every total follow?",
+        "de": "Welche Annahmen bewegen die Summen, und kann ich einen Parameter (Tagessatz, Größenzuordnung, Zuschlag, Spanne, Szenario) ändern und sehe jede Summe folgen?"
+       }
+      },
+      {
+       "id": "F4",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand"
+       ],
+       "text": {
+        "en": "In the selected scenario, are the costs per system and phase traceable?",
+        "de": "Sind im gewählten Szenario die Kosten je System und Phase nachvollziehbar?"
+       }
+      },
+      {
+       "id": "F5",
+       "deliverables": [
+        "D1"
+       ],
+       "tags": [
+        "understand",
+        "act"
+       ],
+       "text": {
+        "en": "What is open and with whom, and can an open input change the order of the scenarios?",
+        "de": "Was ist offen und bei wem, und kann eine offene Eingabe die Reihenfolge der Szenarien ändern?"
+       }
+      }
+     ]
+    }
+   }
+  ],
+  "verifier_strata": [
+   [
+    "figure",
+    3
+   ],
+   [
+    "verdict",
+    5
+   ],
+   [
+    "security",
+    2
+   ],
+   [
+    "assumption",
+    3
+   ]
+  ]
+ },
+ "holds": [
+  {
+   "before": "discover",
+   "tool": "classify",
+   "_readme": "dbcx status next (and dbcx discover) wait for the row classification while a customization-depth or target-readiness handover is imported: dbcx classify draft | approve | apply | skip"
+  }
+ ],
+ "steps": [
+  {
+   "before": "discover",
+   "tool": "impact",
+   "_readme": "(run.json systems only): the scope step - pre-fill + triage -> state/impact.json (`dbcx impact plan | apply`), applied automatically; `dbcx status next` names it before discover, which never waits for it; overrides from the dashboard view 'Impact per system' are picked up by the next wave (`dbcx impact changes`)"
+  },
+  {
+   "before": "consolidate",
+   "tool": "architect",
+   "_readme": "(run.json systems only): the architect step after a wave with gaps - `dbcx architect plan | apply` -> state/architect.json, applied automatically; `dbcx status next` names it beside the waves (it holds nothing); the follow-up work packages (`dbcx architect changes`) go to the next wave through `dbcx discover --pickup`; an override from the dashboard view 'Gap decisions' is optional"
+  }
+ ]
+}

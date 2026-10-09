@@ -1,0 +1,468 @@
+{
+ "name": "requirements",
+ "display": "Requirements for a system, from client documents and workshops",
+ "version": "0.2.0",
+ "description": "Formulate the requirements for one system (eCommerce platform, CMS, PIM, integration platform ...) from the client's documents, Miro board exports and workshop results: a source inventory with the epic structure (D1), one requirement set per epic with a source locator on every row, FR/TR/NFR classification, priorities, contradictions between sources and open client questions, consolidated into one numbered requirements set with an FR<->TR cross-check and a gap check against a reference requirement catalogue (D2). The unit of analysis is the EPIC; the released artefact `requirements-set` is the input of the tech-scoring and tech-fit-estimation methods.",
+ "knowledge_slots": {
+  "catalogue": {
+   "kind": "catalogue",
+   "role": "catalogue",
+   "required": false
+  }
+ },
+ "defaults": {
+  "system": {
+   "type": "",
+   "vocabulary": "the client's own vocabulary from the workshops and documents; standard requirement-engineering terms only where the client has none"
+  },
+  "catalogue": {
+   "pack": "",
+   "display": "(no reference catalogue configured - the gap check states that explicitly and the standard critic judges against best practice only)"
+  },
+  "unit": {
+   "noun": "Epic",
+   "noun_plural": "Epics"
+  },
+  "requirements": {
+   "types": [
+    "functional",
+    "technical",
+    "nfr"
+   ],
+   "priorities": [
+    "must",
+    "should",
+    "could",
+    "unknown"
+   ],
+   "releases": [
+    "MVP",
+    "Phase 2",
+    "later",
+    "unknown"
+   ],
+   "statuses": [
+    "confirmed",
+    "inferred",
+    "question"
+   ],
+   "id_scheme": "per epic FR-<epic-abbr>-NNN / TR-<epic-abbr>-NNN / NFR-<epic-abbr>-NNN; the consolidation renumbers globally to FR-NNN / TR-NNN / NFR-NNN and keeps the epic id in the `epic` column",
+   "priority_scheme": "must | should | could (MoSCoW, as the sources state it) | unknown (no source states a priority - never guessed, and `unknown` is not a defect)",
+   "locator_rule": "every requirement row carries at least one corpus locator (SRC-nnn#p12, #s7, #para12, #Sheet!R12, #item:<id>, #L120, #frame:<name>) or the literal `inferred` with the inference named in the description and one claim per inferred row"
+  },
+  "epics": [],
+  "deliverables": {
+   "D1": {
+    "enabled": true,
+    "file": "Source_Inventory_and_Epics.xlsx"
+   },
+   "D2": {
+    "enabled": true,
+    "file": "Requirements.xlsx"
+   },
+   "estimation_sheet_export": {
+    "enabled": false,
+    "file": "Requirements_EstimationSheet.xlsx",
+    "_readme": "optional export of the consolidated set into the client's EstimationSheet shape (sheets `Functional Requirements` / `Technical Requirements` with #, Epic, Title, Description). Off by default; `dbcx export_estimation_sheet` writes it, formula-free, only when enabled is true. Set `deliverables.estimation_sheet_export.enabled: true` in run.json (a bare boolean under `deliverables` breaks `dbcx status init`)."
+   }
+  },
+  "scoring": {
+   "gate_personas": [
+    "product_owner",
+    "head_of_ecommerce",
+    "cto"
+   ],
+   "light_pass_size": 6,
+   "_light_readme": "size = estimated_requirements of the epic; an epic with 5 or fewer expected requirement rows runs the light gauntlet (dbcx discover sets the flag, plan_waves applies the same floor when a method leaves it open)"
+  },
+  "rules": {
+   "no_invented_requirements": true,
+   "do_not_run": []
+  }
+ },
+ "profiles": {
+  "_readme": "run.json `profile` (`dbcx init run --profile`) selects one block; its values sit on the method defaults, knowledge packs, engagement.json and run.json still win. full = the complete pipeline (scoring, claims and human_input keep the engine defaults: one client critic and the standard critics, 4 rounds, quotes warn, live questions, rulings optional). lean = one analysis over everything: no scope split (the scopes phase is skipped), the consolidator reads the corpus, the inventory passes on the deterministic checks (CHECK, verbatim quotes, locators - no critic), one standard critic on the consolidations, one round plus one rework round for defects, quotes required, rulings required before the inventory, questions released in batches. The final gate is unchanged. requirements lean: the SET consolidator writes every requirement row from the corpus, epic by epic, with its locators and a quote; D1 and D2 are built.",
+  "full": {
+   "split": "by_scope",
+   "consolidator_reads_corpus": false
+  },
+  "lean": {
+   "split": "none",
+   "consolidator_reads_corpus": true,
+   "scoring": {
+    "critics": [
+     "standard"
+    ],
+    "phase_critics": {
+     "inventory": []
+    },
+    "pass_rule": "defects+quotes",
+    "max_gauntlet_rounds": 1,
+    "defect_rework_rounds": 1,
+    "freeze_register_after_round": 1
+   },
+   "claims": {
+    "quotes": "required"
+   },
+   "human_input": {
+    "release": "batched",
+    "rulings": "required"
+   },
+   "phase_hints": {
+    "preflight": {
+     "hint": "dbcx corpus index; dbcx md_to_json --generate; dbcx intake; dbcx status init; researcher (dbcx render brief research --out) only when a catalogue slot is set; profile lean: quotes are required, for vendor facts too (PS-7 rows through `dbcx reference add --quote`) - allowlist the documentation domains the researcher and the standard critic will cite in run.json `evidence_bases: [{\"id\": \"standard-docs\", \"domains\": [\"<docs host>\", ...]}]` (merged by id over the method's base; `dbcx safe_web \"<generic query>\" --check-only --url https://<docs host>/...` shows the allowlist); then `dbcx rulings draft` - the rulings come before the inventory"
+    },
+    "inventory": {
+     "before": "dbcx corpus index; dbcx corpus list; dbcx render brief inventory --out (profile lean: every claim carries a verbatim quote; no critic scores the inventory, it passes on CHECK + quotes + locators)",
+     "after": "dbcx render handover; dbcx build_excel D1; early gate read (profile lean: no discover, no plan_waves, no waves - the SET consolidation writes the requirements from the inventory's epics and the corpus)"
+    },
+    "consolidation_set": {
+     "before": "dbcx render digest SET (profile lean: the inventory's epics with their sources and the corpus)"
+    }
+   }
+  }
+ },
+ "init_fields": {
+  "system.type": "the system these requirements are for (eCommerce platform, CMS, PIM, integration platform, portal ...)"
+ },
+ "evidence_bases": [
+  {
+   "id": "corpus",
+   "kind": "corpus",
+   "roots": [
+    "@project/corpus",
+    "@project/input"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "orchestrator",
+    "inventory",
+    "analyst",
+    "critic-client"
+   ],
+   "note": "the client's own material as indexed text with stable locators (dbcx corpus index): corpus/index.json, corpus/text/SRC-nnn.md, corpus/unextractable.md, plus the original files under input/. Read-only. Cite as SRC-nnn#<anchor>; a source in unextractable.md may only be cited as `visual, unverified`"
+  },
+  {
+   "id": "reference",
+   "kind": "reference",
+   "roots": [
+    "@project/reference"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "verified standard facts of this engagement, section 7 rows cited by id PS-7-NNN"
+  },
+  {
+   "id": "handover",
+   "kind": "handover",
+   "roots": [
+    "input/handover"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "frozen artefacts imported from earlier runs (client-context, system-inventory), cited as HO-<type>#<id>; the materialised copies under state/ are the ones the briefs point at"
+  },
+  {
+   "id": "analyses",
+   "kind": "derived",
+   "roots": [
+    "analysis"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "this run's own analysis files; an epic analyst reads only its own epic's file plus the source inventory and the handover"
+  },
+  {
+   "id": "standard-docs",
+   "kind": "web",
+   "domains": [],
+   "roles": [
+    "orchestrator",
+    "consolidator",
+    "critic-standard",
+    "researcher"
+   ],
+   "note": "external documentation for the system type and requirements best practice, generic queries only. The standard critic judges completeness, testability and classification against the reference catalogue and best practice - NEVER against the client's documents (it has no corpus access, hook-enforced)"
+  }
+ ],
+ "artefacts": {
+  "consumes": [
+   {
+    "type": "client-context",
+    "required": false,
+    "target": "state/client_context.json",
+    "note": "context, goals and guardrails of the client as released by an earlier run or an intake; evidence, never restated as this run's own fact"
+   },
+   {
+    "type": "system-inventory",
+    "required": false,
+    "target": "state/system_inventory.json",
+    "note": "the system inventory of an `ea-landscape` run (target state/system_inventory.json): every system in the landscape that needs at least one technical epic"
+   }
+  ],
+  "produces": [
+   {
+    "type": "requirements-set",
+    "source": "analysis/consolidated/SET.json",
+    "scope": "SET",
+    "note": "the consolidated, numbered requirement set with locators - imported by the tech-scoring and tech-fit-estimation methods; `dbcx export_requirements` additionally writes state/requirements.json in the engine's requirements shape"
+   }
+  ]
+ },
+ "scopes": {
+  "kind": "epic",
+  "noun_key": "unit.noun",
+  "output_dir": "analysis/scopes",
+  "agent_prefix": "analyst-",
+  "discover": "discover",
+  "wave_rule": "dependency",
+  "state_key": "epics",
+  "size_field": "size",
+  "id_prefix": "C-"
+ },
+ "inventory": {
+  "scope": "D1",
+  "kind": "inventory",
+  "output": "analysis/inventory/source_inventory.md",
+  "agent": "inventory",
+  "scopes_table": "epics",
+  "scopes_key": "name",
+  "handover": "analysis/inventory/HANDOVER.md",
+  "brief": "inventory",
+  "inputs": {
+   "SOURCES": "corpus/index.json + corpus/unextractable.md"
+  },
+  "derived_markers": [
+   "index.json"
+  ]
+ },
+ "consolidations": {
+  "SET": {
+   "kind": "requirements_set",
+   "output": "analysis/consolidated/SET.md",
+   "digest_tables": [
+    "requirements",
+    "contradictions",
+    "open_questions"
+   ],
+   "deliverable": "D2",
+   "head_fields": {
+    "SYSTEM TYPE (head field system_type)": "{system.type}"
+   }
+  }
+ },
+ "phases": [
+  {
+   "id": "preflight",
+   "type": "simple",
+   "hint": "dbcx corpus index; dbcx md_to_json --generate; dbcx intake; dbcx status init; researcher (dbcx render brief research --out) only when a catalogue slot is set"
+  },
+  {
+   "id": "inventory",
+   "type": "gauntlet",
+   "scope": "D1",
+   "deliverable": "D1",
+   "before": "dbcx corpus index; dbcx corpus list; dbcx render brief inventory --out",
+   "after": "dbcx render handover; dbcx discover; dbcx plan_waves; dbcx build_excel D1; early gate read"
+  },
+  {
+   "id": "waves",
+   "type": "scopes",
+   "deliverable": "D2"
+  },
+  {
+   "id": "consolidation_set",
+   "type": "gauntlet",
+   "scope": "SET",
+   "deliverable": "D2"
+  },
+  {
+   "id": "excel_build",
+   "type": "build"
+  },
+  {
+   "id": "final_gate",
+   "type": "gate"
+  }
+ ],
+ "deliverable_sources": {
+  "D1": [
+   "analysis/inventory/source_inventory.json",
+   "analysis/summaries/D1.md"
+  ],
+  "D2": [
+   "analysis/scopes/*.json",
+   "analysis/consolidated/SET.json",
+   "analysis/summaries/D2.md"
+  ]
+ },
+ "gauntlet": {
+  "pack_sections": {
+   "inventory": [
+    "Corpus notes",
+    "Coverage"
+   ],
+   "epic": [
+    "Summary",
+    "Contradictions"
+   ],
+   "requirements_set": [
+    "Crosscheck",
+    "Catalogue gaps"
+   ]
+  },
+  "row_tables": {
+   "inventory": [
+    [
+     "sources",
+     "id"
+    ],
+    [
+     "epics",
+     "name"
+    ]
+   ],
+   "epic": [
+    [
+     "requirements",
+     "req_id"
+    ],
+    [
+     "contradictions",
+     "topic"
+    ]
+   ],
+   "requirements_set": [
+    [
+     "requirements",
+     "req_id"
+    ],
+    [
+     "crosscheck",
+     "functional_requirement"
+    ],
+    [
+     "catalogue_gaps",
+     "catalogue_id"
+    ]
+   ]
+  }
+ },
+ "briefs": {
+  "rows": [
+   [
+    "SYSTEM",
+    "{system.type}"
+   ],
+   [
+    "SCOPE NOUN",
+    "{unit.noun} (plural {unit.noun_plural})"
+   ],
+   [
+    "ID SCHEME",
+    "{requirements.id_scheme}"
+   ],
+   [
+    "PRIORITIES",
+    "{requirements.priority_scheme}"
+   ],
+   [
+    "RELEASES",
+    "{list:requirements.releases}"
+   ],
+   [
+    "LOCATOR RULE",
+    "{requirements.locator_rule}"
+   ],
+   [
+    "VOCABULARY",
+    "{system.vocabulary}"
+   ]
+  ],
+  "notes_title": "METHOD NOTES (from the method and the catalogue pack)",
+  "notes_keys": {
+   "inventory": [
+    "source_types",
+    "epic_reference_functional",
+    "epic_reference_technical",
+    "epic_sizing"
+   ],
+   "analyst": [
+    "requirement_wording",
+    "one_requirement_per_row",
+    "catalogue_usage",
+    "epic_reference_functional",
+    "epic_reference_technical"
+   ],
+   "consolidate:SET": [
+    "crosscheck_rules",
+    "catalogue_usage",
+    "renumbering_rules"
+   ],
+   "critic-client": [
+    "traceability_rules"
+   ],
+   "critic-standard": [
+    "catalogue_persona",
+    "catalogue_usage",
+    "best_practice",
+    "docs_domains"
+   ],
+   "researcher": [
+    "docs_domains",
+    "catalogue_usage"
+   ]
+  },
+  "analyst_inputs": {
+   "CORPUS": "corpus/index.json and corpus/text/SRC-*.md - grep here: `grep -n \"<term>\" corpus/text/SRC-*.md` or `dbcx corpus grep \"<regex>\"`",
+   "UNEXTRACTABLE": "corpus/unextractable.md - a source listed there may only be cited as `visual, unverified` (confidence low + a client question)",
+   "SOURCE INVENTORY": "analysis/inventory/source_inventory.md - your epic's row names the sources that carry it",
+   "CLIENT CONTEXT": "state/client_context.json (only when a client-context artefact was imported)",
+   "SYSTEM INVENTORY": "state/system_inventory.json (only when a system-inventory artefact was imported; every system in it needs technical requirements)"
+  },
+  "consolidator_inputs": "analysis/consolidated/digest-SET.md (read first), analysis/inventory/source_inventory.md, analysis/inventory/HANDOVER.md, analysis/scopes/*.md (open only for rows the digest points to), the catalogue file named in CATALOGUE, reference/platform-standard.md, state/system_inventory.json (when imported)",
+  "critic_client_persona": "the client's product owner / business analyst who sat in every workshop and knows every document: evidence base = the corpus (their own documents, board exports and workshop notes) and the analysis itself; never a reference catalogue, never vendor documentation. Their question is always the same: does the cited locator really say this, and is anything here invented?",
+  "critic_standard_persona_key": "catalogue_persona",
+  "critic_standard_persona": "an independent requirements expert for this system type who judges the set against the reference requirement catalogue and requirements best practice only: completeness (which catalogue capability has no requirement), testability (can this be accepted?), standard vocabulary, FR/TR/NFR classification and requirements that are really solutions. You never read the client's own documents - the client-side critic settles what a document says.",
+  "consolidator_inputs_lean": "analysis/consolidated/digest-SET.md (read first: the inventory's epics with their sources and claim ids, the corpus index), analysis/inventory/source_inventory.md, corpus/index.json and corpus/text/SRC-nnn.md (you read the client's documents yourself in this run), corpus/unextractable.md, the catalogue file named in CATALOGUE, reference/platform-standard.md, state/system_inventory.json (when imported)"
+ },
+ "snippets": {
+  "rulings_topics": "scope-boundaries: channels, markets, customer groups and phases in scope; target-platforms: the platforms and legacy systems the requirements assume, and their end of life; integration-principles: which systems the shop integrates with, in which direction; requirement-conventions: wording, granularity and numbering of the requirement set",
+  "source_types": "Sources come in five shapes and each has its own locator: workshop notes and protocols (SRC-nnn#L120 line blocks), presentations (#s7 slides), documents (#para12 blocks, #table3), spreadsheets and longlists (#Sheet!R12 rows), Miro / whiteboard exports (#item:<id>, #frame:<name>). A diagram exported as an image carries no text - it is in corpus/unextractable.md and may only be cited as `visual, unverified`.",
+  "epic_reference_functional": "Functional epic candidates for a shop-like system: SEO, analytics and tracking, internationalisation, security and data privacy, registration and login, account management, content management, product information, search and navigation, listing pages, detail pages, cart, checkout, pricing and discounts, quote and offer process, order management, payment, returns and claims, inventory and locations, services, personalisation and recommendations, notifications and transactional mail, chat and assistance, loyalty, accessibility, backoffice and user management, punchout / B2B procurement. Use them as a checklist against the sources, never as a source: an epic exists only when the client's material carries it.",
+  "epic_reference_technical": "Technical epic candidates: one epic per connected external system (ERP, PIM, DAM, CRM, WMS, PSP, tax, shipping, search, CDP), one per partner integration, plus middleware / integration layer, frontend and content delivery, platform and hosting, identity and single sign-on, data migration, analytics pipeline, security and compliance, observability. Rule: every system named in an architecture picture, a data-flow list or an imported system inventory needs at least one technical epic - or an explicit out-of-scope epic row.",
+  "epic_sizing": "`estimated_requirements` is an estimate of how many requirement rows the epic's sources will yield - it drives the wave plan and the light pass (<= 5 rows), nothing else. State the basis of the estimate in the epic description (how many source passages carry it), never a bare number.",
+  "requirement_wording": "A requirement states a CAPABILITY the system must have, from the point of view of the client's business, in the present tense and testable: \"The shop shows the customer's contract prices on the product detail page.\" Not a solution (\"a price service is implemented that ...\"), not a task (\"migrate the price table\"), not a wish without a subject. Keep the client's own words for domain terms; add a standard term in brackets only when the client's term is ambiguous.",
+  "one_requirement_per_row": "One requirement per row. A source sentence joined by \"and\" that carries two capabilities becomes two rows with two locators pointing at the same passage. A row whose description needs the word \"and also\" is two rows. Conversely: the same capability mentioned in three sources is ONE row with three locators.",
+  "catalogue_usage": "The reference catalogue (CATALOGUE row, ids CAT-...) is a checklist, never a source of requirements: `catalogue_ref` names the catalogue entry a requirement corresponds to; a catalogue capability with no requirement becomes a Catalogue-gaps row with decision `in-scope` (add a requirement), `out-of-scope` (the client's material rules it out - name the locator) or `question` (nobody said - it becomes a client question). Never copy a catalogue entry into the requirement list as if the client had asked for it.",
+  "crosscheck_rules": "FR<->TR cross-check: every functional requirement that moves data across a system boundary (prices, stock, products, orders, customers, invoices, media, single sign-on, payment, shipping, tax) needs a technical requirement for that interface - relation `has-tr` with the TR id, or `missing-tr` when none exists (and then a client question or a new TR). A technical requirement that no functional requirement and no explicit technical goal needs is `orphan-tr` - it is either an invented requirement or an undocumented driver; say which.",
+  "renumbering_rules": "Renumber globally after the dedupe: FR-001.. in epic order, then TR-001.., then NFR-001..; the per-epic id of the analyst goes nowhere - but every row you renumber, merge or drop is listed by BOTH ids in your report, because a changed table row is invisible to the claims register and the orchestrator has to put it into the next critic brief by hand. A merged duplicate keeps the union of its locators and names the dropped id in `duplicates_of`.",
+  "traceability_rules": "Traceability is the point of this method: open the locator of every requirement row you score and read the passage. A locator that says something similar is not the same as a locator that says this; a locator that carries a wish (\"it would be nice if\") is not a must; a locator that carries an exclusion (\"not in the first release\", \"we do not want\") must not have become a requirement without that exclusion. An invented requirement - one whose locator does not carry it and which is not marked `inferred` - is verdict `false`, not a low score.",
+  "best_practice": "Requirements best practice as the yardstick: one capability per requirement, testable (an acceptance hint that names an observable outcome), free of solution design, free of hidden assumptions, classified consistently (functional = what the business can do; technical = interfaces, platform, data, migration; nfr = performance, availability, security, accessibility, operability, compliance - a measurable quality with a number where the sources give one), priorities from the sources rather than from the consultant.",
+  "docs_domains": ""
+ },
+ "research_topics": "Only relevant when a catalogue slot is set: confirm for THIS system type which capabilities the reference catalogue lists as standard today, which of its entries are outdated for the current generation of products, and which regulatory or accessibility requirements (for the client's markets) belong in every requirement set of this system type. Resolve every *(verify)* item of the catalogue pack's seed with URL and date, or mark it unverifiable with the reason. Generic queries only - never the client's name, an epic name or a corpus locator.",
+ "lint": {
+  "allow_terms": [
+   "business analyst",
+   "requirements analyst",
+   "solution analyst",
+   "data correction",
+   "correction of master data",
+   "order status",
+   "delivery status",
+   "payment status",
+   "requirement status"
+  ]
+ },
+ "progress": {
+  "size_weighted": true
+ }
+}

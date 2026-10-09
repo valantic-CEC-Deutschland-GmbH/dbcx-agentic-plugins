@@ -1,0 +1,8 @@
+{
+  "frontend": "Storefront",
+  "api": "OCC/API",
+  "plugin": "AddOn",
+  "admin": "Backoffice",
+  "facade": "Facades",
+  "core": "Backend core"
+}

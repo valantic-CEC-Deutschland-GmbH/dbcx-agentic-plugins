@@ -1,0 +1,84 @@
+{
+  "name": "sap-commerce",
+  "display": "SAP Commerce (Cloud)",
+  "roles": [
+    "source",
+    "target"
+  ],
+  "_readme": "SAP Commerce / hybris as source (on-premise or CCv2, accelerator or composable) and SAP Commerce Cloud as target (CCv2 + composable storefront). Structural layer hand-written; standard extension list derived from the platform folders in the repo; version-pair knowledge seeded in knowledge.json/research-seed.md and refreshed per project. Also carries: activation rule, collision mechanisms, ImpEx parse rule + impex_rows tool, property resolution chain, help.sap.com tools, shared-type attribute ownership, invoice-module name trap (knowledge); resolver tools active_extensions / effective_property / template_diff / process_reach (deterministic, read-only); check_recipes in knowledge.json (rendered only when triggered).",
+  "as_source": {
+    "platform": "SAP Commerce",
+    "language_stack": "Java / Spring (JDK per platform version)",
+    "default_frontend": "JSP accelerator storefront + addons",
+    "unit": {
+      "noun": "Extension",
+      "noun_plural": "Extensions",
+      "manifest_file": "extensioninfo.xml",
+      "repo_roots": [
+        "hybris/bin/custom"
+      ],
+      "standard_dirs": [
+        "hybris/bin/platform",
+        "hybris/bin/modules",
+        "hybris/bin/ext-"
+      ]
+    },
+    "do_not_run": [
+      "ant",
+      "hybrisserver.sh",
+      "any platform start or initialization"
+    ],
+    "snippets": {
+      "version_markers": "hybris/bin/platform/build.number (version=...), CCv2 manifest.json commerceSuiteVersion, extensioninfo.xml version attributes; JDK from setenv/manifest",
+      "active_units_config": "Resolve activation with the pack tool `dbcx active_extensions <repo> [--ext a,b]` and quote its state + evidence; never count localextensions.xml by regex (commented-out entries and single-quoted attributes miscount). The list the build uses: CCv2 = the file manifest.json useConfig.extensions.location points at, minus useConfig.extensions.exclude; on-premise = hybris/config/localextensions.xml. manifest.json extensions[] / storefrontAddons[] add to it; useConfig.extensions carries no persona, so activation is all-or-nothing across dev/stage/prod. requires-extension auto-loads a required extension ONLY when it is discoverable on a scanned path (the tree); a CCv2 cloud-only extension becomes discoverable only through manifest.json extensions[]. FOUR states: active (loaded by a source above AND in the tree or supplied by the manifest) / declared-not-provisioned (listed or required by an active extension, but neither in the tree nor in manifest.json - the repository does not provide it; whether the CCv2 build injects it anyway is NOT decidable from the repository: say exactly that, and never recommend or rule out a manifest change on the declaration alone) / not-decidable (no localextensions.xml in the repo, standard code not checked in, excluded but required, or reachable only through an extension whose extensioninfo.xml is not in the repo) / inactive (nothing in the repository loads it). DECLARED IS NOT ACTIVE: name the source of every activation statement and report a disagreement between extensioninfo.xml, the manifest, localextensions.xml and the tree. An inactive unit still costs its cleanup fan-out in live units (items.xml attributes, backoffice config, ImpEx that writes its attributes).",
+      "package_sources": "accelerator addons: localextensions.xml / manifest.json storefrontAddons, extensioninfo requires-extension, project.properties addon lists; partner extensions under hybris/bin/custom",
+      "override_mechanisms": "The scanner's override_candidates are CANDIDATES with a `resolution` (overrides-standard / no-op-standard-alias / target-not-loaded / new-id / not-decidable): only `overrides-standard` rows re-point a bean an ACTIVE standard extension defines - never publish the candidate count. overridden = standard bean replaced: <alias name=\"custom\" alias=\"standardBeanId\"/>, redefinition of a standard bean id, replaced interceptor/validator/populator list entries, AOP advice; extended = subclass registered as a NEW bean without alias takeover (or parent= extension); shadowed = a class with a de.hybris.* / com.sap.* FQN inside a custom extension (overlays the platform class on the classpath). Four COLLISION MECHANISMS with different failure modes - name the one that applies: (1) duplicate request-mapping annotations in one web context -> Spring MVC ambiguous-mapping failure at context refresh; (2) duplicate bean ids -> silent, load-order-dependent shadowing, no crash; (3) byte-identical *-beans.xml declaring the same FQCNs in two extensions -> the BUILD fails first (generated DTO collision), before Spring is reached; (4) alias contention - two extensions alias the same standard bean id, the later-loaded one wins (localextensions order). Spring quirk worth knowing: DefaultListableBeanFactory.doGetBeanNamesForType skips a bean definition NAME that is also registered as an ALIAS, so a component-scanned controller whose name is aliased onto another bean is never collected by RequestMappingHandlerMapping (verify against the shipped spring-beans jar with javap, never assert). AspectJ @annotation(RequestMapping) does NOT match @GetMapping/@PostMapping meta-annotations.",
+      "schema_sources": "<ext>-items.xml: itemtype autocreate=\"false\" = extended standard type (count its attributes), autocreate=\"true\" = new type (deployment table + typecode), relations, enumtypes; *-beans.xml are DTOs (aggregate)",
+      "workflow_sources": "resources/<ext>/process/*.xml business processes (name the standard process they replace, e.g. order-process of yacceleratorfulfilmentprocess), *-spring.xml process action beans, CronJob/Job beans and impex CronJob triggers",
+      "data_script_sources": "resources/**/impex/**/*.impex (essentialdata, projectdata, sampledata), patch releases (patches extension: release folders replayed, not edited in place), hot-folder mappings. IMPEX PARSE RULE: a header (INSERT_UPDATE Type;...) stays active until the NEXT header - blank lines and '#' comment lines do NOT close a block, and a type's block can sit after another type's header in the same file; counting by paragraph or by first header silently drops rows. Use the pack tool platforms/sap-commerce/tools/impex_rows.py --type <Type> <folder> and quote its RULE line. A '$macro = value' line is a DEFINITION - a deprecation hit on it proves only that the string exists; check whether any header uses the macro before reporting it as substantive.",
+      "read_order": "extensioninfo.xml, project.properties, *-spring.xml (+ web/webroot/WEB-INF/*-web-spring.xml), *-items.xml, *-beans.xml, web/webroot/WEB-INF/config, resources/**/impex, resources/**/process/*.xml, *-backoffice-config.xml, acceleratoraddon/**, src/**, web/src/**, testsrc (intent only); check activation (`dbcx active_extensions`) and the property chain (`dbcx effective_property`, PROPERTY RESOLUTION ORDER) before asserting behaviour; for a unit generated from a vendor template run `dbcx template_diff <repo> <unit>` before calling anything a patch or quoting a size",
+      "hosting_constraints": "on-premise -> CCv2: no persistent local file system (hot folders via cloudhotfolder/azurecloudhotfolder + Blob), media via Azure Blob storage strategy, Tomcat/JVM properties via manifest aspects not local.properties, no custom Tomcat valves/connectors, outbound network only to allow-listed endpoints, SMTP via external relay, cluster/cronjob node groups via aspects (backgroundProcessing), Solr as managed service, no SSH/ant on servers, localextensions.xml replaced by manifest.json",
+      "api_families_hint": "OCC v2 (commercewebservices + b2bocc, commerceorgocc, b2bpunchoutocc, customerticketingocc, cmsocc, ...) see knowledge target_api_endpoint_families",
+      "property_resolution_order": "Resolve an effective value with the pack tool `dbcx effective_property <repo> <key> [--persona p] [--aspect a]` and quote its layer + file:line; the LAST writer wins. CCv2 (manifest.json present): hybris/bin/platform/project.properties -> project.properties of the ACTIVE extensions (their mutual order is the platform load order) -> manifest.json `properties` -> manifest.json useConfig.properties files in ARRAY order (persona entries only for the persona, aspect entries only for the aspect; e.g. common.properties listed after the local-<persona> files overrides them) -> manifest `properties` with a persona -> the aspect's manifest `properties` -> DEPLOYMENT-TIME layers (Cloud Portal environment properties / hcs-common service) that rank after everything in the repository and are INVISIBLE to a code-only analysis. hybris/config/local.properties is generated at build time on CCv2 and is not a repository layer. On-premise: platform + extension project.properties -> hybris/config/local.properties -> deployment-time layers (HYBRIS_OPT_CONFIG_DIR files, y_* environment variables). Files that set the key but are not in the chain (e.g. developer or local-build folders) do not count for the cloud build - name the build path a statement holds for. A vendor default read from platform code is never the effective value until the chain is checked. WRAPPER SEMANTICS: the shipped HybrisConfiguration.getString(key) returns an empty string for a missing key (no null, no exception) - verify against the shipped bytecode (javap) before asserting that a missing property causes a lookup failure or disables a check; an unset timeout read through such a wrapper means 'no timeout', not 'default timeout'."
+    }
+  },
+  "as_target": {
+    "platform": "SAP Commerce Cloud",
+    "api_name": "OCC",
+    "content_model_name": {
+      "en": "CMS component",
+      "de": "CMS-Komponente"
+    },
+    "default_frontend": "composable storefront latest",
+    "snippets": {
+      "critic2_persona": "SAP solution architect who knows SAP Commerce Cloud in detail across the source and target versions, CCv2 and composable storefront, incl. release notes, deprecations and what is standard vs. partner add-on",
+      "docs_domains": "help.sap.com (SAP Commerce Cloud product documentation, release notes, 'What's new', deprecation status table, upgrade notes) - it is a JS application that WebFetch cannot render: use the pack tools `python3 <plugin>/platforms/sap-commerce/tools/saphelp.py <topic-url>` (topic as text) and `python3 .../tools/sapsearch.py \"<query>\"` (portal search, generic queries only); SAP Commerce Cloud API (OCC) reference on api.sap.com. Version lines: the JDK-21 line is 2211-jdk21.N, the parallel JDK-17 line 2211.N, composable storefront 221121.x / 2211.x - never derive a release number on the other line from a mapping rule and never place a derived number inside a citation.",
+      "best_practice": "extend via new beans + alias, never class shadowing or patched platform jars; data model delta via autocreate=false attribute additions, new deployment tables with unique typecodes 10000-32767; business logic in services, facades convert to DTOs, OCC controllers thin; integration via Integration API / CPI (outboundsync, odata2webservices) not point-to-point SOAP; headless: no SessionService/JaloSession attribute state for UI features, cart as single source of truth, OAuth2 tokens, CMS via cmsocc; shared platform types (SAPConfiguration, BaseStore, BaseSite, CMSSite) survive a module removal while the ATTRIBUTES that module contributed do not - an ImpEx header carrying an unowned column fails at import time; check attribute ownership per extension (javadoc 'defined at extension')",
+      "critic2_focus": "D1: deprecation statuses, version facts, CCv2 constraints. D2: is the 'standard counterpart' really a platform bean/class, classification vs. SAP extension best practice. D3: covered-standard / standard_alternative exist in the target version AND in composable storefront (name the OCC extension and the composable storefront feature library). D4: exact OCC endpoint names, composable storefront CMS component mapping, auth/session statements vs. OCC OAuth2 reality",
+      "expected_hotspots_d3": "requirements around external identity (CIAM/SSO), customer-specific pricing and availability from the ERP, punchout, installed base / equipment, document downloads, product relations (successor/accessory), quotes and order approval",
+      "expected_blockers_d4": "auth/CIAM with external IdP vs. OCC OAuth2, live pricing/availability calls, punchout, custom CMS component types without a composable storefront mapping, session/JaloSession-state features, on-prem -> CCv2 constraints, entities without standard counterpart",
+      "content_model_notes": "CMS component types with a composable storefront component mapping render out of the box (see knowledge target_content_component_types) - `supported` requires the BACKEND component type name to be mapped; a reusable presentational building block (e.g. the carousel) is not a CMS-type mapping. Custom component types need an Angular component + CmsConfig mapping; AddOn JSP overrides have no headless equivalent. A type re-declared in a project items.xml with generate=\"false\" autocreate=\"false\" is a platform type, not a custom one. THREE SEPARATE MECHANISMS per custom CMS component on the composable storefront - (1) type/schema survival in the backend, (2) CMS-OCC transport (cmsocc serialises the component; nested component collections arrive as component UID references the frontend resolves itself), (3) frontend mapping and rendering (CmsConfig mapping, Angular component, interaction, accessibility) - a D4 feature row names all three: transport alone delivers no visible component, and schema survival says nothing about the rendering layer.",
+      "frontend_rebuild_notes": "Frontend units (JSP storefront, AddOns, JavaScript widgets): (a) per-BaseSite label partitions are NOT covered by the composable storefront's language fallback - per-site resource selection or a remote i18n endpoint is a separate design item; (b) accessibility verdicts on legacy widgets trace the loaded JavaScript library's runtime DOM augmentation (focusability, roles, labels, keyboard handling) - static empty controls prove nothing; (c) a custom CMS component is three mechanisms - schema survival, CMS-OCC transport incl. nested UID resolution, frontend mapping + rendering - judged separately; (d) a rebuild-frontend disposition names what the target frontend rebuilds against which OCC endpoint, and the CMS component types it needs mapped."
+    }
+  },
+  "knowledge": "knowledge.json",
+  "adapter": "adapter.py",
+  "research_seed": "research-seed.md",
+  "reference_cache": "reference-cache.md",
+  "kind": "platform",
+  "vendor_code": {
+    "_readme": "Composable storefront npm libraries (`@spartacus` scope) installed read-only as citable evidence by the `vendor_code` pack tool. release_lines maps a platform variant to its release line; 'default' covers every other variant.",
+    "scope": "@spartacus",
+    "release_lines": {
+      "2211-jdk21": "221121",
+      "default": "2211"
+    },
+    "libraries": [
+      "core", "storefront", "styles", "assets", "setup", "schematics", "asm", "cart", "checkout", "order",
+      "organization", "product", "product-configurator", "user", "tracking", "smartedit", "storefinder",
+      "pickup-in-store", "requested-delivery-date", "estimated-delivery-date", "quote", "customer-ticketing",
+      "pdf-invoices", "s4om", "cdc", "cds", "cdp", "digital-payments", "opf", "epd-visualization", "qualtrics",
+      "segment-refs", "s4-service", "omf", "punchout"
+    ]
+  }
+}

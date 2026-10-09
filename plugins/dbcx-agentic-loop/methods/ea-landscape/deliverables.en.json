@@ -1,0 +1,1951 @@
+{
+ "_readme": "Excel deliverables of the ea-landscape method. Wording only; the rows come from methods/ea-landscape/datasets.py DATASETS. Formula placeholders: {r} row, {MAXR}, {rng:Sheet.col_id}, {col:col_id}, {cell:col_id}, {L:token} (or {L:token|ctx}), {p:param}, {row}, {x:key}. Text placeholders {engagement.client}, {landscape.focus}, {strategy.vision}, {system.noun} ... come from the merged run configuration.",
+ "deliverables": {
+  "D1": {
+   "title": "D1 System inventory and data objects",
+   "requires": [
+    "D1"
+   ],
+   "purpose": "The landscape as the client's own documents describe it: every system with category, vendor and product, version, owner, hosting and lifecycle; every data object that crosses a system boundary with the systems the documents claim as its master; and the strategic statements the target architecture is derived from. Scope of this study: {landscape.focus}.",
+   "sources": "corpus/index.json (the indexed client documents with stable locators), analysis/inventory/landscape_inventory.md (the verified inventory)",
+   "sources_client": "The client's documents (indexed, every statement with a stable document locator) and the landscape inventory verified against them",
+   "extra": "As-is diagram: the file {deliverables.D1.diagram} is generated from the same data - it is regenerated after every change, never edited by hand.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "KPIs as formulas over the detail sheets, assessment as text",
+     "kpis": [
+      {
+       "id": "systems",
+       "label": "{system.noun_plural} in the landscape",
+       "formula": "=COUNTA({rng:Systems.name})",
+       "note": "sheet Systems"
+      },
+      {
+       "id": "core",
+       "label": "of which core",
+       "formula": "=COUNTIF({rng:Systems.relevance},\"{L:core}\")",
+       "note": "carry the business processes in scope"
+      },
+      {
+       "id": "peripheral",
+       "label": "of which peripheral",
+       "formula": "=COUNTIF({rng:Systems.relevance},\"{L:peripheral}\")",
+       "note": "named and described, examined in less depth"
+      },
+      {
+       "id": "out_of_scope",
+       "label": "of which out of scope",
+       "formula": "=COUNTIF({rng:Systems.relevance},\"{L:out-of-scope}\")",
+       "note": "listed for completeness only"
+      },
+      {
+       "id": "retiring",
+       "label": "{system.noun_plural} being retired or already retired",
+       "formula": "=COUNTIF({rng:Systems.lifecycle},\"{L:retiring}\")+COUNTIF({rng:Systems.lifecycle},\"{L:retired}\")",
+       "note": "sheet Systems, column Lifecycle"
+      },
+      {
+       "id": "data_objects",
+       "label": "Data objects crossing a system boundary",
+       "formula": "=COUNTA({rng:Data_Objects.name})",
+       "note": "sheet Data_Objects"
+      },
+      {
+       "id": "single_master",
+       "label": "of which with exactly one documented master",
+       "formula": "=COUNTIF({rng:Data_Objects.n_masters},1)",
+       "note": "one system of record, as the documents state it"
+      },
+      {
+       "id": "conflicts",
+       "label": "of which claimed by more than one system",
+       "formula": "=COUNTIF({rng:Data_Objects.n_masters},\">1\")",
+       "note": "the documents contradict each other - {engagement.client} decides which system leads"
+      },
+      {
+       "id": "no_master",
+       "label": "of which without a documented master",
+       "formula": "=COUNTIF({rng:Data_Objects.n_masters},0)",
+       "note": "no document names a system of record"
+      },
+      {
+       "id": "interfaces",
+       "label": "Interfaces the documents mention",
+       "formula": "=SUM({rng:Systems.interfaces_mentioned})",
+       "note": "upper bound from the documents; the detail per system is in D2"
+      },
+      {
+       "id": "documents",
+       "label": "Client documents read",
+       "formula": "=COUNTA({rng:Sources.id})",
+       "note": "sheet Sources"
+      },
+      {
+       "id": "no_text",
+       "label": "of which without a usable text layer",
+       "formula": "=COUNTIF({rng:Sources.quality},\"{L:unextractable|q}\")+COUNTIF({rng:Sources.quality},\"{L:none|q}\")",
+       "note": "statements resting on them stay marked as unverified"
+      },
+      {
+       "id": "vision",
+       "label": "Strategic statements the documents make",
+       "formula": "=COUNTA({rng:Strategic_Vision.topic})",
+       "note": "sheet Strategic_Vision - the target architecture rests on these"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Sources",
+     "type": "table",
+     "dataset": "sources",
+     "readme": "One row per client document with its origin, date and text quality - the base of every locator in this study",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 10
+      },
+      {
+       "header": "Document",
+       "field": "title",
+       "width": 44
+      },
+      {
+       "header": "Type",
+       "field": "type",
+       "width": 10
+      },
+      {
+       "header": "Date of the document",
+       "field": "date",
+       "width": 14
+      },
+      {
+       "header": "Origin (who, for which purpose)",
+       "field": "origin",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Text quality",
+       "field": "quality",
+       "label": true,
+       "label_ctx": "q",
+       "validation": [
+        "good",
+        "partial",
+        "none",
+        "unextractable"
+       ],
+       "width": 16,
+       "emphasis": "decision",
+       "status": {
+        "good": "standard",
+        "partial": "rework",
+        "none": "rebuild",
+        "unextractable": "rebuild"
+       }
+      },
+      {
+       "header": "Evidence for",
+       "field": "covers",
+       "wrap": true,
+       "width": 50
+      }
+     ],
+     "tab": "reference"
+    },
+    {
+     "name": "Systems",
+     "type": "table",
+     "dataset": "systems",
+     "readme": "One row per {system.noun} of the landscape: category, product, ownership, hosting, lifecycle and how deeply it was examined",
+     "columns": [
+      {
+       "header": "{system.noun}",
+       "field": "name",
+       "width": 22
+      },
+      {
+       "header": "Category",
+       "field": "category",
+       "label": true,
+       "validation": "$system.categories",
+       "width": 16
+      },
+      {
+       "header": "Lifecycle",
+       "field": "lifecycle",
+       "label": true,
+       "validation": "$system.lifecycles",
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "active": "standard",
+        "planned": "neutral",
+        "retiring": "rework",
+        "retired": "neutral"
+       }
+      },
+      {
+       "header": "Depth of examination",
+       "field": "relevance",
+       "label": true,
+       "validation": "$system.relevances",
+       "width": 16,
+       "emphasis": "decision",
+       "status": {
+        "core": "standard",
+        "peripheral": "neutral",
+        "out-of-scope": "neutral"
+       }
+      },
+      {
+       "header": "Vendor / product",
+       "field": "vendor_product",
+       "width": 26
+      },
+      {
+       "header": "What it does for the business",
+       "field": "description",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Receives data from",
+       "field": "depends_on",
+       "sep": ", ",
+       "wrap": true,
+       "width": 24
+      },
+      {
+       "header": "Interfaces mentioned",
+       "field": "interfaces_mentioned",
+       "numeric": true,
+       "width": 10
+      },
+      {
+       "header": "Data objects claimed as master",
+       "id": "mastered",
+       "formula": "=COUNTIF({rng:Data_Objects.masters},\"*\"&{cell:name}&\"*\")",
+       "width": 12
+      },
+      {
+       "header": "Own profile in D2",
+       "field": "analysed",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Version",
+       "field": "version",
+       "width": 14,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Owner",
+       "field": "owner",
+       "width": 20,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Hosting",
+       "field": "hosting",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "sources",
+       "sep": "; ",
+       "wrap": true,
+       "width": 34,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      }
+     ],
+     "row_key": "name"
+    },
+    {
+     "name": "Data_Objects",
+     "type": "table",
+     "dataset": "data_objects",
+     "readme": "One row per data object with every system the documents claim as its master - more than one claim is a mastership conflict",
+     "columns": [
+      {
+       "header": "Data object",
+       "field": "name",
+       "width": 22
+      },
+      {
+       "header": "What it is",
+       "field": "description",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Claimed as master by",
+       "field": "claimed_master_systems",
+       "id": "masters",
+       "sep": "; ",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Number of claims",
+       "id": "n_masters",
+       "formula": "=IF({cell:masters}=\"\",0,LEN({cell:masters})-LEN(SUBSTITUTE({cell:masters},\";\",\"\"))+1)",
+       "width": 10
+      },
+      {
+       "header": "Mastership",
+       "id": "mastership",
+       "formula": "=IF({cell:n_masters}=0,\"{L:unknown}\",IF({cell:n_masters}=1,\"{L:single-master}\",\"{L:conflict}\"))",
+       "width": 20,
+       "emphasis": "decision",
+       "status": {
+        "single-master": "standard",
+        "conflict": "rebuild",
+        "unknown": "rework"
+       }
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Read by",
+       "field": "consumer_systems",
+       "sep": ", ",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "sources",
+       "sep": "; ",
+       "wrap": true,
+       "width": 34,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      }
+     ],
+     "row_key": "name"
+    },
+    {
+     "name": "Strategic_Vision",
+     "type": "table",
+     "dataset": "strategic_vision",
+     "readme": "The client's own strategic statements, quoted with their locator - the target architecture in D4 rests on these rows and on nothing else",
+     "columns": [
+      {
+       "header": "Topic",
+       "field": "topic",
+       "width": 26
+      },
+      {
+       "header": "Statement",
+       "field": "statement",
+       "wrap": true,
+       "width": 90
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "source_locators",
+       "sep": "; ",
+       "wrap": true,
+       "width": 34,
+       "evidence": true
+      }
+     ]
+    },
+    {
+     "name": "Overview",
+     "type": "overview",
+     "title": "Landscape overview (formulas over the sheet Systems)",
+     "readme": "Distribution per category and lifecycle, plus the mastership and document picture",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "By category",
+       "row_header": "Category",
+       "row_tokens": "$system.categories",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{system.noun_plural}",
+         "formula": "=COUNTIF({rng:Systems.category},{row})"
+        },
+        {
+         "header": "of which core",
+         "formula": "=COUNTIFS({rng:Systems.category},{row},{rng:Systems.relevance},\"{L:core}\")"
+        },
+        {
+         "header": "Interfaces mentioned",
+         "formula": "=SUMIF({rng:Systems.category},{row},{rng:Systems.interfaces_mentioned})"
+        },
+        {
+         "header": "Data objects claimed as master",
+         "formula": "=SUMIF({rng:Systems.category},{row},{rng:Systems.mastered})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "{system.noun_plural} by category"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "By lifecycle",
+       "row_header": "Lifecycle",
+       "row_tokens": "$system.lifecycles",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{system.noun_plural}",
+         "formula": "=COUNTIF({rng:Systems.lifecycle},{row})"
+        },
+        {
+         "header": "of which core",
+         "formula": "=COUNTIFS({rng:Systems.lifecycle},{row},{rng:Systems.relevance},\"{L:core}\")"
+        },
+        {
+         "header": "Interfaces mentioned",
+         "formula": "=SUMIF({rng:Systems.lifecycle},{row},{rng:Systems.interfaces_mentioned})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "{system.noun_plural} by lifecycle"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Mastership and documents",
+       "rows": [
+        {
+         "label": "Data objects with one master",
+         "formula": "=COUNTIF({rng:Data_Objects.mastership},\"{L:single-master}\")"
+        },
+        {
+         "label": "Data objects with a mastership conflict",
+         "formula": "=COUNTIF({rng:Data_Objects.mastership},\"{L:conflict}\")"
+        },
+        {
+         "label": "Data objects without a documented master",
+         "formula": "=COUNTIF({rng:Data_Objects.mastership},\"{L:unknown}\")"
+        },
+        {
+         "label": "Documents with full text",
+         "formula": "=COUNTIF({rng:Sources.quality},\"{L:good|q}\")"
+        },
+        {
+         "label": "Documents with partial text",
+         "formula": "=COUNTIF({rng:Sources.quality},\"{L:partial|q}\")"
+        },
+        {
+         "label": "Documents without a text layer",
+         "formula": "=COUNTIF({rng:Sources.quality},\"{L:unextractable|q}\")"
+        },
+        {
+         "label": "{system.noun_plural} with an own profile in D2",
+         "formula": "=COUNTIF({rng:Systems.analysed},\"{L:true}\")"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "D1",
+     "readme": "Every statement of this workbook with its evidence and the two reviewer scores"
+    }
+   ]
+  },
+  "D2": {
+   "title": "D2 {system.noun} profiles: interfaces, data ownership, pain points",
+   "requires": [
+    "scopes"
+   ],
+   "purpose": "One profile per {system.noun} of the landscape, read from the client's documents: which interfaces it has and by which mechanism, which data objects it owns, reads or copies, which business capabilities it provides as a product standard and which were built for this client, what hurts today, and what limits any change (contracts, end of life, regulation).",
+   "sources": "analysis/scopes/*.md (one analysis per {system.noun}), analysis/inventory/landscape_inventory.md",
+   "sources_client": "One analysis per {system.noun} over the client's documents; the landscape inventory",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "KPIs as formulas over the detail sheets, assessment as text",
+     "kpis": [
+      {
+       "id": "profiled",
+       "label": "{system.noun_plural} profiled",
+       "formula": "=COUNTA({rng:Profiles.system})",
+       "note": "sheet Profiles"
+      },
+      {
+       "id": "interfaces",
+       "label": "Interfaces documented",
+       "formula": "=COUNTA({rng:Interfaces.id})",
+       "note": "sheet Interfaces, one row per interface end"
+      },
+      {
+       "id": "if_assumption",
+       "label": "of which resting on an assumption",
+       "formula": "=COUNTIF({rng:Interfaces.grundlage},\"Assumption*\")",
+       "note": "only a picture shows them - column Basis names the assumption {engagement.client} confirms or corrects"
+      },
+      {
+       "id": "if_unknown",
+       "label": "of which with an undocumented mechanism",
+       "formula": "=COUNTIF({rng:Interfaces.protocol_style},\"{L:unknown}\")",
+       "note": "nobody wrote down how the data moves"
+      },
+      {
+       "id": "if_manual",
+       "label": "of which manual",
+       "formula": "=COUNTIF({rng:Interfaces.protocol_style},\"{L:manual}\")",
+       "note": "a person moves the data - no service level, no audit trail"
+      },
+      {
+       "id": "owned",
+       "label": "Data objects a {system.noun} owns",
+       "formula": "=COUNTIF({rng:Data_Ownership.role},\"{L:master}\")",
+       "note": "mastership rows across all profiles"
+      },
+      {
+       "id": "copies",
+       "label": "Redundant copies of a data object",
+       "formula": "=COUNTIF({rng:Data_Ownership.role},\"{L:copy}\")",
+       "note": "a copy that is also written is the usual source of divergence"
+      },
+      {
+       "id": "custom",
+       "label": "Capabilities built for this client",
+       "formula": "=COUNTIF({rng:Capabilities.provided_by},\"{L:custom|p}\")",
+       "note": "a replacement would have to rebuild these"
+      },
+      {
+       "id": "blockers",
+       "label": "Pain points that block the strategy",
+       "formula": "=COUNTIF({rng:Pain_Points.impact},\"{L:blocker}\")",
+       "note": "sheet Pain_Points"
+      },
+      {
+       "id": "act_now",
+       "label": "Pain points worth acting on now",
+       "formula": "=COUNTIF({rng:Pain_Points.client_attention},\"{L:true}\")",
+       "note": "independent of any target decision"
+      },
+      {
+       "id": "constraints",
+       "label": "Constraints recorded",
+       "formula": "=COUNTA({rng:Constraints.constraint})",
+       "note": "sheet Constraints"
+      },
+      {
+       "id": "eol",
+       "label": "of which an end of life",
+       "formula": "=COUNTIF({rng:Constraints.kind},\"{L:end-of-life}\")",
+       "note": "these set the dates of the roadmap in D4"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Profiles",
+     "type": "table",
+     "dataset": "profiles",
+     "readme": "One row per profiled {system.noun} with its counts as formulas over the detail sheets",
+     "columns": [
+      {
+       "header": "{system.noun}",
+       "field": "system",
+       "width": 22
+      },
+      {
+       "header": "Lifecycle",
+       "field": "lifecycle",
+       "label": true,
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "active": "standard",
+        "planned": "neutral",
+        "retiring": "rework",
+        "retired": "neutral"
+       }
+      },
+      {
+       "header": "In one paragraph",
+       "field": "summary",
+       "wrap": true,
+       "width": 64
+      },
+      {
+       "header": "Vendor / product",
+       "field": "vendor_product",
+       "width": 26
+      },
+      {
+       "header": "Interfaces",
+       "id": "n_if",
+       "formula": "=COUNTIF({rng:Interfaces.system},{cell:system})",
+       "width": 10
+      },
+      {
+       "header": "Data objects owned",
+       "id": "n_master",
+       "formula": "=COUNTIFS({rng:Data_Ownership.system},{cell:system},{rng:Data_Ownership.role},\"{L:master}\")",
+       "width": 10
+      },
+      {
+       "header": "Capabilities built for this client",
+       "id": "n_custom",
+       "formula": "=COUNTIFS({rng:Capabilities.system},{cell:system},{rng:Capabilities.provided_by},\"{L:custom|p}\")",
+       "width": 10
+      },
+      {
+       "header": "Pain points",
+       "id": "n_pain",
+       "formula": "=COUNTIF({rng:Pain_Points.system},{cell:system})",
+       "width": 10
+      },
+      {
+       "header": "Constraints",
+       "id": "n_con",
+       "formula": "=COUNTIF({rng:Constraints.system},{cell:system})",
+       "width": 10
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Purpose",
+       "field": "purpose",
+       "wrap": true,
+       "width": 44,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Version",
+       "field": "version",
+       "width": 14,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Owner",
+       "field": "owner",
+       "width": 20,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Hosting",
+       "field": "hosting",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Users",
+       "field": "users",
+       "wrap": true,
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "sources",
+       "sep": "; ",
+       "wrap": true,
+       "width": 34,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      }
+     ],
+     "row_key": "system"
+    },
+    {
+     "name": "Interfaces",
+     "type": "table",
+     "dataset": "interfaces",
+     "readme": "One row per interface end as a document describes it - mechanism, frequency, data objects, middleware and basis",
+     "columns": [
+      {
+       "header": "{system.noun}",
+       "field": "system",
+       "width": 20
+      },
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 16
+      },
+      {
+       "header": "Counterpart",
+       "field": "counterpart",
+       "width": 22
+      },
+      {
+       "header": "Direction",
+       "field": "direction",
+       "label": true,
+       "validation": [
+        "in",
+        "out",
+        "bidirectional"
+       ],
+       "width": 16
+      },
+      {
+       "header": "Mechanism",
+       "field": "protocol_style",
+       "label": true,
+       "validation": "$system.protocol_styles",
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "api": "standard",
+        "event": "standard",
+        "file": "rework",
+        "batch": "rework",
+        "manual": "rework",
+        "unknown": "rebuild"
+       }
+      },
+      {
+       "header": "Frequency (as documented)",
+       "field": "frequency",
+       "width": 20
+      },
+      {
+       "header": "Data objects",
+       "field": "data_objects",
+       "sep": ", ",
+       "wrap": true,
+       "width": 26
+      },
+      {
+       "header": "Middleware",
+       "field": "middleware",
+       "width": 20
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "source_locators",
+       "sep": "; ",
+       "wrap": true,
+       "width": 40,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      },
+      {
+       "header": "How well documented",
+       "field": "confidence",
+       "label": true,
+       "validation": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "width": 14,
+       "internal": true
+      }
+     ],
+     "row_key": "id"
+    },
+    {
+     "name": "Data_Ownership",
+     "type": "table",
+     "dataset": "data_ownership",
+     "readme": "Which {system.noun} owns, reads or copies which data object, always with the document that says so",
+     "columns": [
+      {
+       "header": "{system.noun}",
+       "field": "system",
+       "width": 20
+      },
+      {
+       "header": "Data object",
+       "field": "data_object",
+       "width": 22
+      },
+      {
+       "header": "Role",
+       "field": "role",
+       "label": true,
+       "validation": [
+        "master",
+        "consumer",
+        "copy",
+        "unknown"
+       ],
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "master": "standard",
+        "consumer": "neutral",
+        "copy": "rework",
+        "unknown": "rework"
+       }
+      },
+      {
+       "header": "Note",
+       "field": "note",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "source_locators",
+       "sep": "; ",
+       "wrap": true,
+       "width": 40,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      }
+     ]
+    },
+    {
+     "name": "Capabilities",
+     "type": "table",
+     "dataset": "capabilities",
+     "readme": "The business capabilities each {system.noun} provides, separated into product standard and built for this client",
+     "columns": [
+      {
+       "header": "{system.noun}",
+       "field": "system",
+       "width": 20
+      },
+      {
+       "header": "Capability",
+       "field": "capability",
+       "width": 40
+      },
+      {
+       "header": "Provided by",
+       "field": "provided_by",
+       "label": true,
+       "label_ctx": "p",
+       "validation": [
+        "standard",
+        "custom",
+        "unknown"
+       ],
+       "width": 24,
+       "emphasis": "decision",
+       "status": {
+        "standard": "standard",
+        "custom": "rework",
+        "unknown": "neutral"
+       }
+      },
+      {
+       "header": "Note",
+       "field": "note",
+       "wrap": true,
+       "width": 70
+      }
+     ]
+    },
+    {
+     "name": "Pain_Points",
+     "type": "table",
+     "dataset": "pain_points",
+     "readme": "What the documents and the stakeholders say hurts today, with its weight for the strategy",
+     "columns": [
+      {
+       "header": "{system.noun}",
+       "field": "system",
+       "width": 20
+      },
+      {
+       "header": "Topic",
+       "field": "topic",
+       "width": 22
+      },
+      {
+       "header": "Weight",
+       "field": "impact",
+       "label": true,
+       "validation": [
+        "blocker",
+        "major",
+        "minor",
+        "none"
+       ],
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "standard",
+        "none": "neutral"
+       }
+      },
+      {
+       "header": "Act now",
+       "field": "client_attention",
+       "label": true,
+       "width": 12,
+       "emphasis": "decision",
+       "status": {
+        "true": "rework"
+       }
+      },
+      {
+       "header": "Finding",
+       "field": "finding",
+       "wrap": true,
+       "width": 70
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "source_locators",
+       "sep": "; ",
+       "wrap": true,
+       "width": 40,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      }
+     ]
+    },
+    {
+     "name": "Constraints",
+     "type": "table",
+     "dataset": "constraints",
+     "readme": "Contracts, end-of-life dates, regulation and technical limits - the frame every option in D4 has to fit",
+     "columns": [
+      {
+       "header": "{system.noun}",
+       "field": "system",
+       "width": 20
+      },
+      {
+       "header": "Constraint",
+       "field": "constraint",
+       "wrap": true,
+       "width": 64
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "validation": [
+        "contract",
+        "end-of-life",
+        "regulation",
+        "technical",
+        "organisational"
+       ],
+       "width": 18,
+       "emphasis": "decision",
+       "status": {
+        "end-of-life": "rebuild",
+        "contract": "rework",
+        "regulation": "rework",
+        "technical": "neutral",
+        "organisational": "neutral"
+       }
+      },
+      {
+       "header": "Until",
+       "field": "until",
+       "width": 18
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "source_locators",
+       "sep": "; ",
+       "wrap": true,
+       "width": 40,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      }
+     ]
+    },
+    {
+     "name": "Overview",
+     "type": "overview",
+     "title": "Profile overview (formulas over the detail sheets)",
+     "readme": "Interfaces by mechanism, pain points by weight, data ownership by role",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Interfaces by mechanism",
+       "row_header": "Mechanism",
+       "row_tokens": "$system.protocol_styles",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Interfaces",
+         "formula": "=COUNTIF({rng:Interfaces.protocol_style},{row})"
+        },
+        {
+         "header": "of which resting on an assumption",
+         "formula": "=COUNTIFS({rng:Interfaces.protocol_style},{row},{rng:Interfaces.grundlage},\"Assumption*\")"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Interfaces by mechanism"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "Pain points by weight",
+       "row_header": "Weight",
+       "row_tokens": [
+        "blocker",
+        "major",
+        "minor",
+        "none"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Pain points",
+         "formula": "=COUNTIF({rng:Pain_Points.impact},{row})"
+        },
+        {
+         "header": "of which worth acting on now",
+         "formula": "=COUNTIFS({rng:Pain_Points.impact},{row},{rng:Pain_Points.client_attention},\"{L:true}\")"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Pain points by weight"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "Data ownership by role",
+       "row_header": "Role",
+       "row_tokens": [
+        "master",
+        "consumer",
+        "copy",
+        "unknown"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Rows",
+         "formula": "=COUNTIF({rng:Data_Ownership.role},{row})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Data ownership by role"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Capabilities and constraints",
+       "rows": [
+        {
+         "label": "Capabilities as product standard",
+         "formula": "=COUNTIF({rng:Capabilities.provided_by},\"{L:standard|p}\")"
+        },
+        {
+         "label": "Capabilities built for this client",
+         "formula": "=COUNTIF({rng:Capabilities.provided_by},\"{L:custom|p}\")"
+        },
+        {
+         "label": "Capabilities nobody documented",
+         "formula": "=COUNTIF({rng:Capabilities.provided_by},\"{L:unknown|p}\")"
+        },
+        {
+         "label": "Constraints from a contract",
+         "formula": "=COUNTIF({rng:Constraints.kind},\"{L:contract}\")"
+        },
+        {
+         "label": "Constraints from an end of life",
+         "formula": "=COUNTIF({rng:Constraints.kind},\"{L:end-of-life}\")"
+        },
+        {
+         "label": "Constraints from regulation",
+         "formula": "=COUNTIF({rng:Constraints.kind},\"{L:regulation}\")"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "scopes",
+     "readme": "Every statement of this workbook with its evidence and the two reviewer scores"
+    }
+   ]
+  },
+  "D3": {
+   "title": "D3 Data flows and single source of truth",
+   "requires": [
+    "FLOWS"
+   ],
+   "purpose": "The landscape as one flow list: which data moves from which {system.noun} to which, by which mechanism and how often; for every data object which {system.noun} is the single source of truth, where two documents claim it for different systems, and where nobody claims it at all; and the structural findings that follow from the flow list.",
+   "sources": "analysis/consolidated/FLOWS.md (the consolidated flow list and SSOT matrix) over analysis/scopes/*.md",
+   "sources_client": "The consolidated flow list and mastership matrix over the {system.noun} analyses",
+   "extra": "The as-is diagram deliverables/{deliverables.D1.diagram} is generated from the sheet Flows of this workbook's data source - the picture and the table always agree.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "KPIs as formulas over the detail sheets, assessment as text",
+     "kpis": [
+      {
+       "id": "flows",
+       "label": "Data flows in the landscape",
+       "formula": "=COUNTA({rng:Flows.id})",
+       "note": "sheet Flows, one row per direction"
+      },
+      {
+       "id": "manual",
+       "label": "of which manual",
+       "formula": "=COUNTIF({rng:Flows.style},\"{L:manual}\")",
+       "note": "a person moves the data"
+      },
+      {
+       "id": "unknown",
+       "label": "of which with an undocumented mechanism",
+       "formula": "=COUNTIF({rng:Flows.style},\"{L:unknown}\")",
+       "note": "nobody wrote down how the data moves"
+      },
+      {
+       "id": "via_mw",
+       "label": "of which through middleware",
+       "formula": "=SUM({rng:Flows.via_mw})",
+       "note": "the rest is point to point"
+      },
+      {
+       "id": "on_assumption",
+       "label": "of which resting on an assumption",
+       "formula": "=COUNTIF({rng:Flows.grundlage},\"Assumption*\")",
+       "note": "only a picture shows them - column Basis names the assumption {engagement.client} confirms or corrects"
+      },
+      {
+       "id": "objects",
+       "label": "Data objects assessed",
+       "formula": "=COUNTA({rng:SSOT_Matrix.data_object})",
+       "note": "sheet SSOT_Matrix"
+      },
+      {
+       "id": "single_master",
+       "label": "with exactly one master",
+       "formula": "=COUNTIF({rng:SSOT_Matrix.verdict},\"{L:single-master}\")",
+       "note": "the documents agree"
+      },
+      {
+       "id": "conflicts",
+       "label": "with a mastership conflict",
+       "formula": "=COUNTIF({rng:SSOT_Matrix.verdict},\"{L:conflict}\")",
+       "note": "two systems are claimed - the client decides"
+      },
+      {
+       "id": "no_master",
+       "label": "without a documented master",
+       "formula": "=COUNTIF({rng:SSOT_Matrix.verdict},\"{L:unknown}\")",
+       "note": "no document names a system of record"
+      },
+      {
+       "id": "findings",
+       "label": "Integration findings",
+       "formula": "=COUNTA({rng:Integration_Debt.finding})",
+       "note": "sheet Integration_Debt"
+      },
+      {
+       "id": "blockers",
+       "label": "of which blocking the strategy",
+       "formula": "=COUNTIF({rng:Integration_Debt.impact},\"{L:blocker}\")",
+       "note": "has to be solved before the target architecture"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Flows",
+     "type": "table",
+     "dataset": "flows",
+     "readme": "One row per directed flow, merged from both ends, with its basis and the documents it rests on",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 10
+      },
+      {
+       "header": "From",
+       "field": "from_system",
+       "width": 22
+      },
+      {
+       "header": "To",
+       "field": "to_system",
+       "width": 22
+      },
+      {
+       "header": "Data objects",
+       "field": "data_objects",
+       "sep": ", ",
+       "wrap": true,
+       "width": 26
+      },
+      {
+       "header": "Mechanism",
+       "field": "style",
+       "label": true,
+       "validation": "$system.protocol_styles",
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "api": "standard",
+        "event": "standard",
+        "file": "rework",
+        "batch": "rework",
+        "manual": "rework",
+        "unknown": "rebuild"
+       }
+      },
+      {
+       "header": "Frequency (as documented)",
+       "field": "frequency",
+       "width": 20
+      },
+      {
+       "header": "Middleware",
+       "field": "middleware",
+       "width": 20
+      },
+      {
+       "header": "Through middleware",
+       "id": "via_mw",
+       "formula": "=IF({cell:middleware}=\"\",0,1)",
+       "width": 10
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Evidence (documents)",
+       "field": "evidence",
+       "sep": "; ",
+       "wrap": true,
+       "width": 34,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true
+      },
+      {
+       "header": "How well documented",
+       "field": "confidence",
+       "label": true,
+       "validation": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "width": 14,
+       "internal": true
+      }
+     ],
+     "row_key": "id"
+    },
+    {
+     "name": "SSOT_Matrix",
+     "type": "table",
+     "dataset": "ssot_matrix",
+     "readme": "One row per data object: which {system.noun} is the single source of truth, which other claims exist, and what would settle it",
+     "columns": [
+      {
+       "header": "Data object",
+       "field": "data_object",
+       "width": 22
+      },
+      {
+       "header": "Assessment",
+       "field": "verdict",
+       "label": true,
+       "validation": [
+        "single-master",
+        "conflict",
+        "unknown"
+       ],
+       "width": 20,
+       "emphasis": "decision",
+       "status": {
+        "single-master": "standard",
+        "conflict": "rebuild",
+        "unknown": "rework"
+       }
+      },
+      {
+       "header": "Master",
+       "field": "master_system",
+       "width": 22
+      },
+      {
+       "header": "Also claimed by",
+       "field": "conflicting_claims",
+       "sep": "; ",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Flows carrying it",
+       "id": "n_flows",
+       "formula": "=COUNTIF({rng:Flows.data_objects},\"*\"&{cell:data_object}&\"*\")",
+       "width": 12
+      },
+      {
+       "header": "Recommendation",
+       "field": "recommendation",
+       "wrap": true,
+       "width": 64
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "field": "evidence",
+       "sep": "; ",
+       "width": 40,
+       "emphasis": "support",
+       "group": "loc",
+       "evidence": true,
+       "header": "Evidence (documents)"
+      }
+     ],
+     "row_key": "data_object"
+    },
+    {
+     "name": "Integration_Debt",
+     "type": "table",
+     "dataset": "integration_debt",
+     "readme": "Structural findings over the whole flow list, each with the number it rests on and how that number was counted",
+     "columns": [
+      {
+       "header": "Finding",
+       "field": "finding",
+       "wrap": true,
+       "width": 70
+      },
+      {
+       "header": "{system.noun_plural} concerned",
+       "field": "systems",
+       "sep": ", ",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Weight",
+       "field": "impact",
+       "label": true,
+       "validation": [
+        "blocker",
+        "major",
+        "minor",
+        "none"
+       ],
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "standard",
+        "none": "neutral"
+       }
+      },
+      {
+       "header": "Recommendation",
+       "field": "recommendation",
+       "wrap": true,
+       "width": 70
+      }
+     ]
+    },
+    {
+     "name": "Overview",
+     "type": "overview",
+     "title": "Flow and mastership overview (formulas over the detail sheets)",
+     "readme": "Data objects by mastership assessment, flows by mechanism",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Data objects by mastership",
+       "row_header": "Assessment",
+       "row_tokens": [
+        "single-master",
+        "conflict",
+        "unknown"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Data objects",
+         "formula": "=COUNTIF({rng:SSOT_Matrix.verdict},{row})"
+        },
+        {
+         "header": "Flows carrying them",
+         "formula": "=SUMIF({rng:SSOT_Matrix.verdict},{row},{rng:SSOT_Matrix.n_flows})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Data objects by mastership"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "Flows by mechanism",
+       "row_header": "Mechanism",
+       "row_tokens": "$system.protocol_styles",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Flows",
+         "formula": "=COUNTIF({rng:Flows.style},{row})"
+        },
+        {
+         "header": "of which resting on an assumption",
+         "formula": "=COUNTIFS({rng:Flows.style},{row},{rng:Flows.grundlage},\"Assumption*\")"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Flows by mechanism"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Integration findings",
+       "rows": [
+        {
+         "label": "Findings that block the strategy",
+         "formula": "=COUNTIF({rng:Integration_Debt.impact},\"{L:blocker}\")"
+        },
+        {
+         "label": "Findings of major weight",
+         "formula": "=COUNTIF({rng:Integration_Debt.impact},\"{L:major}\")"
+        },
+        {
+         "label": "Flows through middleware",
+         "formula": "=SUM({rng:Flows.via_mw})"
+        },
+        {
+         "label": "Flows point to point",
+         "formula": "=COUNTA({rng:Flows.id})-SUM({rng:Flows.via_mw})"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "FLOWS",
+     "readme": "Every statement of this workbook with its evidence and the two reviewer scores"
+    }
+   ]
+  },
+  "D4": {
+   "title": "D4 Target architecture: options and roadmap",
+   "requires": [
+    "TARGET"
+   ],
+   "purpose": "The target architecture as a decision, not a picture: one row per strategic move the client's own vision asks for - introduce, replace, consolidate, move a master, retire, keep - with the {system.noun_plural} affected, the flows that change, the data objects that get a new master, the prerequisites, the risks and whether it is the recommended way or the alternative that was weighed. The roadmap shows in which order the moves have to happen and what is true for the business at the end of each phase.",
+   "sources": "analysis/consolidated/TARGET.md (options, roadmap, principles) over analysis/consolidated/FLOWS.md and the strategic statements in D1",
+   "sources_client": "The consolidated options, roadmap and principles over the flow list and the strategic statements in D1",
+   "extra": "Target diagram: the file {deliverables.D4.diagram} is generated from the option list - a changed option changes the picture. Strategic frame: {strategy.vision} Horizon: {strategy.horizon}.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "KPIs as formulas over the detail sheets, assessment as text",
+     "kpis": [
+      {
+       "id": "options",
+       "label": "Options on the table",
+       "formula": "=COUNTA({rng:Options.id})",
+       "note": "sheet Options"
+      },
+      {
+       "id": "preferred",
+       "label": "recommended",
+       "formula": "=COUNTIF({rng:Options.recommendation},\"{L:preferred}\")",
+       "note": "the way this study recommends"
+      },
+      {
+       "id": "alternative",
+       "label": "alternatives kept for the decision",
+       "formula": "=COUNTIF({rng:Options.recommendation},\"{L:alternative}\")",
+       "note": "weighed and shown, not hidden"
+      },
+      {
+       "id": "rejected",
+       "label": "rejected with a reason",
+       "formula": "=COUNTIF({rng:Options.recommendation},\"{L:rejected}\")",
+       "note": "each names the constraint or risk that rejects it"
+      },
+      {
+       "id": "introduce",
+       "label": "{system.noun_plural} to be introduced",
+       "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:introduce}\")",
+       "note": "new in the landscape"
+      },
+      {
+       "id": "replace",
+       "label": "{system.noun_plural} to be replaced",
+       "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:replace}\")",
+       "note": "same capability, different product"
+      },
+      {
+       "id": "retire",
+       "label": "{system.noun_plural} to be retired",
+       "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:retire}\")",
+       "note": "capability moves elsewhere or ends"
+      },
+      {
+       "id": "rehome",
+       "label": "Masters to be moved",
+       "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:re-home-ssot}\")",
+       "note": "a data object gets a new system of record"
+      },
+      {
+       "id": "flows_changed",
+       "label": "Flows changed in total",
+       "formula": "=SUM({rng:Options.n_flows})",
+       "note": "sum over the recommended and alternative options"
+      },
+      {
+       "id": "remastered",
+       "label": "Data objects re-mastered in total",
+       "formula": "=SUM({rng:Options.n_remaster})",
+       "note": "compare with the mastership conflicts in D3"
+      },
+      {
+       "id": "phases",
+       "label": "Roadmap phases",
+       "formula": "=COUNTA({rng:Roadmap.phase})",
+       "note": "sheet Roadmap"
+      },
+      {
+       "id": "principles",
+       "label": "Architecture principles",
+       "formula": "=COUNTA({rng:Principles.principle})",
+       "note": "each traced to a client statement"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Options",
+     "type": "table",
+     "dataset": "options",
+     "readme": "One row per strategic move: move and recommendation first, then rationale, risks, prerequisites and phase; collapsed: the flows and data objects that change",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 10
+      },
+      {
+       "header": "Strategic move",
+       "field": "strategic_move",
+       "label": true,
+       "validation": "$system.strategic_moves",
+       "width": 18,
+       "emphasis": "decision",
+       "status": {
+        "keep": "standard",
+        "introduce": "rework",
+        "consolidate": "rework",
+        "re-home-ssot": "rework",
+        "replace": "rebuild",
+        "retire": "rebuild"
+       }
+      },
+      {
+       "header": "Recommendation",
+       "field": "recommendation",
+       "label": true,
+       "validation": [
+        "preferred",
+        "alternative",
+        "rejected"
+       ],
+       "width": 14,
+       "emphasis": "decision",
+       "status": {
+        "preferred": "standard",
+        "alternative": "rework",
+        "rejected": "neutral"
+       }
+      },
+      {
+       "header": "{system.noun_plural} affected",
+       "field": "systems_affected",
+       "sep": ", ",
+       "wrap": true,
+       "width": 26
+      },
+      {
+       "header": "Why (which strategic statement it serves)",
+       "field": "rationale",
+       "wrap": true,
+       "width": 56
+      },
+      {
+       "header": "Risks",
+       "field": "risks",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Prerequisites",
+       "field": "prerequisites",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Phase",
+       "field": "phase",
+       "width": 12
+      },
+      {
+       "header": "Flows changed",
+       "field": "flows_changed",
+       "sep": "; ",
+       "wrap": true,
+       "width": 26,
+       "emphasis": "support",
+       "group": "change"
+      },
+      {
+       "header": "Flows changed (count)",
+       "id": "n_flows",
+       "formula": "=IF({cell:flows_changed}=\"\",0,LEN({cell:flows_changed})-LEN(SUBSTITUTE({cell:flows_changed},\";\",\"\"))+1)",
+       "width": 12,
+       "emphasis": "support",
+       "group": "change"
+      },
+      {
+       "header": "Data objects re-mastered",
+       "field": "data_objects_re_mastered",
+       "sep": "; ",
+       "wrap": true,
+       "width": 28,
+       "emphasis": "support",
+       "group": "change"
+      },
+      {
+       "header": "Data objects re-mastered (count)",
+       "id": "n_remaster",
+       "formula": "=IF({cell:data_objects_re_mastered}=\"\",0,LEN({cell:data_objects_re_mastered})-LEN(SUBSTITUTE({cell:data_objects_re_mastered},\";\",\"\"))+1)",
+       "width": 12,
+       "emphasis": "support",
+       "group": "change"
+      },
+      {
+       "header": "Confidence",
+       "field": "confidence",
+       "label": true,
+       "validation": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "width": 12,
+       "internal": true
+      }
+     ],
+     "row_key": "id"
+    },
+    {
+     "name": "Roadmap",
+     "type": "table",
+     "dataset": "roadmap",
+     "readme": "The phases in the order they have to run, with the business outcome of each phase",
+     "columns": [
+      {
+       "header": "Phase",
+       "field": "phase",
+       "width": 22
+      },
+      {
+       "header": "Options",
+       "field": "options",
+       "sep": ", ",
+       "wrap": true,
+       "width": 26
+      },
+      {
+       "header": "Options (count)",
+       "id": "n_opt",
+       "formula": "=COUNTIF({rng:Options.phase},{cell:phase})",
+       "width": 12
+      },
+      {
+       "header": "Flows changed",
+       "id": "n_flows_phase",
+       "formula": "=SUMIF({rng:Options.phase},{cell:phase},{rng:Options.n_flows})",
+       "width": 12
+      },
+      {
+       "header": "Data objects re-mastered",
+       "id": "n_remaster_phase",
+       "formula": "=SUMIF({rng:Options.phase},{cell:phase},{rng:Options.n_remaster})",
+       "width": 12
+      },
+      {
+       "header": "What is true for the business afterwards",
+       "field": "outcome",
+       "wrap": true,
+       "width": 80
+      },
+      {
+       "header": "Has to wait for",
+       "field": "dependencies",
+       "sep": ", ",
+       "wrap": true,
+       "width": 30
+      }
+     ]
+    },
+    {
+     "name": "Principles",
+     "type": "table",
+     "dataset": "principles",
+     "readme": "The architecture principles the target rests on, each traced to a client statement or a named reference",
+     "columns": [
+      {
+       "header": "Principle",
+       "field": "principle",
+       "wrap": true,
+       "width": 90
+      },
+      {
+       "header": "Evidence (document locators)",
+       "field": "source_locators",
+       "sep": "; ",
+       "wrap": true,
+       "width": 40,
+       "evidence": true
+      }
+     ]
+    },
+    {
+     "name": "Overview",
+     "type": "overview",
+     "title": "Target overview (formulas over the sheets Options and Roadmap)",
+     "readme": "Options by strategic move and by recommendation, effort of change per phase",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "By strategic move",
+       "row_header": "Strategic move",
+       "row_tokens": "$system.strategic_moves",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Options",
+         "formula": "=COUNTIF({rng:Options.strategic_move},{row})"
+        },
+        {
+         "header": "of which recommended",
+         "formula": "=COUNTIFS({rng:Options.strategic_move},{row},{rng:Options.recommendation},\"{L:preferred}\")"
+        },
+        {
+         "header": "Flows changed",
+         "formula": "=SUMIF({rng:Options.strategic_move},{row},{rng:Options.n_flows})"
+        },
+        {
+         "header": "Data objects re-mastered",
+         "formula": "=SUMIF({rng:Options.strategic_move},{row},{rng:Options.n_remaster})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Options by strategic move"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "By recommendation",
+       "row_header": "Recommendation",
+       "row_tokens": [
+        "preferred",
+        "alternative",
+        "rejected"
+       ],
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Options",
+         "formula": "=COUNTIF({rng:Options.recommendation},{row})"
+        },
+        {
+         "header": "Flows changed",
+         "formula": "=SUMIF({rng:Options.recommendation},{row},{rng:Options.n_flows})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Options by recommendation"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "By phase",
+       "row_header": "Phase",
+       "row_values_from": "roadmap.phase",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Options",
+         "formula": "=COUNTIF({rng:Options.phase},{row})"
+        },
+        {
+         "header": "of which recommended",
+         "formula": "=COUNTIFS({rng:Options.phase},{row},{rng:Options.recommendation},\"{L:preferred}\")"
+        },
+        {
+         "header": "Flows changed",
+         "formula": "=SUMIF({rng:Options.phase},{row},{rng:Options.n_flows})"
+        },
+        {
+         "header": "Data objects re-mastered",
+         "formula": "=SUMIF({rng:Options.phase},{row},{rng:Options.n_remaster})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Options by phase"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Scale of the change",
+       "rows": [
+        {
+         "label": "{system.noun_plural} introduced",
+         "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:introduce}\")"
+        },
+        {
+         "label": "{system.noun_plural} replaced",
+         "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:replace}\")"
+        },
+        {
+         "label": "{system.noun_plural} consolidated",
+         "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:consolidate}\")"
+        },
+        {
+         "label": "{system.noun_plural} retired",
+         "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:retire}\")"
+        },
+        {
+         "label": "{system.noun_plural} kept deliberately",
+         "formula": "=COUNTIF({rng:Options.strategic_move},\"{L:keep}\")"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "TARGET",
+     "readme": "Every statement of this workbook with its evidence and the two reviewer scores"
+    }
+   ]
+  }
+ },
+ "profile_patches": {
+  "lean": [
+   {
+    "deliverable": "D2",
+    "set": {
+     "requires": [
+      "inventory"
+     ],
+     "not_assessed": [
+      "Capabilities",
+      "Pain_Points",
+      "Constraints"
+     ],
+     "purpose": "One profile per {system.noun} of the landscape from the system inventory and the data flows, both read from the client's documents: which interfaces it has and over which mechanism, and which data objects it masters or reads. Capabilities, pain points and constraints per {system.noun} are not assessed in this study.",
+     "sources": "analysis/inventory/landscape_inventory.md (systems and data objects), analysis/consolidated/FLOWS.md (flows, one interface per end) - profile lean: no analysis per {system.noun}",
+     "sources_client": "The system inventory and the data flows, both read from the client's documents"
+    }
+   },
+   {
+    "deliverable": "D2",
+    "sheet": "Claims",
+    "set": {
+     "scopes": "inventory_flows"
+    }
+   }
+  ]
+ }
+}

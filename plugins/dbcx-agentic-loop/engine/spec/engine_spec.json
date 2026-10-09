@@ -1,0 +1,475 @@
+{
+ "_readme": [
+  "Engine part of the analysis spec: the claims table every kind embeds (marker CLAIMS in a method's kinds.json), the critic and gate kinds. Method kinds live in methods/<m>/kinds.json.",
+  "Field types: s=string, i=integer, b=boolean, l=list (';'-separated in Markdown), n=nullable string. Long form: {\"t\": \"s\", \"enum\": [...], \"req\": true}. `$scoring.critics` etc. resolve against the merged run configuration."
+ ],
+ "conventions": "no '|' inside cells (use '/'), no line breaks inside cells (use <br>), lists separated by ';', enum tokens English exactly as given, free text in the deliverable language",
+ "assumptions": {
+  "_readme": "opt-in section (marker ASSUMPTIONS in a method's kinds.json; key assumptions_taken, so it never collides with a method's own `assumptions` table): the readings an autonomous run takes instead of leaving a question open; `dbcx questions import <scope>` registers each row as a client-directed assumption (A-nn on the Annahmen sheet with the confirm/deny dropdown)",
+  "heading": "Assumptions taken",
+  "key": "assumptions_taken",
+  "type": "table",
+  "optional": true,
+  "fields": {"id": {"t": "s", "req": true}, "affects": {"t": "l", "req": true}, "question": {"t": "s", "req": true}, "reading_taken": {"t": "s", "req": true}, "assumption": {"t": "s", "req": true}, "why": {"t": "s", "req": true}, "if_not": {"t": "s", "req": true}, "alternatives": "l"},
+  "help": "Never leave a question open: take the most probable reading (a tie -> the lowest effort, closest to the standard) and record it here. id = a short local id (AS-01); affects = the row keys the reading moves (FR-041 or FR-041@<option>); question = the open point as the client would be asked it; reading_taken = the reading you proceed under (short); assumption = the sentence the client confirms or denies, in the deliverable language ('Die Schätzung geht davon aus, dass ...'); why = why this reading is the most probable; if_not = what changes when the client denies it; alternatives = the other readings (';'-separated). Also write the short reading into the affected row's own assumption text."
+ },
+ "claims": {
+  "heading": "Claims",
+  "key": "claims",
+  "type": "table",
+  "fields": {
+   "id": {
+    "t": "s",
+    "req": true
+   },
+   "type": {
+    "t": "s",
+    "enum": [
+     "fact",
+     "assessment"
+    ],
+    "req": true
+   },
+   "statement": {
+    "t": "s",
+    "req": true
+   },
+   "evidence": {
+    "t": "l",
+    "req": true
+   },
+   "quote": "s",
+   "target": {
+    "t": "s",
+    "req": true
+   },
+   "supersedes": "n",
+   "history": "n"
+  },
+  "help": "Every statement that ends up in a deliverable. ONE PROPOSITION PER CLAIM: one fact or one judgement, at most two figures (a count and its denominator or basis), one `target` sheet - a paragraph carrying several figures is split into several claims (a wrong figure then costs one atom, not the paragraph). type = fact | assessment. evidence = evidence locators (repository path[:line-range], corpus locator SRC-nnn#p12, workbook Sheet!A12, URL, or PS-7-NNN reference id) separated by ';'. A locator is an ADDRESS A TOOL RESOLVES, not prose: no ellipsis ('.../file.xml'), no scheme prefix ('vendor:...'), no parenthetical or comment inside the cell ('file.xml (fully read)', 'PS-7-003 (aspects a, b, c)' - a comma inside a cell also splits it into two broken locators), and never a tool invocation ('dbcx count x'). Standard/vendor code is cited by its real path under the checked-out standard code roots. A reference fact is cited by its id alone. Whatever the parenthetical was going to say - that you read the whole file, which directory you searched, the rule behind a count - belongs in the statement or the rationale, where the client reads it. A negative finding still needs a real address: cite the directory you searched, not a path with your conclusion appended. The CHECK warns per cell that does not resolve; a cell a critic cannot open scores 4 at best. An assessment lists the ids of the fact claims it rests on. target = deliverable/sheet plus the row(s) the claim backs, exactly one sheet: `D3/Coverage#FR-012`, `D4/Features#F-001`, `D2/Patched#r1a2b3c4d,r5e6f7a8b` (several rows of ONE sheet separated by ','). The row id is the row's `rid` in the converted .json (the row key itself when it is an id, else a short hash of the key text); the exact key value works too. Coverage is an exact row-id match: a claim backs exactly the rows its target names - never write the row key into the statement to make a row count as covered. A sheet showing one row per scope (e.g. D2/Depth) needs no row id. The statement is written as an absolute, present-tense fact for the client - never 'corrected in round 2', never a date of an edit, never the words round/critic/analyst/orchestrator/session; correction history goes into history (internal, not exported). quote (optional; `claims.quotes` warn | required) = ONE verbatim excerpt of at least 20 characters in the original language, copied from a cited locator, that carries the statement; several fragments of the same locator are joined by ' […] '. Never paraphrase or translate it - `dbcx evidence quotes <scope>` looks it up word for word and the critics see the result. The quote lives in its own column; the evidence cell stays locator-only"
+ },
+ "kinds": {
+  "critic": {
+   "title": "Gauntlet score: <scope> / <critic> / round <n>",
+   "file": "critic-scores.md",
+   "output_dir": "analysis/gauntlet",
+   "head": {
+    "scope": {
+     "t": "s",
+     "req": true
+    },
+    "critic": {
+     "t": "s",
+     "enum": "$scoring.critics",
+     "req": true
+    },
+    "round": {
+     "t": "i",
+     "req": true
+    }
+   },
+   "head_help": "critic = one of the tokens in run.json scoring.critics (client | standard)",
+   "sections": [
+    {
+     "heading": "Scores",
+     "key": "scores",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "claim_id": {
+       "t": "s",
+       "req": true
+      },
+      "score": {
+       "t": "i",
+       "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+       ],
+       "req": true
+      },
+      "verdict": {
+       "t": "s",
+       "enum": [
+        "confirmed",
+        "imprecise",
+        "unsupported",
+        "false",
+        "trivial",
+        "insightful"
+       ],
+       "req": true
+      },
+      "issue": "s",
+      "counter_evidence": "l",
+      "found_via": {
+       "t": "s",
+       "enum": [
+        "",
+        "grep",
+        "search",
+        "read",
+        "map"
+       ],
+       "omit_empty": true
+      },
+      "fix_hint": "s",
+      "accept_if": "s"
+     },
+     "help": "score 0-10 per docs/SCORING.md; ONE row per claim_id; issue and fix_hint mandatory below 8; counter_evidence mandatory for 2 and 4; verdict false = you checked and the statement is contradicted by evidence (blocks the pass regardless of the score); issue on a passing claim = optional wording/precision note (collected, never becomes a rework on its own); a fix_hint that asserts a count names the test that produced it and what the test would miss; accept_if mandatory below the PASS THRESHOLD: the test you will apply next round - what the corrected statement must state or cite to pass (write it before you see the fix; it keeps your judgement independent and tells the analyst what settles the claim); found_via = optional, the tool that found your counter-evidence (grep | search | read | map)"
+    },
+    {
+     "heading": "Missing claims",
+     "key": "missing_claims",
+     "type": "list",
+     "help": "one line per missing statement ('- ...'), most important first, at most MISSING CLAIMS CAP; the standard critic prefixes each with [standard-fact] or [inference-requires-client-evidence]"
+    },
+    {
+     "heading": "Estate observations",
+     "key": "estate_observations",
+     "type": "list",
+     "help": "one line per fact you established OUTSIDE this scope while scoring (another scope, the whole estate, a standard fact that changes a passed claim elsewhere) - with locator or URL; collected by score_aggregate for the consolidators, the client-attention candidates and the final report. Empty list is fine."
+    },
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "req": true,
+     "help": "3-5 sentences overall impression (English, internal)"
+    }
+   ]
+  },
+  "gate": {
+   "title": "Final gate: <persona> / round <n>",
+   "file": "gate-scores.md",
+   "output_dir": "analysis/gate",
+   "head": {
+    "persona": {
+     "t": "s",
+     "enum": "$scoring.gate_personas",
+     "req": true
+    },
+    "round": {
+     "t": "i",
+     "req": true
+    }
+   },
+   "head_help": "persona = one of the tokens in run.json scoring.gate_personas",
+   "sections": [
+    {
+     "heading": "Key questions",
+     "key": "questions",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "question_id": {
+       "t": "s",
+       "req": true
+      },
+      "score": {
+       "t": "i",
+       "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+       ],
+       "req": true
+      },
+      "where": "s",
+      "answer": "s",
+      "rationale": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "ONE row per KEY QUESTION of your brief, nothing else. score on the anchored scale: 10 = answered on the Management Summary with a figure, its consequence and its basis; 8 = answered in the relevant sheet with at most one filter, the basis visible in each row; 6 = answerable only by combining sheets or reading many rows; 4 = partial or ambiguous; 2 = not answerable; 0 = the deliverable says something wrong or misleading (you name the cell that contradicts another cell or the rendering); odd scores are in-betweens. where = Sheet!Cell where you found the answer (- when none); answer = the answer as you read it, one sentence in the deliverable language; rationale = why this score and not the next anchor up"
+    },
+    {
+     "heading": "Board test",
+     "key": "board_test",
+     "type": "kv",
+     "req": true,
+     "fields": {
+      "forward_unchanged": {
+       "t": "b",
+       "req": true
+      },
+      "blocking_items": "l"
+     },
+     "help": "forward_unchanged = yes | no: would you forward the deliverables to your board exactly as they are; blocking_items = the issue ids (I1; I4) that stop you, empty when yes"
+    },
+    {
+     "heading": "What is missing",
+     "key": "missing",
+     "type": "list",
+     "help": "unscored: what you expected to find for your role and did not find, one line each (deliverable language); empty list is fine"
+    },
+    {
+     "heading": "Issues",
+     "key": "issues",
+     "type": "table",
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "deliverable": {
+       "t": "s",
+       "req": true
+      },
+      "location": {
+       "t": "s",
+       "req": true
+      },
+      "issue": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "content",
+        "presentation",
+        "structure",
+        "language",
+        "outside-scope"
+       ],
+       "req": true
+      },
+      "severity": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "req": true
+      },
+      "question_id": "s",
+      "proposed_change": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "no minimum count - only what costs you a point on a key question or blocks the board test; id = I1, I2 ...; deliverable = the workbook file name; location = Sheet!Cell, Sheet!A2:C9 or Sheet/<row id> (one location per issue); kind = content (a statement or figure is missing, wrong or unproven) | presentation (layout, chart, label, order, wording of a cell) | structure (a sheet, column or KPI is missing or in the wrong place) | language (not in the deliverable language, jargon, raw keys) | outside-scope (a wish the study was not commissioned for); severity blocker = you would not forward the deliverable, major = costs a key question at least one anchor, minor = cosmetic; question_id = the key question it hurts; proposed_change = the concrete change, deliverable language"
+    },
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "req": true,
+     "help": "3-5 sentences, deliverable language: what convinced you, what stops you"
+    }
+   ]
+  },
+  "verifier": {
+   "title": "Final gate verifier: round <n>",
+   "file": "verifier-scores.md",
+   "output_dir": "analysis/gate",
+   "head": {
+    "round": {
+     "t": "i",
+     "req": true
+    }
+   },
+   "sections": [
+    {
+     "heading": "Samples",
+     "key": "samples",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "deliverable": {
+       "t": "s",
+       "req": true
+      },
+      "location": {
+       "t": "s",
+       "req": true
+      },
+      "stratum": {
+       "t": "s",
+       "enum": [
+        "verdict",
+        "figure",
+        "security",
+        "assumption",
+        "code",
+        "other"
+       ],
+       "req": true
+      },
+      "statement": "s",
+      "locator": "s",
+      "result": {
+       "t": "s",
+       "enum": [
+        "confirmed",
+        "imprecise",
+        "unsupported",
+        "false",
+        "no-locator",
+        "assumption-in-code"
+       ],
+       "req": true
+      },
+      "note": "s"
+     },
+     "help": "one row per sampled row of the SAMPLE file, in its order; location = Sheet!<row> or Sheet/<row id>; statement = the row's claim in one line; locator = what you opened (file:line, [Qn] + URL, A-nn); result: confirmed = the locator shows what the row says; imprecise = right direction, wrong figure/scope/wording; unsupported = the locator does not show it; false = the evidence contradicts it; no-locator = a 'Code' row without a repository locator; assumption-in-code = an 'Annahme' row the code actually settles (name the file:line)"
+    },
+    {
+     "heading": "Scores",
+     "key": "scores",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "deliverable": {
+       "t": "s",
+       "req": true
+      },
+      "score": {
+       "t": "i",
+       "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+       ],
+       "req": true
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per deliverable: 10 = every sampled row confirmed; 8 = at most one imprecise row, nothing false or unsupported; 6 = several imprecise or one unsupported; 4 = more than one unsupported; 2 = a false row on a verdict or figure the client decides on; 0 = several false rows"
+    },
+    {
+     "heading": "Defects",
+     "key": "defects",
+     "type": "table",
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "deliverable": {
+       "t": "s",
+       "req": true
+      },
+      "location": {
+       "t": "s",
+       "req": true
+      },
+      "defect": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "content",
+        "presentation",
+        "structure",
+        "language",
+        "outside-scope"
+       ],
+       "req": true
+      },
+      "severity": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "req": true
+      },
+      "evidence": "s",
+      "proposed_change": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per sample that is not confirmed (id = V1, V2 ...); kind is content for a wrong or unproven statement; evidence = the file:line or URL that shows the truth; severity blocker = false on a verdict or figure, major = unsupported or assumption-in-code, minor = imprecise wording"
+    },
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "req": true,
+     "help": "3-5 sentences (English, internal): what you checked, what held, what did not"
+    }
+   ]
+  },
+  "postpass": {
+   "title": "Post-pass justifications: <scope>",
+   "file": "postpass-justifications.md",
+   "output_dir": "analysis/gauntlet",
+   "head": {
+    "scope": {
+     "t": "s",
+     "req": true
+    }
+   },
+   "head_help": "one file per scope: analysis/gauntlet/<scope>/postpass-justifications.md; rows are kept across post-passes (append, never delete a row)",
+   "sections": [
+    {
+     "heading": "Justifications",
+     "key": "justifications",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "claim_id": {
+       "t": "s",
+       "req": true
+      },
+      "justification": {
+       "t": "s",
+       "req": true
+      },
+      "accept_if_kept": "s"
+     },
+     "help": "ONE row per claim whose statement, evidence or target the post-pass changed: justification = which item required the change and why the scored proposition is unchanged (English, internal); accept_if_kept = how the corrected text still meets the critic's accept_if that `dbcx postpass check` prints for the claim (mandatory when it prints one). A changed scored claim without a row is refused by the check."
+    },
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "help": "optional, English"
+    }
+   ]
+  }
+ },
+ "claim_rules": {
+  "_readme": "Atomic-claim rules checked by md_to_json (WARNING lines, never INVALID): statement length, number of figures (ids, locators, versions and years are not figures), exactly one target of the form D<n>/<Sheet>[:<row id>]; a method may list its allowed target sheets in method.json `claims.targets`. Overridable per run in run.json scoring.claim_max_statement_chars / scoring.claim_max_figures. Evidence: in the first engagement the round-1 failure share rose from 3 % (statements < 300 chars) to 48 % (> 1000 chars) and from 14 % (one figure) to 50 % (seven or more). Row targets (A5): D<n>/<Sheet>#<row id>[,<row id>] or <kind>/<section>#<row id>; the legacy ':' separator is accepted; coverage is an exact row-id match (engine/tools/rows.py).",
+  "max_statement_chars": 350,
+  "max_figures": 2,
+  "single_target": true,
+  "target_pattern": "^(D\\d+|[A-Za-z][\\w-]*)/[A-Za-z][\\w-]*([#:].+)?$"
+ }
+}

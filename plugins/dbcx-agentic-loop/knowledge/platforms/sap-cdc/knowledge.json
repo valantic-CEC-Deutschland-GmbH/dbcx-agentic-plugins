@@ -1,0 +1,43 @@
+{
+  "_readme": [
+    "SAP Customer Data Cloud (CDC) pack knowledge, target role only. The lists below were derived on 2026-10-05 from the table of contents of the current CDC help (help.sap.com, product SAP_CUSTOMER_DATA_CLOUD, deliverable 8b8d6fffe113457094a17701f63e3d6a, version SHIP, read through the http.svc content service) and from the SAP Commerce Cloud Integration Extension Pack and composable storefront pages for the CDC integration (2211).",
+    "target_api_endpoint_families groups the CDC API by namespace. Every namespace exists in the documentation; behaviour and limits are quoted only through the reference cache. CDC is SaaS: there is no code base to scan, so the pack carries no adapter.py and no as_source block.",
+    "target_content_component_types lists the user-facing building blocks the product renders out of the box (default screen-sets, hosted pages, Delegated Admin console, preference center). Anything outside the list is custom UI against the Web SDK or the REST API."
+  ],
+  "target_api_endpoint_families": [
+    "accounts.* (Customer Identity core): register / login / logout / getAccountInfo / setAccountInfo / search / getSchema / setSchema / getPolicies / setPolicies / getScreenSets / importFullAccount / importLiteAccount, plus accounts.session.*, accounts.identifiers.*, accounts.address.*, accounts.password.*",
+    "accounts.auth.* / accounts.otp.* / accounts.tfa.* / accounts.rba.* / accounts.devices.* (authentication methods: passwordless, FIDO, OTP, two-factor, risk-based authentication)",
+    "accounts.b2b.* (CIAM for B2B: registerOrganization, getOrganizationInfo, setOrganizationInfo, setOrganizationWorkflowStatus, setOrganizationBpid, deleteOrganization, inviteMember, removeMember, getAccountOrganizationInfo, setAccountOrganizationInfo, search, setup.bootstrap, business entities, webhooks.getAll) and accounts.b2b.auth.* (getAssets, getPolicies)",
+    "accounts.groups.* (Group Model Management: group model and relationship schemas, members)",
+    "accounts.communications.* / accounts.setConsentsStatements / accounts.getConsentsStatements / accounts.getSiteConsentDetails / accounts.store.* (consent documents) / accounts.emailAccount.* / accounts.getLiteToken / accounts.sendLiteInvite (Customer Consent, communication topics, lite accounts)",
+    "accounts.extensions.* (synchronous extension points calling customer-hosted endpoints) and accounts.webhooks.* (asynchronous event notifications)",
+    "accounts.global.* / setAccountResidency (Global Access, account residency across data centers)",
+    "ds.* (Data Store: store, get, search, delete, getSchema, setSchema, deleteSchemaFields, getTypes)",
+    "idx.* (IdentitySync dataflows: createDataflow, getDataflow, setDataflow, deleteDataflow, drafts and rollback)",
+    "fidm.oidc.op.* / fidm.oidc.rp.* / fidm.saml.* / fidm.certificates.* (federation: CDC as OIDC OP or RP, as SAML IdP or SP)",
+    "socialize.* (social login and legacy session APIs)",
+    "audit.search, reports.* (audit log, usage and identity reports)",
+    "SCIM REST (user provisioning)",
+    "Web SDK (gigya.js, loaded per site API key from the data center CDN): accounts.showScreenSet, global CONF object, screen-set events",
+    "server-side SDKs .NET, Java, PHP, Python; mobile SDKs Android and iOS (incl. Native Screen-Sets)",
+    "SAP Commerce Cloud side (Integration Extension Pack module sap-customer-data-cloud): gigya* extensions, custom OAuth grant (GigyaCustomTokenGranter), webhook endpoints gigyab2bwebservices (/gigyab2bwebservices/v1/<baseSiteId>/b2bwebhook) and gigyawebservices; composable storefront library @spartacus/cdc (routes /cdc/login, /cdc/register-org)"
+  ],
+  "target_content_component_types": [
+    "default screen-set collection (Default- prefix; the number of screen-sets depends on the licences): RegistrationLogin, ProfileUpdate, LinkAccounts, ReAuthentication, PasswordlessLogin and further licence-dependent sets",
+    "OrganizationRegistration screen-set (CIAM for B2B licence; fixed fields and fixed mappings)",
+    "lite registration / subscription screen-sets (Customer Consent licence)",
+    "Native Screen-Sets (mobile, rendered from one JSON object, designed in the UI Builder)",
+    "Hosted Pages (cloud-hosted pages with the templates Generic, Login, Reset Password, Profile Update, Device Registration; need a CNAME; only some data centers)",
+    "Central Login Page for cross-domain SSO",
+    "Delegated Admin console (Organization Management; branding limited to primary colour and font)",
+    "consent / preference center pages (One Account preferences center; the Lite preferences center is legacy)",
+    "email and SMS templates (verification, password reset, B2B invitations and notifications) per language",
+    "Identity Flow Builder flows (condition, time period, counter, event and screen-set actions)",
+    "composable storefront CDC integration: library @spartacus/cdc rendering CDC screen-sets and native screens for login, registration, profile, password, consent and B2B organization registration"
+  ],
+  "_stamp": {
+    "version_pair": "CDC current (help.sap.com SHIP) + SAP Commerce Cloud 2211 / IEP 2211 CDC integration",
+    "date": "2026-10",
+    "refresh_with": "dbcx render brief research"
+  }
+}

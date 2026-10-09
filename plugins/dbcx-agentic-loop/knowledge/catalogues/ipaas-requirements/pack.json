@@ -1,0 +1,16 @@
+{
+  "name": "ipaas-requirements",
+  "display": "iPaaS / Integration Platform Requirement Catalogue",
+  "kind": "catalogue",
+  "roles": [
+    "catalogue"
+  ],
+  "_readme": "Reference catalogue of integration-platform requirements used as a completeness checklist when eliciting and classifying integration requirements in an engagement. Hand-written seed of 2026-09-08 from general integration-architecture practice; it is not, and must never be presented as, any client's requirement set.",
+  "snippets": {
+    "catalogue_persona": "an integration architect who has run ERP-to-commerce integration programmes end to end and knows that integration projects fail on the non-happy path - duplicates, silent stops, unowned dead-letter queues and expired certificates - rather than on the mapping",
+    "catalogue_focus": "completeness of the non-happy path above all: idempotency, retry and backoff, dead-letter ownership, replay, poison-message and head-of-line behaviour, monitoring, missing-message detection and day-two operations; every entry phrased so it can be tested rather than asserted; correct classification as FR (behaviour an operator or business user can exercise), TR (a technical or interface constraint) or NFR (a measurable quality attribute); and insistence that the interface inventory and the per-entity, per-attribute data ownership are established before any tooling is compared",
+    "docs_domains": ""
+  },
+  "research_seed": "catalogue.md",
+  "reference_cache": "reference-cache.md"
+}

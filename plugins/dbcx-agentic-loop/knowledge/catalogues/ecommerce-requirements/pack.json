@@ -1,0 +1,14 @@
+{
+  "name": "ecommerce-requirements",
+  "display": "E-Commerce Requirement Catalogue (B2B/B2C)",
+  "kind": "catalogue",
+  "roles": ["catalogue"],
+  "_readme": "A hand-written elicitation catalogue of 178 commerce capabilities across 13 areas, each with its typical FR/TR/NFR classification, B2B/B2C applicability and the discriminating question that decides effort. It is a checklist for challenging and completing an engagement's requirements, not a requirement list to hand over.",
+  "snippets": {
+    "catalogue_persona": "an experienced business analyst and requirements engineer for B2B and B2C commerce programmes who knows from delivery which requirements clients systematically forget and which harmless-sounding sentences later explode into effort",
+    "catalogue_focus": "completeness against the capability areas, testability of each requirement, correct FR/TR/NFR classification, B2B vs. B2C applicability, one capability per requirement, no solution design or platform name smuggled into a requirement, ownership of data and processes named, and every number (volume, latency, target level, deadline) actually stated rather than implied",
+    "docs_domains": ""
+  },
+  "research_seed": "catalogue.md",
+  "reference_cache": "reference-cache.md"
+}

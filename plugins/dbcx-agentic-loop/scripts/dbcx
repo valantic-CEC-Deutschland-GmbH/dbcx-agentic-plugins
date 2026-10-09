@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dbcx <tool> [args] - runs a tool of the dbcx-agentic-loop plugin against the current run (nearest parent with run.json, or $DBCX_RUN)
+HERE="$(cd "$(dirname "$(readlink "$0" 2>/dev/null || echo "$0")")" && pwd)"
+. "$HERE/python.sh"; dbcx_python || exit 127
+export PYTHONUTF8=1
+export PLUGIN_ROOT="${PLUGIN_ROOT:-$(cd "$HERE/.." && pwd)}"
+export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}"
+exec "${PY[@]}" "$(cd "$HERE/.." && pwd)/engine/dbcx.py" "$@"

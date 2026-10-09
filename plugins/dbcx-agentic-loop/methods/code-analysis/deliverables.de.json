@@ -1,0 +1,3884 @@
+{
+ "_readme": [
+  "Excel-Deliverables der Methode code-analysis (Kundenausgabe): je Blatt höchstens zwei Entscheidungsspalten (`emphasis: decision` mit `status`), Ergebnis zuerst (ID, Titel, Phase/Kategorie, Urteil, Kernaussage, Grundlage), Detailgruppen eingeklappt (`emphasis: support` + `group`); Formel- und Abgleichsspalten sowie jede Konfidenz sind `internal` (nur im internen Review-Workbook). Daten aus methods/code-analysis/datasets.py DATASETS. Formel-Platzhalter: {r}, {MAXR}, {rng:Blatt.spalte}, {col:spalte}, {cell:spalte}, {L:token}, {p:Parameter}, {row}, {x:phase_in_scope}; Textplatzhalter {engagement.client}, {target.platform}, {unit.noun} ... aus der Run-Konfiguration. deliverables.en.json hat dieselbe Struktur (gleiche Spalten-IDs/Felder, nur Wortlaut und Blattnamen übersetzt). Spalten der Kundenliste, die die meisten Listen nicht haben (Priorität, Verantwortlich), stehen nicht in der Spezifikation – je Run per Override-Patch ergänzen (insert_column nach 'sources')."
+ ],
+ "deliverables": {
+  "D0": {
+   "title": "D0 Befunde mit Handlungsbedarf",
+   "requires": [
+    "d0"
+   ],
+   "purpose": "Befunde zum heutigen Shop, die unabhängig von der Plattformentscheidung Handlungsbedarf haben: Defekte, Sicherheitsrisiken, fehlerhafte Konfiguration, tote aber teure Reste. Jede Zeile nennt die betroffenen {unit.noun_plural}, den Befund, die Schwere, die Empfehlung und ihre Fundstellen.",
+   "sources": "analysis/consolidated/D0.json",
+   "sources_client": "Code-Analyse des Repository-Stands (Befunde mit Handlungsbedarf aus den {unit.noun}-Analysen)",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "Kennzahlen (Formeln), Einordnung und Diagramme",
+     "kpis": [
+      {
+       "id": "findings",
+       "label": "Befunde",
+       "formula": "=COUNTA({rng:Findings.id})",
+       "note": "Blatt Findings"
+      },
+      {
+       "id": "high",
+       "label": "Schwere {L:high}",
+       "formula": "=COUNTIF({rng:Findings.severity},\"{L:high}\")",
+       "note": "jetzt handeln"
+      },
+      {
+       "id": "open",
+       "label": "Noch zu klären",
+       "formula": "=COUNTIF({rng:Findings.settled},\"{L:false}\")",
+       "note": "die Zeile nennt, was es klärt"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "findings",
+       "status": "neutral",
+       "label": "Befunde"
+      },
+      {
+       "kpi": "high",
+       "status": "rebuild",
+       "label": "Schwere {L:high}"
+      },
+      {
+       "kpi": "open",
+       "status": "assumption",
+       "label": "noch zu klären"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "by_severity",
+       "title": "Befunde nach Schwere"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Findings",
+     "dataset": "d0",
+     "row_key": "id",
+     "readme": "Eine Zeile je Befund mit Schwere, betroffenen {unit.noun_plural}, Empfehlung und Fundstellen",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 9
+      },
+      {
+       "header": "Befund",
+       "field": "finding",
+       "wrap": true,
+       "width": 70
+      },
+      {
+       "header": "Schwere",
+       "field": "severity",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "high": "rebuild",
+        "medium": "rework",
+        "low": "standard"
+       },
+       "width": 11
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Empfehlung",
+       "field": "recommendation",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 24
+      },
+      {
+       "header": "Aus dem Repository geklärt",
+       "field": "settled",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Was es klärt",
+       "field": "settles_by",
+       "wrap": true,
+       "width": 40,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Aussage-IDs",
+       "field": "claims",
+       "sep": ", ",
+       "width": 24,
+       "internal": true
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Overview",
+     "title": "Befunde nach Schwere (Formeln über Findings)",
+     "readme": "Verteilung nach Schwere",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_severity",
+       "title": "Nach Schwere",
+       "row_header": "Schwere",
+       "row_tokens": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "total_label": "Summe",
+       "columns": [
+        {
+         "header": "Befunde",
+         "formula": "=COUNTIF({rng:Findings.severity},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Befunde nach Schwere",
+        "status": {
+         "high": "rebuild",
+         "medium": "rework",
+         "low": "standard"
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "D1": {
+   "title": "D1 {unit.noun}-Inventar und Abhängigkeiten",
+   "requires": [
+    "inv"
+   ],
+   "purpose": "Modul 1: vollständiges Inventar der eigenen {unit.noun_plural} mit Kategorie, Ladezustand, Größe (LOC gesamt und bereinigt), Abhängigkeiten, genutzten Drittpaketen, Plattformversion und bekannten Deprecations in Richtung {target.platform}.",
+   "sources": "analysis/inventory/inventory.json (automated scan), analysis/inventory/inventory_analysis.md (inventory assessment)",
+   "sources_client": "Automatischer Scan des Repository-Stands (Einheiten, Dateien, Abhängigkeiten, Deprecation-Treffer) und die Inventar-Bewertung je {unit.noun}; Herstellerdokumentation",
+   "extra": "Abhängigkeitsdiagramm: Die Dateien {deliverables.D1.diagram} (draw.io) und {deliverables.D1.diagram}.png zeigen dieselben Abhängigkeiten wie das Blatt Abhaengigkeiten als Grafik. LOC bereinigt = gepflegter Code (Code, Templates, JS, TS ohne Tests, generierten Code und Kopien der Herstellervorlage) geladener {unit.noun_plural} ohne Test-{unit.noun_plural}; Tests, Konfiguration, Datenskripte, generierter Code und Vorlagenkopien zählen nur in „LOC gesamt“. Deprecations zeigt nur Treffer im Quellcode; Treffer in Kommentaren, Konfiguration, Bibliotheken, Berichten oder Tests zählt Einheiten.",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "Kennzahlen (Formeln), Einordnung und Diagramme",
+     "kpis": [
+      {
+       "id": "units",
+       "label": "Custom-{unit.noun_plural}",
+       "formula": "=COUNTA({rng:Einheiten.name})",
+       "note": "eigene {unit.noun_plural} im Repository (Blatt Einheiten)"
+      },
+      {
+       "id": "not_loaded",
+       "label": "davon {L:dead|act}",
+       "formula": "=COUNTIF({rng:Einheiten.activation},\"{L:dead|act}\")",
+       "note": "vorhanden, aber von keiner Konfiguration geladen – Kandidaten zum Stilllegen"
+      },
+      {
+       "id": "frontend",
+       "label": "davon {L:frontend}",
+       "formula": "=COUNTIF({rng:Einheiten.category},\"{L:frontend}\")",
+       "note": "{unit.noun_plural} der heutigen Storefront – werden durch {target.frontend} ersetzt"
+      },
+      {
+       "id": "api",
+       "label": "davon {L:api}",
+       "formula": "=COUNTIF({rng:Einheiten.category},\"{L:api}\")",
+       "note": "bereits vorhandene eigene API-{unit.noun_plural}"
+      },
+      {
+       "id": "integration",
+       "label": "davon {L:integration}",
+       "formula": "=COUNTIF({rng:Einheiten.category},\"{L:integration}\")",
+       "note": "Schnittstellen zu ERP, PIM, Payment, Drittsystemen"
+      },
+      {
+       "id": "loc_clean",
+       "label": "LOC bereinigt",
+       "formula": "=SUM({rng:Einheiten.loc_clean})",
+       "note": "gepflegter Code geladener {unit.noun_plural} ohne Tests, generierten Code, Vorlagenkopien, Konfiguration und Datenskripte – die Größe, die ein Umbau bewegt",
+       "number_format": "#,##0"
+      },
+      {
+       "id": "loc_clean_cf",
+       "label": "Anteil kundennaher Code (LOC bereinigt)",
+       "formula": "=IFERROR(SUMIF({rng:Einheiten.reach},\"{L:_customer_facing}\",{rng:Einheiten.loc_clean})/SUM({rng:Einheiten.loc_clean}),0)",
+       "note": "{unit.noun_plural} der Kategorien {L:frontend} und {L:api}: der Code, den Kunden im Shop erleben",
+       "number_format": "0%"
+      },
+      {
+       "id": "loc_generated",
+       "label": "LOC generiert oder aus der Herstellervorlage kopiert",
+       "formula": "=SUM({rng:Einheiten.loc_generated})+SUM({rng:Einheiten.loc_template_copy})",
+       "note": "gehört zur Plattform bzw. wird neu erzeugt – nicht Teil von „LOC bereinigt“",
+       "number_format": "#,##0"
+      },
+      {
+       "id": "loc_total",
+       "label": "LOC gesamt",
+       "formula": "=SUM({rng:Einheiten.total})",
+       "note": "alle gezählten nicht-leeren Zeilen einschließlich Tests, Konfiguration und Datenskripte",
+       "number_format": "#,##0"
+      },
+      {
+       "id": "deps_custom",
+       "label": "Abhängigkeiten {L:custom} → {L:custom}",
+       "formula": "=COUNTIF({rng:Abhaengigkeiten.to_kind},\"{L:custom}\")",
+       "note": "Kanten im Abhängigkeitsdiagramm"
+      },
+      {
+       "id": "dep_confirmed",
+       "label": "Deprecation-Befunde ({L:deprecated} / {L:removed-in-target})",
+       "formula": "=COUNTIF({rng:Deprecations.status},\"{L:deprecated}\")+COUNTIF({rng:Deprecations.status},\"{L:removed-in-target}\")",
+       "note": "genutzte APIs/Pakete, die in {target.platform} deprecated oder entfernt sind"
+      },
+      {
+       "id": "dep_unverified",
+       "label": "Deprecation-Befunde ({L:unverified})",
+       "formula": "=COUNTIF({rng:Deprecations.status},\"{L:unverified}\")",
+       "note": "Scan-Treffer, deren Nutzung im Code noch nicht bestätigt ist"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "units",
+       "status": "neutral",
+       "label": "eigene {unit.noun_plural}"
+      },
+      {
+       "kpi": "loc_clean",
+       "status": "neutral",
+       "label": "LOC bereinigt"
+      },
+      {
+       "kpi": "loc_clean_cf",
+       "status": "rework",
+       "label": "davon kundennah"
+      },
+      {
+       "kpi": "not_loaded",
+       "status": "neutral",
+       "label": "{L:dead|act}"
+      },
+      {
+       "kpi": "dep_confirmed",
+       "status": "rebuild",
+       "label": "Deprecations im Ziel"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "by_category",
+       "title": "LOC bereinigt nach Kategorie"
+      },
+      {
+       "type": "doughnut",
+       "block": "reach",
+       "title": "Kundennaher und interner Code (LOC bereinigt)"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Einheiten",
+     "dataset": "units",
+     "row_key": "name",
+     "readme": "Eine Zeile je Custom-{unit.noun}: Kategorie, Ladezustand, Größe (LOC gesamt als Balken, LOC bereinigt), Kundennähe; eingeklappt: LOC je Art, Datenmodell- und Erweiterungszahlen, Abhängigkeiten, Fundstellen",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "name",
+       "width": 26
+      },
+      {
+       "header": "Kategorie",
+       "field": "category",
+       "label": true,
+       "validation": "$unit.categories",
+       "width": 13
+      },
+      {
+       "header": "Ladezustand",
+       "field": "activation",
+       "label": true,
+       "label_ctx": "act",
+       "width": 12
+      },
+      {
+       "header": "Beschreibung",
+       "field": "description",
+       "wrap": true,
+       "width": 44
+      },
+      {
+       "header": "LOC gesamt",
+       "id": "total",
+       "formula": "=SUM({cell:code}:{cell:data_scripts})",
+       "databar": true,
+       "number_format": "#,##0",
+       "width": 12
+      },
+      {
+       "header": "LOC bereinigt",
+       "id": "loc_clean",
+       "formula": "=IF(OR({cell:activation}=\"{L:dead|act}\",{cell:activation}=\"{L:inactive|act}\",{cell:activation}=\"{L:stub|act}\",{cell:activation}=\"{L:declared-not-provisioned|act}\",{cell:category}=\"{L:test}\"),0,{cell:loc_maintained})",
+       "number_format": "#,##0",
+       "width": 11
+      },
+      {
+       "header": "Kundennähe",
+       "field": "reach",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Benötigt von (custom)",
+       "id": "required_by",
+       "width": 12,
+       "formula": "=COUNTIFS({rng:Abhaengigkeiten.to},{cell:name},{rng:Abhaengigkeiten.to_kind},\"{L:custom}\")"
+      },
+      {
+       "header": "Deprecation-Treffer",
+       "id": "dep_hits",
+       "formula": "=COUNTIF({rng:Deprecations.unit},{cell:name})",
+       "width": 13
+      },
+      {
+       "header": "Anmerkungen",
+       "field": "notes",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "LOC gepflegt",
+       "field": "loc_maintained",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC generiert",
+       "field": "loc_generated",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC Vorlagenkopie",
+       "field": "loc_template_copy",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC Code (main)",
+       "field": "code",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC Code (Test)",
+       "field": "code_test",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC Templates",
+       "field": "templates",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC JS",
+       "field": "js",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC TS",
+       "field": "ts",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC Konfiguration",
+       "field": "config",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "LOC Datenskripte",
+       "field": "data_scripts",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "size"
+      },
+      {
+       "header": "Unterkategorien",
+       "field": "sub_categories",
+       "sep": ", ",
+       "width": 20,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Vorlage (Template)",
+       "field": "template_origin",
+       "width": 18,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Frontend-Einstiegspunkte",
+       "field": "frontend_entry_points",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "API-Einstiegspunkte",
+       "field": "api_entry_points",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Datenmodell: neue Typen",
+       "field": "schema_new_types",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Datenmodell: Standardtypen erweitert",
+       "field": "schema_extended_types",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Attribute an Standardtypen",
+       "field": "schema_attributes_on_extended_types",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Relationen",
+       "field": "schema_relations",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Enums",
+       "field": "schema_enums",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "DI-Definitionen",
+       "field": "di_definitions",
+       "numeric": true,
+       "width": 8,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Überschreibt Standard-Beans (aufgelöst)",
+       "field": "overrides_standard",
+       "label": true,
+       "width": 12,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Deprecation-Treffer außerhalb des Quellcodes",
+       "field": "dep_hits_other",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Workflows (Anzahl)",
+       "field": "workflows_n",
+       "numeric": true,
+       "width": 9,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Custom-Content-Komponententypen",
+       "field": "content_custom_component_types",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Integrationssignale",
+       "field": "integration_hits",
+       "sep": ", ",
+       "width": 24,
+       "emphasis": "support",
+       "group": "model"
+      },
+      {
+       "header": "Benötigt (custom)",
+       "field": "requires_custom",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "deps"
+      },
+      {
+       "header": "Benötigt (Standard)",
+       "field": "requires_standard",
+       "sep": ", ",
+       "width": 40,
+       "emphasis": "support",
+       "group": "deps"
+      },
+      {
+       "header": "Benötigt (unbekannt, Anzahl)",
+       "field": "requires_unknown_n",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "deps"
+      },
+      {
+       "header": "Pfad",
+       "field": "path",
+       "width": 40,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Geladen in",
+       "field": "loaded_in",
+       "label": true,
+       "sep": "; ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Abhaengigkeiten",
+     "dataset": "dependencies",
+     "readme": "Deklarierte Abhängigkeiten ({L:custom} → {L:custom}/{L:standard}/{L:unknown}) plus Laufzeit-, Daten- und Konfigurationsverweise aus der Inventar-Bewertung; Grundlage des Diagramms",
+     "columns": [
+      {
+       "header": "Von",
+       "field": "from",
+       "width": 28
+      },
+      {
+       "header": "Nach",
+       "field": "to",
+       "width": 28
+      },
+      {
+       "header": "Ziel-Art",
+       "field": "to_kind",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Art der Abhängigkeit",
+       "field": "type",
+       "label": true,
+       "label_ctx": "deptype",
+       "width": 26
+      },
+      {
+       "header": "Hinweis",
+       "field": "note",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Fundstelle",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Pakete",
+     "dataset": "packages",
+     "readme": "Genutzte Hersteller-Add-ons, Marktplatz- und Partnerpakete",
+     "columns": [
+      {
+       "header": "Paket",
+       "field": "name",
+       "width": 32
+      },
+      {
+       "header": "Art",
+       "field": "kind",
+       "label": true,
+       "width": 14
+      },
+      {
+       "header": "Installiert auf / genutzt von",
+       "field": "installed_on",
+       "sep": ", ",
+       "width": 30
+      },
+      {
+       "header": "Hinweise",
+       "field": "notes",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Fundstelle",
+       "field": "source",
+       "evidence": true,
+       "width": 50
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Plattform",
+     "dataset": "platform",
+     "readme": "Plattformversion, Laufzeitumgebung, Betrieb, Storefront-Technologie, Build-Fakten",
+     "columns": [
+      {
+       "header": "Merkmal",
+       "field": "key",
+       "label": true,
+       "label_ctx": "pf",
+       "width": 30
+      },
+      {
+       "header": "Wert",
+       "field": "value",
+       "wrap": true,
+       "width": 90
+      },
+      {
+       "header": "Fundstelle",
+       "field": "evidence",
+       "evidence": true,
+       "width": 60
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Deprecations",
+     "dataset": "deprecations",
+     "row_key": "id",
+     "readme": "Deprecated, im Ziel entfernte und riskante API- und Paketnutzungen mit Status, Ersatz und Fundstelle",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 22
+      },
+      {
+       "header": "Befund",
+       "field": "title",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 24
+      },
+      {
+       "header": "Status",
+       "field": "status",
+       "label": true,
+       "validation": [
+        "deprecated",
+        "removed-in-target",
+        "risky",
+        "false-positive",
+        "unverified"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "removed-in-target": "rebuild",
+        "deprecated": "rework",
+        "risky": "rework"
+       },
+       "width": 16
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Ersatz",
+       "field": "replacement",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Deprecated seit",
+       "field": "since",
+       "width": 16
+      },
+      {
+       "header": "Fundstelle (Code-Ausschnitt)",
+       "field": "snippet",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Fundstelle",
+       "field": "locator",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Geprüft gegen",
+       "field": "verified_against",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Uebersicht",
+     "title": "Inventar-Übersicht (Formeln über Blatt Einheiten)",
+     "readme": "Formelbasierte Summen je Kategorie, kundennaher Code, Deprecations",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_category",
+       "row_header": "Kategorie",
+       "row_tokens": "$unit.categories",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Einheiten.category},{row})"
+        },
+        {
+         "header": "LOC bereinigt",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.loc_clean})"
+        },
+        {
+         "header": "LOC generiert / Vorlagenkopie",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.loc_generated})+SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.loc_template_copy})"
+        },
+        {
+         "header": "LOC Templates",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.templates})"
+        },
+        {
+         "header": "LOC JS+TS",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.js})+SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.ts})"
+        },
+        {
+         "header": "LOC gesamt",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.total})"
+        },
+        {
+         "header": "Datenmodell: neue Typen",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.schema_new_types})"
+        },
+        {
+         "header": "Standardtypen erweitert",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.schema_extended_types})"
+        },
+        {
+         "header": "Deprecation-Treffer",
+         "formula": "=SUMIF({rng:Einheiten.category},{row},{rng:Einheiten.dep_hits})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 2,
+        "title": "LOC bereinigt nach Kategorie"
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "reach",
+       "title": "Kundennaher und interner Code",
+       "row_header": "Kundennähe",
+       "row_tokens": [
+        "_customer_facing",
+        "_internal"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Einheiten.reach},{row})"
+        },
+        {
+         "header": "LOC bereinigt",
+         "formula": "=SUMIF({rng:Einheiten.reach},{row},{rng:Einheiten.loc_clean})"
+        }
+       ],
+       "chart": {
+        "type": "doughnut",
+        "column": 2,
+        "title": "LOC bereinigt nach Kundennähe",
+        "status": {
+         "_customer_facing": "rework",
+         "_internal": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "deprecations",
+       "title": "Deprecations nach Status",
+       "row_header": "Status",
+       "row_tokens": [
+        "removed-in-target",
+        "deprecated",
+        "risky",
+        "unverified",
+        "false-positive"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Befunde",
+         "formula": "=COUNTIF({rng:Deprecations.status},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Deprecations nach Status",
+        "status": {
+         "removed-in-target": "rebuild",
+         "deprecated": "rework",
+         "risky": "rework",
+         "unverified": "neutral",
+         "false-positive": "neutral"
+        }
+       }
+      },
+      {
+       "type": "kv",
+       "rows": [
+        {
+         "label": "Abhängigkeiten {L:custom} → {L:custom}",
+         "formula": "=COUNTIF({rng:Abhaengigkeiten.to_kind},\"{L:custom}\")"
+        },
+        {
+         "label": "Abhängigkeiten {L:custom} → {L:standard}",
+         "formula": "=COUNTIF({rng:Abhaengigkeiten.to_kind},\"{L:standard}\")"
+        },
+        {
+         "label": "Abhängigkeiten {L:custom} → {L:unknown}",
+         "formula": "=COUNTIF({rng:Abhaengigkeiten.to_kind},\"{L:unknown}\")"
+        },
+        {
+         "label": "Pakete: {L:standard}",
+         "formula": "=COUNTIF({rng:Pakete.kind},\"{L:standard}\")"
+        },
+        {
+         "label": "Pakete: {L:third-party}",
+         "formula": "=COUNTIF({rng:Pakete.kind},\"{L:third-party}\")"
+        },
+        {
+         "label": "Pakete: {L:custom}",
+         "formula": "=COUNTIF({rng:Pakete.kind},\"{L:custom}\")"
+        },
+        {
+         "label": "{unit.noun_plural}: {L:dead|act}",
+         "formula": "=COUNTIF({rng:Einheiten.activation},\"{L:dead|act}\")"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Aussagen",
+     "scopes": "D1",
+     "readme": "Alle Aussagen mit Prüfer-Scores (nur interne Fassung)"
+    }
+   ]
+  },
+  "D2": {
+   "title": "D2 Customization-Tiefe (Heat Map)",
+   "requires": [
+    "units"
+   ],
+   "purpose": "Modul 2: je {unit.noun} die Abweichung vom {source.platform}-Standard (überschriebene, erweiterte und neue Code-Einheiten, Datenmodell-Delta, angepasste Workflows und Datenskripte, Eingriffe in Standardverhalten), eine Klassifizierung gering / mittel / hoch / Neubau und die Migrationsleitlinie (Disposition); dazu die Befunde zu Sicherheit und Betrieb des heutigen Shops.",
+   "sources": "analysis/units/<unit>.md, analysis/inventory/inventory.json",
+   "sources_client": "Code-Analyse je {unit.noun} auf dem Repository-Stand (Fundstellen je Zeile); automatischer Scan; Herstellerdokumentation",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "Kennzahlen (Formeln), Einordnung und Diagramme",
+     "kpis": [
+      {
+       "id": "units",
+       "label": "Analysierte {unit.noun_plural}",
+       "formula": "=COUNTA({rng:Heatmap.unit})",
+       "note": "eine Zeile je {unit.noun} (Blatt Heatmap)"
+      },
+      {
+       "id": "clean_core",
+       "label": "Clean Core: Anteil {unit.noun_plural} ohne Eingriff in Standardverhalten",
+       "formula": "=IFERROR(COUNTIF({rng:Heatmap.patched},0)/COUNTA({rng:Heatmap.unit}),0)",
+       "note": "Blatt Heatmap, Eingriffe in Standardverhalten = 0 – je höher, desto näher am Standard",
+       "number_format": "0%"
+      },
+      {
+       "id": "rewrite",
+       "label": "Klassifizierung „{L:rewrite}“",
+       "formula": "=COUNTIF({rng:Heatmap.depth},\"{L:rewrite}\")",
+       "note": "{unit.noun_plural}, die den Standard patchen/überlagern oder so nicht nach {target.platform} übernommen werden können"
+      },
+      {
+       "id": "heavy",
+       "label": "Klassifizierung „{L:heavy}“",
+       "formula": "=COUNTIF({rng:Heatmap.depth},\"{L:heavy}\")",
+       "note": "Standardverhalten ersetzt oder große eigene Fachlogik"
+      },
+      {
+       "id": "medium",
+       "label": "Klassifizierung „{L:medium}“",
+       "formula": "=COUNTIF({rng:Heatmap.depth},\"{L:medium}\")",
+       "note": "Standard erweitert, Typen ergänzt, kein Ersatz von Standardverhalten"
+      },
+      {
+       "id": "low",
+       "label": "Klassifizierung „{L:low}“",
+       "formula": "=COUNTIF({rng:Heatmap.depth},\"{L:low}\")",
+       "note": "Konfiguration, Daten, dünne Verbindungsschicht"
+      },
+      {
+       "id": "patched",
+       "label": "Eingriffe in Standardverhalten",
+       "formula": "=SUM({rng:Heatmap.patched})",
+       "note": "Blatt Standardeingriffe"
+      },
+      {
+       "id": "patched_high",
+       "label": "davon Upgrade-Risiko {L:high}",
+       "formula": "=COUNTIF({rng:Standardeingriffe.risk},\"{L:high}\")",
+       "note": "Blatt Standardeingriffe"
+      },
+      {
+       "id": "patched_security",
+       "label": "davon sicherheitsrelevant",
+       "formula": "=IF(COUNTIF({rng:Standardeingriffe.security_relevant},\"{L:not-assessed}\")>0,COUNTIF({rng:Standardeingriffe.security_relevant},\"{L:true}\")&\" (\"&COUNTIF({rng:Standardeingriffe.security_relevant},\"{L:not-assessed}\")&\" {L:not-assessed})\",COUNTIF({rng:Standardeingriffe.security_relevant},\"{L:true}\"))",
+       "note": "Blatt Standardeingriffe, Spalte Sicherheitsrelevant"
+      },
+      {
+       "id": "secops",
+       "label": "Befunde zu Sicherheit und Betrieb",
+       "formula": "=COUNTA({rng:Sicherheit_und_Betrieb.id})",
+       "note": "Blatt Sicherheit_und_Betrieb – Handlungsbedarf im heutigen Shop, unabhängig von der Plattformentscheidung"
+      },
+      {
+       "id": "secops_high",
+       "label": "davon Schwere {L:high}",
+       "formula": "=COUNTIF({rng:Sicherheit_und_Betrieb.severity},\"{L:high}\")",
+       "note": "jetzt handeln"
+      },
+      {
+       "id": "secops_more",
+       "label": "Weitere markierte Befunde (nur auf den Detailblättern)",
+       "formula": "=MAX(0,{x:secops_flagged}-COUNTA({rng:Sicherheit_und_Betrieb.id}))",
+       "note": "das Blatt Sicherheit_und_Betrieb zeigt die schwersten Befunde; die übrigen stehen auf dem Blatt Standardeingriffe bzw. als Migrationsrisiken je {unit.noun} auf dem Blatt Heatmap"
+      },
+      {
+       "id": "overridden",
+       "label": "Überschriebene Standard-Services/-Klassen",
+       "formula": "=SUM({rng:Heatmap.overridden})",
+       "note": "Blatt Code_Einheiten, Art = {L:overridden}"
+      },
+      {
+       "id": "shadowed",
+       "label": "Überlagerte Standardklassen (Shadowing)",
+       "formula": "=SUM({rng:Heatmap.shadowed})",
+       "note": "höchstes Upgrade-Risiko"
+      },
+      {
+       "id": "std_types_ext",
+       "label": "Standardtypen erweitert",
+       "formula": "=SUM({rng:Heatmap.std_types_ext})",
+       "note": "Datenmodell-Delta gegen das Standard-Datenmodell"
+      },
+      {
+       "id": "disp_refactor",
+       "label": "Disposition „{L:refactor-to-standard}“",
+       "formula": "=COUNTIF({rng:Heatmap.disposition},\"{L:refactor-to-standard}\")",
+       "note": "Blatt Heatmap, Spalte Disposition – die Migrationsleitlinie je {unit.noun}"
+      },
+      {
+       "id": "disp_rebuild",
+       "label": "Disposition „{L:rebuild-frontend}“",
+       "formula": "=COUNTIF({rng:Heatmap.disposition},\"{L:rebuild-frontend}\")",
+       "note": "Blatt Heatmap, Spalte Disposition – die Migrationsleitlinie je {unit.noun}"
+      },
+      {
+       "id": "disp_keep",
+       "label": "Disposition „{L:keep}“ / „{L:adapt-api}“",
+       "formula": "=COUNTIF({rng:Heatmap.disposition},\"{L:keep}\")&\" / \"&COUNTIF({rng:Heatmap.disposition},\"{L:adapt-api}\")",
+       "note": "Blatt Heatmap, Spalte Disposition – die Migrationsleitlinie je {unit.noun}"
+      },
+      {
+       "id": "disp_retire",
+       "label": "Disposition „{L:retire}“ / „{L:third-party-replace}“",
+       "formula": "=COUNTIF({rng:Heatmap.disposition},\"{L:retire}\")&\" / \"&COUNTIF({rng:Heatmap.disposition},\"{L:third-party-replace}\")",
+       "note": "Blatt Heatmap, Spalte Disposition – die Migrationsleitlinie je {unit.noun}"
+      },
+      {
+       "id": "data_migrate",
+       "label": "Datentypen, die migriert werden müssen",
+       "formula": "=COUNTIF({rng:Datenmodell.data_class},\"{L:transactional}\")+COUNTIF({rng:Datenmodell.data_class},\"{L:master-shop-owned}\")",
+       "note": "Blatt Datenmodell: Datenklasse {L:transactional} oder {L:master-shop-owned}"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "clean_core",
+       "status": "standard",
+       "label": "Clean Core"
+      },
+      {
+       "kpi": "rewrite",
+       "status": "rebuild",
+       "label": "{L:rewrite}"
+      },
+      {
+       "kpi": "patched_high",
+       "status": "rework",
+       "label": "Eingriffe mit Upgrade-Risiko {L:high}"
+      },
+      {
+       "kpi": "patched_security",
+       "status": "rebuild",
+       "label": "sicherheitsrelevante Eingriffe"
+      },
+      {
+       "kpi": "secops_high",
+       "status": "rebuild",
+       "label": "Befunde Schwere {L:high}"
+      }
+     ],
+     "charts": [
+      {
+       "type": "doughnut",
+       "block": "clean_core",
+       "title": "Clean Core: {unit.noun_plural} mit und ohne Eingriff"
+      },
+      {
+       "type": "bar",
+       "block": "by_class",
+       "title": "{unit.noun_plural} nach Klassifizierung"
+      },
+      {
+       "type": "bar",
+       "block": "by_disposition",
+       "title": "{unit.noun_plural} nach Disposition"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "parameters",
+     "name": "Parameter",
+     "headers": [
+      "Parameter",
+      "Wert",
+      "Bedeutung"
+     ],
+     "readme": "Gewichte und Schwellen des Abweichungs-Scores – änderbar, alle Blätter rechnen nach",
+     "rows": [
+      {
+       "name": "Gewicht überschrieben",
+       "value": 3,
+       "meaning": "Gewicht je überschriebenem Standard-Service bzw. überschriebener Standardklasse"
+      },
+      {
+       "name": "Gewicht überlagert",
+       "value": 5,
+       "meaning": "Gewicht je überlagerter Standardklasse (Shadowing)"
+      },
+      {
+       "name": "Gewicht erweitert",
+       "value": 1,
+       "meaning": "Gewicht je Klasse, die eine Standardklasse erweitert"
+      },
+      {
+       "name": "Gewicht neu",
+       "value": 0.2,
+       "meaning": "Gewicht je neuer Klasse"
+      },
+      {
+       "name": "Gewicht Standardtyp erweitert",
+       "value": 2,
+       "meaning": "Gewicht je erweitertem Standardtyp"
+      },
+      {
+       "name": "Gewicht Attribut an Standardtyp",
+       "value": 0.5,
+       "meaning": "Gewicht je Attribut an einem Standardtyp"
+      },
+      {
+       "name": "Gewicht neuer Typ",
+       "value": 0.5,
+       "meaning": "Gewicht je neuem Typ"
+      },
+      {
+       "name": "Gewicht Workflow angepasst",
+       "value": 4,
+       "meaning": "Gewicht je angepasstem Standard-Workflow"
+      },
+      {
+       "name": "Gewicht Workflow neu",
+       "value": 2,
+       "meaning": "Gewicht je neuem Workflow"
+      },
+      {
+       "name": "Gewicht Standarddaten angepasst",
+       "value": 1,
+       "meaning": "Gewicht je Datenskript-Bereich, der Standarddaten anpasst"
+      },
+      {
+       "name": "Gewicht Eingriff in Standardverhalten",
+       "value": 4,
+       "meaning": "Gewicht je Eingriff in Standardverhalten"
+      },
+      {
+       "name": "Schwelle mittel",
+       "value": 10,
+       "meaning": "Abweichungs-Score ab diesem Wert → {L:medium}"
+      },
+      {
+       "name": "Schwelle hoch",
+       "value": 40,
+       "meaning": "Abweichungs-Score ab diesem Wert → {L:heavy}"
+      },
+      {
+       "name": "Schwelle Neubau",
+       "value": 120,
+       "meaning": "Abweichungs-Score ab diesem Wert → {L:rewrite} (oder Anteil überschrieben+überlagert ab „Anteil Neubau“)"
+      },
+      {
+       "name": "Anteil Neubau",
+       "value": 0.5,
+       "meaning": "Anteil überschriebener und überlagerter an allen Code-Einheiten, der allein {L:rewrite} bedeutet (ab 5 Code-Einheiten)"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Heatmap",
+     "dataset": "depth",
+     "row_key": "unit",
+     "readme": "Eine Zeile je {unit.noun}: Disposition und Klassifizierung mit Kernaussage und Grundlage, Abweichungs-Score (Farbskala) und Eingriffe in Standardverhalten; eingeklappt: die Formelzählungen aus den Detailblättern und die Fundstellen",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 26
+      },
+      {
+       "header": "Kategorie",
+       "field": "category",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Disposition",
+       "field": "disposition",
+       "label": true,
+       "validation": [
+        "keep",
+        "adapt-api",
+        "refactor-to-standard",
+        "third-party-replace",
+        "rebuild-frontend",
+        "retire"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "keep": "standard",
+        "adapt-api": "rework",
+        "refactor-to-standard": "rework",
+        "third-party-replace": "rework",
+        "rebuild-frontend": "rebuild",
+        "retire": "neutral"
+       },
+       "width": 20
+      },
+      {
+       "header": "Klassifizierung",
+       "field": "depth",
+       "label": true,
+       "validation": [
+        "low",
+        "medium",
+        "heavy",
+        "rewrite"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "low": "standard",
+        "medium": "rework",
+        "heavy": "rebuild",
+        "rewrite": "rebuild"
+       },
+       "width": 14,
+       "id": "depth"
+      },
+      {
+       "header": "Kernaussage",
+       "field": "key_statement",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Abweichungs-Score",
+       "id": "score",
+       "formula": "={cell:new}*{p:Gewicht neu}+{cell:extended}*{p:Gewicht erweitert}+{cell:overridden}*{p:Gewicht überschrieben}+{cell:shadowed}*{p:Gewicht überlagert}+{cell:new_types}*{p:Gewicht neuer Typ}+{cell:std_types_ext}*{p:Gewicht Standardtyp erweitert}+{cell:attrs_on_std}*{p:Gewicht Attribut an Standardtyp}+{cell:wf_custom}*{p:Gewicht Workflow angepasst}+{cell:wf_new}*{p:Gewicht Workflow neu}+{cell:data_custom}*{p:Gewicht Standarddaten angepasst}+{cell:patched}*{p:Gewicht Eingriff in Standardverhalten}",
+       "scale": {
+        "min": 0,
+        "mid": 40,
+        "max": 120
+       },
+       "number_format": "0",
+       "width": 13
+      },
+      {
+       "header": "Standardeingriffe",
+       "id": "patched",
+       "formula": "=COUNTIF({rng:Standardeingriffe.unit},{cell:unit})",
+       "width": 16
+      },
+      {
+       "header": "Clean Core",
+       "id": "core_state",
+       "formula": "=IF({cell:patched}=0,\"{L:_clean_core}\",\"{L:_patches_standard}\")",
+       "width": 14
+      },
+      {
+       "header": "Begründung der Klassifizierung",
+       "field": "rationale",
+       "width": 60,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Begründung der Disposition",
+       "field": "disposition_rationale",
+       "width": 60,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Migrationsrelevanz",
+       "field": "migration_relevance",
+       "label": true,
+       "width": 14,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Neu",
+       "id": "new",
+       "formula": "=SUMIFS({rng:Code_Einheiten.count},{rng:Code_Einheiten.unit},{cell:unit},{rng:Code_Einheiten.kind},\"{L:new}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Erweitert",
+       "id": "extended",
+       "formula": "=SUMIFS({rng:Code_Einheiten.count},{rng:Code_Einheiten.unit},{cell:unit},{rng:Code_Einheiten.kind},\"{L:extended}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Überschrieben",
+       "id": "overridden",
+       "formula": "=SUMIFS({rng:Code_Einheiten.count},{rng:Code_Einheiten.unit},{cell:unit},{rng:Code_Einheiten.kind},\"{L:overridden}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Überlagert",
+       "id": "shadowed",
+       "formula": "=SUMIFS({rng:Code_Einheiten.count},{rng:Code_Einheiten.unit},{cell:unit},{rng:Code_Einheiten.kind},\"{L:shadowed}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Code-Einheiten gesamt",
+       "id": "total",
+       "formula": "=SUMIFS({rng:Code_Einheiten.count},{rng:Code_Einheiten.unit},{cell:unit})",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Anteil überschrieben+überlagert",
+       "id": "share",
+       "formula": "=IF({cell:total}=0,0,({cell:overridden}+{cell:shadowed})/{cell:total})",
+       "number_format": "0%",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Neue Typen",
+       "id": "new_types",
+       "formula": "=COUNTIFS({rng:Datenmodell.unit},{cell:unit},{rng:Datenmodell.kind},\"{L:new-type}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Standardtypen erweitert",
+       "id": "std_types_ext",
+       "formula": "=COUNTIFS({rng:Datenmodell.unit},{cell:unit},{rng:Datenmodell.kind},\"{L:extended-standard-type}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Attribute an Standardtypen",
+       "id": "attrs_on_std",
+       "formula": "=SUMIFS({rng:Datenmodell.attributes_added},{rng:Datenmodell.unit},{cell:unit},{rng:Datenmodell.kind},\"{L:extended-standard-type}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Neue Relationen",
+       "id": "new_rel",
+       "formula": "=COUNTIFS({rng:Datenmodell.unit},{cell:unit},{rng:Datenmodell.kind},\"{L:new-relation}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Workflows angepasst (Standard)",
+       "id": "wf_custom",
+       "formula": "=COUNTIFS({rng:Workflows.unit},{cell:unit},{rng:Workflows.group},\"{L:workflow}\",{rng:Workflows.kind},\"{L:customized-standard}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Workflows neu",
+       "id": "wf_new",
+       "formula": "=COUNTIFS({rng:Workflows.unit},{cell:unit},{rng:Workflows.group},\"{L:workflow}\",{rng:Workflows.kind},\"{L:new}\")",
+       "width": 8,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Datenskripte mit Standarddaten-Anpassung",
+       "id": "data_custom",
+       "formula": "=COUNTIFS({rng:Workflows.unit},{cell:unit},{rng:Workflows.group},\"{L:data_script}\",{rng:Workflows.kind},\"{L:customizes-standard-data}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Migrationsrisiken ({L:blocker|impact}/{L:major|impact})",
+       "field": "concerns_major",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "count"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Klassifizierung (Formel)",
+       "id": "depth_formula",
+       "formula": "=IF(OR({cell:score}>={p:Schwelle Neubau},AND({cell:share}>={p:Anteil Neubau},{cell:total}>=5)),\"{L:rewrite}\",IF({cell:score}>={p:Schwelle hoch},\"{L:heavy}\",IF({cell:score}>={p:Schwelle mittel},\"{L:medium}\",\"{L:low}\")))",
+       "width": 13,
+       "internal": true
+      },
+      {
+       "header": "Abgleich",
+       "id": "check",
+       "formula": "=IF({cell:depth_formula}={cell:depth},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Konfidenz",
+       "field": "confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      },
+      {
+       "header": "Offene Fragen",
+       "field": "open_questions",
+       "numeric": true,
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Analyse-Dokument",
+       "field": "document",
+       "width": 34,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Standardeingriffe",
+     "dataset": "patched",
+     "row_key": "unit",
+     "readme": "Verändertes Standardverhalten (Service-Overrides, Shadowing, AOP/Plugins, Konfigurations- und Template-Overrides, Core-Patches) mit Upgrade-Risiko, Sicherheitsrelevanz und Folge für {engagement.client}",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "Was",
+       "field": "what",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Upgrade-Risiko",
+       "field": "risk_for_upgrade",
+       "label": true,
+       "label_ctx": "c",
+       "emphasis": "decision",
+       "status": {
+        "high": "rebuild",
+        "medium": "rework",
+        "low": "standard"
+       },
+       "width": 12,
+       "id": "risk"
+      },
+      {
+       "header": "Sicherheitsrelevant",
+       "field": "security_relevant",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "true": "rebuild"
+       },
+       "width": 17
+      },
+      {
+       "header": "Folge für {engagement.client}",
+       "field": "consequence",
+       "wrap": true,
+       "width": 44
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Wie",
+       "field": "how",
+       "label": true,
+       "label_ctx": "p",
+       "width": 18
+      },
+      {
+       "header": "Standardverhalten",
+       "field": "standard_behaviour",
+       "width": 44,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Eigenes Verhalten",
+       "field": "custom_behaviour",
+       "width": 44,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Fundstelle",
+       "field": "locator",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Zeilen",
+       "field": "lines",
+       "width": 14,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Sicherheit_und_Betrieb",
+     "dataset": "security_operations",
+     "row_key": "id",
+     "readme": "Die schwersten Befunde zu Sicherheit und Betrieb des heutigen Shops (höchstens 25 Zeilen), die unabhängig von der Plattformentscheidung Handlungsbedarf haben – nur ausdrücklich markierte Eingriffe in Standardverhalten und Risiken der {unit.noun}-Analysen, sortiert nach Schwere und {unit.noun}; die Zahl der übrigen nennt die Übersicht",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 9
+      },
+      {
+       "header": "Art",
+       "field": "kind",
+       "label": true,
+       "label_ctx": "sec",
+       "width": 12
+      },
+      {
+       "header": "Befund",
+       "field": "finding",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Schwere",
+       "field": "severity",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "high": "rebuild",
+        "medium": "rework",
+        "low": "standard"
+       },
+       "width": 11
+      },
+      {
+       "header": "Folge für {engagement.client}",
+       "field": "consequence",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Empfehlung",
+       "field": "recommendation",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 24
+      },
+      {
+       "header": "Herkunft",
+       "field": "origin",
+       "label": true,
+       "label_ctx": "origin",
+       "width": 20,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Code_Einheiten",
+     "dataset": "code_units",
+     "readme": "Jede analysierte Klasse, jeder Service und jede Komponente: neu / erweitert / überschrieben / überlagert mit Standard-Gegenstück",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "Code-Einheit (FQN)",
+       "field": "fqn",
+       "width": 50
+      },
+      {
+       "header": "Art",
+       "field": "kind",
+       "label": true,
+       "width": 16
+      },
+      {
+       "header": "Standard-Gegenstück",
+       "field": "standard_counterpart",
+       "width": 40
+      },
+      {
+       "header": "Zweck",
+       "field": "purpose",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Anzahl",
+       "field": "count",
+       "numeric": true,
+       "width": 7
+      },
+      {
+       "header": "Datei",
+       "field": "file",
+       "width": 60,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Zeilen",
+       "field": "lines",
+       "width": 10,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Datenmodell",
+     "dataset": "data_model",
+     "readme": "Datenmodell-Delta: neue Typen, erweiterte Standardtypen, Attribute, Relationen, Datenklasse für die Migration",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "Typ",
+       "field": "type",
+       "width": 26
+      },
+      {
+       "header": "Art",
+       "field": "kind",
+       "label": true,
+       "label_ctx": "dm",
+       "width": 20
+      },
+      {
+       "header": "Basistyp",
+       "field": "base",
+       "width": 20
+      },
+      {
+       "header": "Attribute ergänzt",
+       "field": "attributes_added",
+       "numeric": true,
+       "width": 9
+      },
+      {
+       "header": "Zweck",
+       "field": "purpose",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Datenklasse (Migration)",
+       "field": "data_class",
+       "label": true,
+       "validation": [
+        "master-reloadable",
+        "master-shop-owned",
+        "transactional",
+        "config",
+        "derived"
+       ],
+       "width": 20,
+       "id": "data_class"
+      },
+      {
+       "header": "Führendes System",
+       "field": "source_of_truth",
+       "width": 18
+      },
+      {
+       "header": "Attribute",
+       "field": "attributes",
+       "sep": ", ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Standard-Alternative",
+       "field": "standard_alternative",
+       "width": 40,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Datei",
+       "field": "file",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Workflows",
+     "dataset": "workflows_jobs_scripts",
+     "readme": "Workflows, geplante Jobs und Datenskripte, neu oder Standard anpassend",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "unit",
+       "width": 22
+      },
+      {
+       "header": "Gruppe",
+       "field": "group",
+       "label": true,
+       "width": 14
+      },
+      {
+       "header": "Name / Bereich",
+       "field": "name",
+       "width": 30
+      },
+      {
+       "header": "Neu oder angepasst",
+       "field": "kind",
+       "label": true,
+       "width": 20
+      },
+      {
+       "header": "Standard-Gegenstück / Job-Klasse",
+       "field": "counterpart",
+       "width": 34
+      },
+      {
+       "header": "Zweck / Anmerkung",
+       "field": "purpose",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Dateien",
+       "field": "files",
+       "sep": "; ",
+       "width": 60,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Uebersicht",
+     "title": "Verteilung der Klassifizierungen, Dispositionen und Befunde (Formeln über Heatmap)",
+     "readme": "Formelbasierte Verteilungen: Klassifizierung, Disposition, Clean Core, Sicherheit und Betrieb",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_class",
+       "title": "Nach Klassifizierung",
+       "row_header": "Klassifizierung",
+       "row_tokens": [
+        "low",
+        "medium",
+        "heavy",
+        "rewrite"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Heatmap.depth},{row})"
+        },
+        {
+         "header": "Code-Einheiten gesamt",
+         "formula": "=SUMIF({rng:Heatmap.depth},{row},{rng:Heatmap.total})"
+        },
+        {
+         "header": "Eingriffe in Standardverhalten",
+         "formula": "=SUMIF({rng:Heatmap.depth},{row},{rng:Heatmap.patched})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "{unit.noun_plural} nach Klassifizierung",
+        "status": {
+         "low": "standard",
+         "medium": "rework",
+         "heavy": "rebuild",
+         "rewrite": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "by_disposition",
+       "title": "Nach Disposition",
+       "row_header": "Disposition",
+       "row_tokens": [
+        "keep",
+        "adapt-api",
+        "refactor-to-standard",
+        "third-party-replace",
+        "rebuild-frontend",
+        "retire"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Heatmap.disposition},{row})"
+        },
+        {
+         "header": "Code-Einheiten gesamt",
+         "formula": "=SUMIF({rng:Heatmap.disposition},{row},{rng:Heatmap.total})"
+        },
+        {
+         "header": "Eingriffe in Standardverhalten",
+         "formula": "=SUMIF({rng:Heatmap.disposition},{row},{rng:Heatmap.patched})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "{unit.noun_plural} nach Disposition",
+        "status": {
+         "keep": "standard",
+         "adapt-api": "rework",
+         "refactor-to-standard": "rework",
+         "third-party-replace": "rework",
+         "rebuild-frontend": "rebuild",
+         "retire": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "clean_core",
+       "title": "Clean Core",
+       "row_header": "Eingriff in Standardverhalten",
+       "row_tokens": [
+        "_clean_core",
+        "_patches_standard"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Heatmap.core_state},{row})"
+        },
+        {
+         "header": "Code-Einheiten gesamt",
+         "formula": "=SUMIF({rng:Heatmap.core_state},{row},{rng:Heatmap.total})"
+        }
+       ],
+       "chart": {
+        "type": "doughnut",
+        "column": 1,
+        "title": "Clean Core",
+        "status": {
+         "_clean_core": "standard",
+         "_patches_standard": "rework"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "secops",
+       "title": "Sicherheit und Betrieb nach Schwere",
+       "row_header": "Schwere",
+       "row_tokens": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Befunde",
+         "formula": "=COUNTIF({rng:Sicherheit_und_Betrieb.severity},{row})"
+        },
+        {
+         "header": "davon {L:security|sec}",
+         "formula": "=COUNTIFS({rng:Sicherheit_und_Betrieb.severity},{row},{rng:Sicherheit_und_Betrieb.kind},\"{L:security|sec}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Befunde nach Schwere",
+        "status": {
+         "high": "rebuild",
+         "medium": "rework",
+         "low": "standard"
+        }
+       }
+      },
+      {
+       "type": "kv",
+       "rows": [
+        {
+         "label": "Weitere markierte Befunde zu Sicherheit und Betrieb (nur auf den Detailblättern)",
+         "formula": "=MAX(0,{x:secops_flagged}-COUNTA({rng:Sicherheit_und_Betrieb.id}))"
+        },
+        {
+         "label": "{unit.noun_plural} ohne Eingriff in Standardverhalten",
+         "formula": "=COUNTIF({rng:Heatmap.patched},0)"
+        },
+        {
+         "label": "Eingriffe in Standardverhalten, sicherheitsrelevant",
+         "formula": "=COUNTIF({rng:Standardeingriffe.security_relevant},\"{L:true}\")"
+        },
+        {
+         "label": "Eingriffe in Standardverhalten, Sicherheitsrelevanz {L:not-assessed}",
+         "formula": "=COUNTIF({rng:Standardeingriffe.security_relevant},\"{L:not-assessed}\")"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Aussagen",
+     "scopes": "units",
+     "readme": "Alle Aussagen mit Prüfer-Scores (nur interne Fassung)"
+    }
+   ]
+  },
+  "D3": {
+   "title": "D3 Anforderungsabdeckung",
+   "requires": [
+    "req",
+    "d3"
+   ],
+   "purpose": "Modul 3: die Anforderungsliste des Kunden – jede Zeile unverändert – ergänzt um unsere Bewertung: die Empfehlung je Anforderung (Standard nutzen / auf Standard umbauen / Custom behalten / neu bauen / nach Bestätigung) mit Kernaussage und Grundlage, wie der heutige Shop sie erfüllt, ob der Standard der Zielplattform ({target.platform} {target.version} mit {target.frontend}) sie abdeckt, die geschäftliche Auswirkung, Beschreibungslücken und die Frontend-Reife; dazu die aus dem Code abgeleiteten neuen Anforderungen (NR-nnn) zur Entscheidung des Kunden.",
+   "sources": "state/requirements.json, analysis/consolidated/D3.md, analysis/consolidated/D4.md",
+   "sources_client": "Anforderungsliste von {engagement.client} (jede Zeile unverändert); Code-Analyse des Repository-Stands; Herstellerdokumentation",
+   "extra": "Zielversion für „Ziel-Standard“ und „Standard-Alternative“: {target.platform} {target.version} mit {target.frontend}. Die Frontend-Spalten fassen die Feature-Zeilen des Blatts Frontend_Features je Anforderung zusammen (schlechtestes Urteil); die vollständigen Feature-Details stehen in D4. Die Spalten der Anforderungsliste sind eingeklappt (Plus-Zeichen über der Spaltenleiste).",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "Kennzahlen (Formeln), Einordnung und Diagramme",
+     "kpis": [
+      {
+       "id": "reqs",
+       "label": "Anforderungen gesamt",
+       "formula": "=COUNTA({rng:Anforderungen.id})",
+       "note": "Anforderungsliste des Kunden, jede Zeile unverändert (Blatt Anforderungen)"
+      },
+      {
+       "id": "rec_std",
+       "label": "Empfehlung „{L:use-standard}“",
+       "formula": "=COUNTIF({rng:Anforderungen.recommendation},\"{L:use-standard}\")",
+       "note": "der Standard deckt die Anforderung ab; heute schon Standard oder nicht umgesetzt"
+      },
+      {
+       "id": "rec_refactor",
+       "label": "Empfehlung „{L:refactor-to-standard}“",
+       "formula": "=COUNTIF({rng:Anforderungen.recommendation},\"{L:refactor-to-standard}\")",
+       "note": "heute Custom-Code, im Ziel durch Standard ersetzbar – das Standardisierungspotenzial"
+      },
+      {
+       "id": "rec_keep",
+       "label": "Empfehlung „{L:keep-custom}“",
+       "formula": "=COUNTIF({rng:Anforderungen.recommendation},\"{L:keep-custom}\")",
+       "note": "heute Custom-Code ohne vollständigen Standard: Logik wird übernommen"
+      },
+      {
+       "id": "rec_new",
+       "label": "Empfehlung „{L:build-new}“",
+       "formula": "=COUNTIF({rng:Anforderungen.recommendation},\"{L:build-new}\")",
+       "note": "heute nicht umgesetzt und kein vollständiger Standard"
+      },
+      {
+       "id": "rec_confirm",
+       "label": "Empfehlung „{L:clarify}“",
+       "formula": "=COUNTIF({rng:Anforderungen.recommendation},\"{L:clarify}\")",
+       "note": "die Empfehlung folgt, sobald {engagement.client} die genannte Annahme bestätigt (Blatt Annahmen)"
+      },
+      {
+       "id": "on_assumption",
+       "label": "Anforderungen, deren Ergebnis an einer Annahme hängt",
+       "formula": "=COUNTIF({rng:Anforderungen.grundlage},\"Annahme*\")",
+       "note": "Spalte Grundlage = Annahme – sobald {engagement.client} die Annahme bestätigt oder ablehnt, steht das Ergebnis fest"
+      },
+      {
+       "id": "std_potential",
+       "label": "Standardisierungspotenzial (heute {L:custom}, Ziel-Standard {L:full})",
+       "formula": "=COUNTIFS({rng:Anforderungen.today},\"{L:custom}\",{rng:Anforderungen.target_standard},\"{L:full}\")",
+       "note": "Anforderungen, deren eigener Code durch Standardfunktion ersetzbar ist"
+      },
+      {
+       "id": "cov_std",
+       "label": "{L:covered-standard}",
+       "formula": "=COUNTIF({rng:Anforderungen.verdict},\"{L:covered-standard}\")",
+       "note": "der {target.platform}-Standard deckt die Anforderung ab"
+      },
+      {
+       "id": "cov_custom",
+       "label": "{L:covered-custom}",
+       "formula": "=COUNTIF({rng:Anforderungen.verdict},\"{L:covered-custom}\")",
+       "note": "heutiger Custom-Code deckt die Anforderung ab"
+      },
+      {
+       "id": "cov_partial",
+       "label": "{L:partial}",
+       "formula": "=COUNTIF({rng:Anforderungen.verdict},\"{L:partial}\")",
+       "note": "teilweise abgedeckt"
+      },
+      {
+       "id": "cov_gap",
+       "label": "{L:gap}",
+       "formula": "=COUNTIF({rng:Anforderungen.verdict},\"{L:gap}\")",
+       "note": "weder heutiger Code noch Standard"
+      },
+      {
+       "id": "gap_scope",
+       "label": "davon im Scope ({x:phase_in_scope}) mit {L:gap}",
+       "formula": "=COUNTIFS({rng:Anforderungen.phase},\"{x:phase_in_scope}\",{rng:Anforderungen.verdict},\"{L:gap}\")",
+       "note": "kritisch für den ersten Go-live"
+      },
+      {
+       "id": "today",
+       "label": "Heute im Shop: {L:custom} / {L:standard-in-use} / {L:partial} / {L:none}",
+       "formula": "=COUNTIF({rng:Anforderungen.today},\"{L:custom}\")&\" / \"&COUNTIF({rng:Anforderungen.today},\"{L:standard-in-use}\")&\" / \"&COUNTIF({rng:Anforderungen.today},\"{L:partial}\")&\" / \"&COUNTIF({rng:Anforderungen.today},\"{L:none}\")",
+       "note": "Spalte „Heute (Ist-Shop)“ – wie der heutige Shop die Anforderung erfüllt"
+      },
+      {
+       "id": "target",
+       "label": "Ziel-Standard deckt ab: {L:full} / {L:partial} / {L:none}",
+       "formula": "=COUNTIF({rng:Anforderungen.target_standard},\"{L:full}\")&\" / \"&COUNTIF({rng:Anforderungen.target_standard},\"{L:partial}\")&\" / \"&COUNTIF({rng:Anforderungen.target_standard},\"{L:none}\")",
+       "note": "Spalte „Ziel-Standard“ – {target.platform} {target.version} mit {target.frontend}"
+      },
+      {
+       "id": "desc_gap",
+       "label": "Anforderungen mit Beschreibungslücke (Code kann mehr als beschrieben)",
+       "formula": "=COUNTIF({rng:Anforderungen.description_gap},\"?*\")",
+       "note": "die Anforderung existiert, beschreibt aber nicht alles, was der Shop heute tut"
+      },
+      {
+       "id": "new_reqs",
+       "label": "Neue Anforderungen aus dem Code (Entscheidung {engagement.client} offen)",
+       "formula": "=COUNTA({rng:Neue_Anforderungen.id})",
+       "note": "Blatt Neue_Anforderungen – Verhalten des heutigen Shops, das keine Anforderung beschreibt"
+      },
+      {
+       "id": "fe_part",
+       "label": "Anforderungen mit Frontend-Anteil",
+       "formula": "=COUNTIF({rng:Anforderungen.fe_part},\"{L:true}\")",
+       "note": "mindestens ein nutzerseitiges Feature zugeordnet (Blatt Frontend_Features)"
+      },
+      {
+       "id": "fe_ready",
+       "label": "Frontend-Reife je Anforderung: {L:ready} / {L:needs-api-work} / {L:needs-redesign}",
+       "formula": "=COUNTIF({rng:Anforderungen.fe_ready},\"{L:ready}\")&\" / \"&COUNTIF({rng:Anforderungen.fe_ready},\"{L:needs-api-work}\")&\" / \"&COUNTIF({rng:Anforderungen.fe_ready},\"{L:needs-redesign}\")",
+       "note": "schlechtestes Feature-Urteil je Anforderung (Spalte „Frontend-Reife“)"
+      },
+      {
+       "id": "not_assessed",
+       "label": "{L:NOT-ASSESSED}",
+       "formula": "=COUNTIF({rng:Anforderungen.verdict},\"{L:NOT-ASSESSED}\")",
+       "note": "muss 0 sein"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "rec_std",
+       "status": "standard",
+       "label": "{L:use-standard}"
+      },
+      {
+       "kpi": "rec_refactor",
+       "status": "rework",
+       "label": "{L:refactor-to-standard}"
+      },
+      {
+       "kpi": "rec_new",
+       "status": "rebuild",
+       "label": "{L:build-new}"
+      },
+      {
+       "kpi": "on_assumption",
+       "status": "assumption",
+       "label": "hängt an einer Annahme"
+      },
+      {
+       "kpi": "std_potential",
+       "status": "standard",
+       "label": "Standardisierungspotenzial"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "by_rec",
+       "title": "Empfehlung je Anforderung"
+      },
+      {
+       "type": "stacked",
+       "block": "today_target",
+       "title": "Heute × Ziel-Standard (Standardisierungspotenzial)"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Anforderungen",
+     "dataset": "coverage",
+     "row_key": "req_id",
+     "readme": "Je Anforderung zuerst das Ergebnis – Empfehlung, Kernaussage, Grundlage, heutiger Shop, Ziel-Standard, geschäftliche Auswirkung –, dann eingeklappt: der Text der Anforderungsliste (unverändert), die Details der Bewertung, die Frontend-Reife (Formeln über Frontend_Features) und die Fundstellen",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "req_id",
+       "width": 9,
+       "id": "id"
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "wrap": true,
+       "width": 28
+      },
+      {
+       "header": "Phase",
+       "field": "phase",
+       "width": 11,
+       "id": "phase"
+      },
+      {
+       "header": "Empfehlung",
+       "field": "recommendation",
+       "label": true,
+       "validation": [
+        "use-standard",
+        "refactor-to-standard",
+        "keep-custom",
+        "build-new",
+        "clarify"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "use-standard": "standard",
+        "refactor-to-standard": "rework",
+        "build-new": "rebuild",
+        "clarify": "assumption"
+       },
+       "width": 18,
+       "id": "recommendation"
+      },
+      {
+       "header": "Kernaussage",
+       "field": "key_statement",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Heute (Ist-Shop)",
+       "field": "today",
+       "label": true,
+       "validation": [
+        "custom",
+        "standard-in-use",
+        "partial",
+        "none"
+       ],
+       "width": 14,
+       "id": "today"
+      },
+      {
+       "header": "Ziel-Standard",
+       "field": "target_standard",
+       "label": true,
+       "validation": [
+        "full",
+        "partial",
+        "none"
+       ],
+       "width": 12,
+       "id": "target_standard"
+      },
+      {
+       "header": "Abdeckung",
+       "field": "verdict",
+       "label": true,
+       "validation": [
+        "covered-standard",
+        "covered-custom",
+        "partial",
+        "gap",
+        "NOT-ASSESSED"
+       ],
+       "width": 18,
+       "id": "verdict"
+      },
+      {
+       "header": "Geschäftliche Auswirkung",
+       "field": "business_effect",
+       "wrap": true,
+       "width": 44
+      },
+      {
+       "header": "Gruppe",
+       "field": "group",
+       "width": 10,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 22,
+       "emphasis": "support",
+       "group": "client",
+       "id": "epic"
+      },
+      {
+       "header": "Beschreibung",
+       "field": "description",
+       "width": 50,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Akzeptanzkriterien",
+       "field": "acceptance_criteria",
+       "width": 40,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Abgrenzungen",
+       "field": "exclusions",
+       "width": 30,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Referenzen",
+       "field": "references",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Quellen (Kundenliste)",
+       "field": "sources",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Ziel-Standard (Funktion, Version)",
+       "field": "target_standard_ref",
+       "width": 40,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Beschreibungslücke (Code kann mehr als beschrieben)",
+       "field": "description_gap",
+       "width": 50,
+       "emphasis": "support",
+       "group": "assess",
+       "id": "description_gap"
+      },
+      {
+       "header": "Ist-Zustand (heutiger Shop)",
+       "field": "current_state_note",
+       "width": 50,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Standard-Alternative",
+       "field": "standard_alternative_flag",
+       "label": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "assess",
+       "id": "flag"
+      },
+      {
+       "header": "Standard-Alternative (Funktion, Version)",
+       "field": "standard_alternative",
+       "width": 40,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Begründung",
+       "field": "rationale",
+       "width": 60,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Umsetzende {unit.noun_plural} (Anzahl)",
+       "id": "n_units",
+       "formula": "=IF({cell:units}=\"\",0,LEN({cell:units})-LEN(SUBSTITUTE({cell:units},\",\",\"\"))+1)",
+       "width": 10,
+       "emphasis": "support",
+       "group": "assess"
+      },
+      {
+       "header": "Umsetzende {unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "assess",
+       "id": "units"
+      },
+      {
+       "header": "Frontend-Anteil",
+       "id": "fe_part",
+       "formula": "=IF(COUNTIF({rng:Frontend_Features.primary_requirement},{cell:id})>0,\"{L:true}\",\"{L:false}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Frontend-Features (Anzahl)",
+       "id": "fe_n",
+       "formula": "=COUNTIF({rng:Frontend_Features.primary_requirement},{cell:id})",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Frontend-Reife (schlechtestes Feature)",
+       "id": "fe_ready",
+       "formula": "=IF(COUNTIF({rng:Frontend_Features.primary_requirement},{cell:id})=0,\"{L:_no_frontend}\",IF(COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.verdict},\"{L:needs-redesign}\")>0,\"{L:needs-redesign}\",IF(COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.verdict},\"{L:needs-api-work}\")>0,\"{L:needs-api-work}\",\"{L:ready}\")))",
+       "width": 18,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "{target.api_name}-Abdeckung (Minimum)",
+       "id": "fe_cov",
+       "formula": "=IF(COUNTIF({rng:Frontend_Features.primary_requirement},{cell:id})=0,\"{L:_no_frontend}\",IF(COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.target_api_coverage},\"{L:none}\")>0,\"{L:none}\",IF(COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.target_api_coverage},\"{L:partial}\")>0,\"{L:partial}\",\"{L:full}\")))",
+       "width": 14,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Features mit eigener API-Arbeit",
+       "id": "fe_api",
+       "formula": "=COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.custom_api_needed_flag},\"{L:true}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Features mit Custom-Content",
+       "id": "fe_cc",
+       "formula": "=COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.content_dependency},\"{L:custom-components}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Features mit serverseitigem Zustand",
+       "id": "fe_state",
+       "formula": "=COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.state_dependency},\"{L:server-side-view-state}\")+COUNTIFS({rng:Frontend_Features.primary_requirement},{cell:id},{rng:Frontend_Features.state_dependency},\"{L:session-attributes}\")",
+       "width": 10,
+       "emphasis": "support",
+       "group": "frontend"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Empfehlung (Formel)",
+       "id": "rec_formula",
+       "formula": "=IF({cell:today}=\"{L:standard-in-use}\",\"{L:use-standard}\",IF({cell:today}=\"{L:none}\",IF({cell:target_standard}=\"{L:full}\",\"{L:use-standard}\",\"{L:build-new}\"),IF({cell:target_standard}=\"{L:full}\",\"{L:refactor-to-standard}\",\"{L:keep-custom}\")))",
+       "width": 18,
+       "internal": true
+      },
+      {
+       "header": "Abgleich",
+       "id": "rec_check",
+       "formula": "=IF({cell:rec_formula}={cell:recommendation},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Konfidenz Ziel-Standard",
+       "field": "target_standard_confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      },
+      {
+       "header": "Konfidenz Alt.",
+       "field": "standard_alternative_confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      },
+      {
+       "header": "Konfidenz",
+       "field": "confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Frontend_Features",
+     "dataset": "frontend_features",
+     "row_key": "feature_id",
+     "readme": "Detailblatt zu den Frontend-Spalten des Blatts Anforderungen: ein nutzerseitiges Feature je Zeile, zugeordnet zu seiner primären Anforderung, mit Urteil und {target.api_name}-Abdeckung – die vollständigen Feature-Details stehen in D4",
+     "columns": [
+      {
+       "header": "Feature-ID",
+       "field": "feature_id",
+       "width": 10,
+       "id": "feature_id"
+      },
+      {
+       "header": "Feature",
+       "field": "feature",
+       "wrap": true,
+       "width": 36
+      },
+      {
+       "header": "Primäre Anforderung",
+       "field": "primary_requirement",
+       "width": 14,
+       "id": "primary_requirement"
+      },
+      {
+       "header": "Urteil",
+       "field": "verdict",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "ready": "standard",
+        "needs-api-work": "rework",
+        "needs-redesign": "rebuild"
+       },
+       "width": 16,
+       "id": "verdict"
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "{target.api_name}-Standardabdeckung",
+       "field": "target_api_coverage",
+       "label": true,
+       "width": 14,
+       "id": "target_api_coverage"
+      },
+      {
+       "header": "Eigene API nötig",
+       "field": "custom_api_needed_flag",
+       "label": true,
+       "width": 10,
+       "id": "custom_api_needed_flag"
+      },
+      {
+       "header": "Content-Abhängigkeit",
+       "field": "content_dependency",
+       "label": true,
+       "width": 16,
+       "id": "content_dependency"
+      },
+      {
+       "header": "Zustandshaltung",
+       "field": "state_dependency",
+       "label": true,
+       "width": 16,
+       "id": "state_dependency"
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Weitere Anforderungen",
+       "field": "related_requirements",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Neue_Anforderungen",
+     "dataset": "new_requirements",
+     "row_key": "id",
+     "readme": "Teil 2 der gemeinsamen Anforderungsliste: Verhalten des heutigen Shops, das keine Anforderung der Kundenliste beschreibt – mit Vorschlag und leerer Spalte für die Entscheidung von {engagement.client}; eingeklappt: die Felder im Format der Kundenliste",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 9,
+       "id": "id"
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Vorschlag",
+       "field": "proposed_handling",
+       "label": true,
+       "validation": [
+        "keep-in-scope",
+        "drop",
+        "merge-into-existing"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "keep-in-scope": "standard",
+        "merge-into-existing": "rework",
+        "drop": "neutral"
+       },
+       "width": 22,
+       "id": "proposed_handling"
+      },
+      {
+       "header": "Kundenentscheidung",
+       "id": "client_decision",
+       "const": "",
+       "validation": [
+        "keep-in-scope",
+        "drop",
+        "merge-into-existing"
+       ],
+       "width": 22
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Beschreibung",
+       "field": "description",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Warum in keiner Anforderung beschrieben",
+       "field": "rationale",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 24,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Akzeptanzkriterien (aus dem Code abgeleitet)",
+       "field": "acceptance_criteria",
+       "width": 50,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Abgrenzungen",
+       "field": "exclusions",
+       "width": 30,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Referenzen (FR/TR)",
+       "field": "references",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Phase",
+       "field": "phase",
+       "width": 10,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Umsetzende {unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 24,
+       "emphasis": "support",
+       "group": "client"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Konfidenz",
+       "field": "confidence",
+       "label": true,
+       "label_ctx": "c",
+       "width": 10,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Uebersicht",
+     "title": "Abdeckung nach Empfehlung, Bewertung, Frontend-Reife, Phase und Epic (Formeln über Anforderungen)",
+     "readme": "Formelbasierte Verteilungen",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "by_rec",
+       "title": "Nach Empfehlung",
+       "row_header": "Empfehlung",
+       "row_tokens": [
+        "use-standard",
+        "refactor-to-standard",
+        "keep-custom",
+        "build-new",
+        "clarify"
+       ],
+       "total_label": "Summe",
+       "columns": [
+        {
+         "header": "Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.recommendation},{row})"
+        },
+        {
+         "header": "davon im Scope ({x:phase_in_scope})",
+         "formula": "=COUNTIFS({rng:Anforderungen.recommendation},{row},{rng:Anforderungen.phase},\"{x:phase_in_scope}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Empfehlung je Anforderung",
+        "status": {
+         "use-standard": "standard",
+         "refactor-to-standard": "rework",
+         "build-new": "rebuild",
+         "clarify": "assumption",
+         "keep-custom": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "today_target",
+       "title": "Heute × Ziel-Standard",
+       "row_header": "Heute (Ist-Shop)",
+       "row_tokens": [
+        "custom",
+        "standard-in-use",
+        "partial",
+        "none"
+       ],
+       "total_label": "Summe",
+       "columns": [
+        {
+         "header": "Ziel-Standard {L:full}",
+         "formula": "=COUNTIFS({rng:Anforderungen.today},{row},{rng:Anforderungen.target_standard},\"{L:full}\")"
+        },
+        {
+         "header": "Ziel-Standard {L:partial}",
+         "formula": "=COUNTIFS({rng:Anforderungen.today},{row},{rng:Anforderungen.target_standard},\"{L:partial}\")"
+        },
+        {
+         "header": "Ziel-Standard {L:none}",
+         "formula": "=COUNTIFS({rng:Anforderungen.today},{row},{rng:Anforderungen.target_standard},\"{L:none}\")"
+        }
+       ],
+       "chart": {
+        "type": "stacked",
+        "columns": [
+         1,
+         2,
+         3
+        ],
+        "title": "Heute × Ziel-Standard",
+        "status": {
+         "Ziel-Standard vollständig": "standard",
+         "Ziel-Standard teilweise": "rework",
+         "Ziel-Standard keine": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "by_verdict",
+       "title": "Nach Abdeckung",
+       "row_header": "Abdeckung",
+       "row_tokens": [
+        "covered-standard",
+        "covered-custom",
+        "partial",
+        "gap"
+       ],
+       "total_label": "Summe",
+       "columns": [
+        {
+         "header": "Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.verdict},{row})"
+        },
+        {
+         "header": "Standard-Alternative vorhanden",
+         "formula": "=COUNTIFS({rng:Anforderungen.verdict},{row},{rng:Anforderungen.flag},\"{L:true}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Abdeckung",
+        "status": {
+         "covered-standard": "standard",
+         "covered-custom": "neutral",
+         "partial": "rework",
+         "gap": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "fe_ready",
+       "title": "Frontend-Reife je Anforderung",
+       "row_header": "Frontend-Reife",
+       "row_tokens": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign",
+        "_no_frontend"
+       ],
+       "total_label": "Summe",
+       "columns": [
+        {
+         "header": "Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.fe_ready},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Frontend-Reife",
+        "status": {
+         "ready": "standard",
+         "needs-api-work": "rework",
+         "needs-redesign": "rebuild",
+         "_no_frontend": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "Nach Phase",
+       "row_header": "Phase",
+       "row_values_from": "coverage.phase",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.phase},{row})"
+        },
+        {
+         "header": "{L:use-standard}",
+         "formula": "=COUNTIFS({rng:Anforderungen.phase},{row},{rng:Anforderungen.recommendation},\"{L:use-standard}\")"
+        },
+        {
+         "header": "{L:refactor-to-standard}",
+         "formula": "=COUNTIFS({rng:Anforderungen.phase},{row},{rng:Anforderungen.recommendation},\"{L:refactor-to-standard}\")"
+        },
+        {
+         "header": "{L:keep-custom}",
+         "formula": "=COUNTIFS({rng:Anforderungen.phase},{row},{rng:Anforderungen.recommendation},\"{L:keep-custom}\")"
+        },
+        {
+         "header": "{L:build-new}",
+         "formula": "=COUNTIFS({rng:Anforderungen.phase},{row},{rng:Anforderungen.recommendation},\"{L:build-new}\")"
+        },
+        {
+         "header": "{L:clarify}",
+         "formula": "=COUNTIFS({rng:Anforderungen.phase},{row},{rng:Anforderungen.recommendation},\"{L:clarify}\")"
+        }
+       ],
+       "chart": {
+        "type": "stacked",
+        "columns": [
+         2,
+         3,
+         4,
+         5,
+         6
+        ],
+        "title": "Empfehlung nach Phase",
+        "status": {
+         "Standard nutzen": "standard",
+         "auf Standard umbauen": "rework",
+         "Custom behalten": "neutral",
+         "neu bauen": "rebuild",
+         "nach Bestätigung": "assumption"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "Nach Epic",
+       "row_header": "Epic",
+       "row_values_from": "coverage.epic",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Anforderungen",
+         "formula": "=COUNTIF({rng:Anforderungen.epic},{row})"
+        },
+        {
+         "header": "{L:use-standard}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.recommendation},\"{L:use-standard}\")"
+        },
+        {
+         "header": "{L:refactor-to-standard}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.recommendation},\"{L:refactor-to-standard}\")"
+        },
+        {
+         "header": "{L:keep-custom}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.recommendation},\"{L:keep-custom}\")"
+        },
+        {
+         "header": "{L:build-new}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.recommendation},\"{L:build-new}\")"
+        },
+        {
+         "header": "{L:clarify}",
+         "formula": "=COUNTIFS({rng:Anforderungen.epic},{row},{rng:Anforderungen.recommendation},\"{L:clarify}\")"
+        }
+       ],
+       "chart": false
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Quellenkuerzel",
+     "dataset": "req_sources",
+     "tab": "reference",
+     "readme": "Die Quellenkürzel der Anforderungsliste (Spalte „Quellen (Kundenliste)“) mit der Unterlage, für die sie stehen – aus der Legende der Anforderungsliste",
+     "columns": [
+      {
+       "header": "Kürzel",
+       "field": "abbreviation",
+       "width": 12
+      },
+      {
+       "header": "Unterlage",
+       "field": "document",
+       "wrap": true,
+       "width": 90
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Aussagen",
+     "scopes": "D3",
+     "readme": "Alle Aussagen mit Prüfer-Scores (nur interne Fassung)"
+    }
+   ]
+  },
+  "D4": {
+   "title": "D4 Zielreife und Migrationsaufgaben",
+   "requires": [
+    "d4"
+   ],
+   "purpose": "Modul 4, das Arbeitsblatt für das Entwicklungsteam: je nutzerseitigem Feature – zugeordnet zu der Anforderung, die es erfüllt – das Reife-Urteil mit Kernaussage, die Abdeckung durch die Standard-{target.api_name}, nötige eigene API-Arbeit, Content- und Zustandsabhängigkeit; die genutzten {target.content_model_name}n und ihre Unterstützung in {target.frontend}; die Schnittstellen zu Fremdsystemen mit Auswirkung und Betreiber im Ziel; und die übergreifenden Migrationsaufgaben (Auswirkung, Rang, Reihenfolge, Abhängigkeiten), aus denen ein Migrationsplan entsteht.",
+   "sources": "analysis/consolidated/D4.md",
+   "sources_client": "Code-Analyse des Repository-Stands, zusammengeführt über alle {unit.noun_plural}; Herstellerdokumentation",
+   "sheets": [
+    {
+     "type": "mgmt",
+     "name": "Management_Summary",
+     "readme": "Kennzahlen (Formeln), Einordnung und Diagramme",
+     "kpis": [
+      {
+       "id": "features",
+       "label": "Nutzerseitige Features",
+       "formula": "=COUNTA({rng:Frontend_Features.feature_id})",
+       "note": "je Feature genau eine primäre Anforderung (Blatt Frontend_Features)"
+      },
+      {
+       "id": "ready",
+       "label": "{L:ready}",
+       "formula": "=COUNTIF({rng:Frontend_Features.verdict_assessed},\"{L:ready}\")",
+       "note": "die Standard-{target.api_name} deckt das Feature ab, {target.frontend} kann es ohne Backend-Arbeit darstellen"
+      },
+      {
+       "id": "api_work",
+       "label": "{L:needs-api-work}",
+       "formula": "=COUNTIF({rng:Frontend_Features.verdict_assessed},\"{L:needs-api-work}\")",
+       "note": "eigene oder erweiterte API-Endpunkte nötig, Fachlogik bleibt"
+      },
+      {
+       "id": "redesign",
+       "label": "{L:needs-redesign}",
+       "formula": "=COUNTIF({rng:Frontend_Features.verdict_assessed},\"{L:needs-redesign}\")",
+       "note": "Feature so nicht übertragbar (serverseitiger Zustand, Template-Logik)"
+      },
+      {
+       "id": "tasks_blocker",
+       "label": "Migrationsaufgaben {L:blocker|impact}",
+       "formula": "=COUNTIF({rng:Migrationsaufgaben.impact},\"{L:blocker|impact}\")",
+       "note": "ohne diese Aufgabe geht nichts live (Blatt Migrationsaufgaben, Rang 1 zuerst)"
+      },
+      {
+       "id": "tasks_major",
+       "label": "Migrationsaufgaben {L:major|impact}",
+       "formula": "=COUNTIF({rng:Migrationsaufgaben.impact},\"{L:major|impact}\")",
+       "note": "Blatt Migrationsaufgaben – Auswirkung"
+      },
+      {
+       "id": "tasks_minor",
+       "label": "Migrationsaufgaben {L:minor|impact}",
+       "formula": "=COUNTIF({rng:Migrationsaufgaben.impact},\"{L:minor|impact}\")",
+       "note": "Blatt Migrationsaufgaben – Auswirkung"
+      },
+      {
+       "id": "tasks_before",
+       "label": "Aufgaben {L:before|seq}",
+       "formula": "=COUNTIF({rng:Migrationsaufgaben.sequence},\"{L:before|seq}\")",
+       "note": "Voraussetzungen des Storefront-Umbaus"
+      },
+      {
+       "id": "cc_custom",
+       "label": "Custom-Content-Komponententypen",
+       "formula": "=COUNTIF({rng:Content_Komponenten.kind},\"{L:custom}\")",
+       "note": "brauchen eigene Frontend-Komponenten in {target.frontend}"
+      },
+      {
+       "id": "cc_unsupported",
+       "label": "Content-Komponenten „{L:unsupported}“",
+       "formula": "=COUNTIF({rng:Content_Komponenten.target_support},\"{L:unsupported}\")",
+       "note": "kein Gegenstück in {target.frontend}"
+      },
+      {
+       "id": "interfaces",
+       "label": "Schnittstellen zu Fremdsystemen",
+       "formula": "=COUNTA({rng:Schnittstellen.system})",
+       "note": "Blatt Schnittstellen (je System und Richtung)"
+      },
+      {
+       "id": "if_custom",
+       "label": "davon mit eigener Umsetzung",
+       "formula": "=COUNTIF({rng:Schnittstellen.implementation},\"{L:custom|impl}\")",
+       "note": "Umsetzung = {L:custom|impl}"
+      },
+      {
+       "id": "if_changed",
+       "label": "Schnittstellen, die der Storefront-Wechsel neu anbindet oder neu baut",
+       "formula": "=COUNTIF({rng:Schnittstellen.target_impact},\"{L:frontend-rewire}\")+COUNTIF({rng:Schnittstellen.target_impact},\"{L:rebuild}\")",
+       "note": "Auswirkung im Ziel = {L:frontend-rewire} oder {L:rebuild}"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "tasks_blocker",
+       "status": "rebuild",
+       "label": "Aufgaben {L:blocker|impact}"
+      },
+      {
+       "kpi": "redesign",
+       "status": "rebuild",
+       "label": "Features {L:needs-redesign}"
+      },
+      {
+       "kpi": "api_work",
+       "status": "rework",
+       "label": "Features {L:needs-api-work}"
+      },
+      {
+       "kpi": "ready",
+       "status": "standard",
+       "label": "Features {L:ready}"
+      },
+      {
+       "kpi": "if_changed",
+       "status": "rework",
+       "label": "Schnittstellen neu anbinden/bauen"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "tasks_impact",
+       "title": "Migrationsaufgaben nach Auswirkung"
+      },
+      {
+       "type": "bar",
+       "block": "verdict",
+       "title": "Features nach Urteil"
+      }
+     ]
+    },
+    {
+     "type": "readme",
+     "name": "README"
+    },
+    {
+     "type": "table",
+     "name": "Frontend_Features",
+     "dataset": "features",
+     "row_key": "feature_id",
+     "readme": "Eine Zeile je nutzerseitigem Feature, sortiert nach der primären Anforderung: Urteil mit Kernaussage und Grundlage, {target.api_name}-Abdeckung, nötige eigene API; eingeklappt: heutige Umsetzung, Ziel-API-Details, Fundstellen",
+     "columns": [
+      {
+       "header": "Feature-ID",
+       "field": "feature_id",
+       "width": 10,
+       "id": "feature_id"
+      },
+      {
+       "header": "Feature",
+       "field": "feature",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Primäre Anforderung",
+       "field": "primary_requirement",
+       "width": 14,
+       "id": "primary_requirement"
+      },
+      {
+       "header": "Urteil",
+       "field": "verdict",
+       "label": true,
+       "validation": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "ready": "standard",
+        "needs-api-work": "rework",
+        "needs-redesign": "rebuild"
+       },
+       "width": 16,
+       "id": "verdict_assessed"
+      },
+      {
+       "header": "Kernaussage",
+       "field": "key_statement",
+       "wrap": true,
+       "width": 46
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 20
+      },
+      {
+       "header": "{target.api_name}-Standardabdeckung",
+       "field": "target_api_coverage",
+       "label": true,
+       "width": 14,
+       "id": "target_api_coverage"
+      },
+      {
+       "header": "Eigene API nötig (was)",
+       "field": "custom_api_needed",
+       "wrap": true,
+       "width": 36,
+       "id": "custom_api_needed"
+      },
+      {
+       "header": "Begründung",
+       "field": "rationale",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "today"
+      },
+      {
+       "header": "Heutige Umsetzung",
+       "field": "current_implementation",
+       "width": 50,
+       "emphasis": "support",
+       "group": "today"
+      },
+      {
+       "header": "Einstiegspunkte",
+       "field": "entry_points",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "today"
+      },
+      {
+       "header": "Standard-Endpunkte",
+       "field": "target_api_endpoints",
+       "sep": ", ",
+       "width": 40,
+       "emphasis": "support",
+       "group": "target"
+      },
+      {
+       "header": "Eigene API vorhanden",
+       "field": "custom_api_exists",
+       "label": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "target",
+       "id": "custom_api_exists"
+      },
+      {
+       "header": "Content-Abhängigkeit",
+       "field": "content_dependency",
+       "label": true,
+       "width": 16,
+       "emphasis": "support",
+       "group": "target",
+       "id": "content_dependency"
+      },
+      {
+       "header": "Content-Komponenten",
+       "field": "content_components",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "target"
+      },
+      {
+       "header": "Zustandshaltung",
+       "field": "state_dependency",
+       "label": true,
+       "width": 16,
+       "emphasis": "support",
+       "group": "target",
+       "id": "state_dependency"
+      },
+      {
+       "header": "Weitere Anforderungen",
+       "field": "related_requirements",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "target"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Urteil (Formel)",
+       "id": "verdict_formula",
+       "formula": "=IF(OR({cell:state_dependency}=\"{L:server-side-view-state}\",AND({cell:target_api_coverage}=\"{L:none}\",{cell:content_dependency}=\"{L:custom-components}\")),\"{L:needs-redesign}\",IF(AND({cell:target_api_coverage}=\"{L:full}\",{cell:content_dependency}<>\"{L:custom-components}\",{cell:custom_api_needed}=\"\"),\"{L:ready}\",\"{L:needs-api-work}\"))",
+       "width": 14,
+       "internal": true
+      },
+      {
+       "header": "Abgleich",
+       "id": "check",
+       "formula": "=IF({cell:verdict_formula}={cell:verdict_assessed},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Content_Komponenten",
+     "dataset": "content_components",
+     "row_key": "component_type",
+     "readme": "Genutzte Content-Komponententypen, {L:standard} oder {L:custom}, mit ihrer Unterstützung in {target.frontend}; „{L:not-counted}“ = die Verwendungen wurden nicht gezählt",
+     "columns": [
+      {
+       "header": "Komponententyp",
+       "field": "component_type",
+       "width": 40
+      },
+      {
+       "header": "Art",
+       "field": "kind",
+       "label": true,
+       "width": 12,
+       "id": "kind"
+      },
+      {
+       "header": "Unterstützung in {target.frontend}",
+       "field": "target_support",
+       "label": true,
+       "validation": [
+        "supported",
+        "needs-custom-mapping",
+        "unsupported",
+        "unknown"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "supported": "standard",
+        "needs-custom-mapping": "rework",
+        "unsupported": "rebuild",
+        "unknown": "neutral"
+       },
+       "width": 24,
+       "id": "target_support"
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27,
+       "grundlage_from": [
+        "evidence",
+        "notes"
+       ]
+      },
+      {
+       "header": "Verwendungen",
+       "field": "usages",
+       "label": true,
+       "width": 14
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 30
+      },
+      {
+       "header": "Hinweise",
+       "field": "notes",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Schnittstellen",
+     "dataset": "integrations",
+     "row_key": "system",
+     "readme": "Schnittstellen des Shops zu Fremdsystemen (ERP, Identity Provider, Middleware, Suche, Beschaffung, Dateiaustausch): Auswirkung im Ziel, Betreiber und Verantwortung im Ziel, Mechanismus und Umsetzung",
+     "columns": [
+      {
+       "header": "System",
+       "field": "system",
+       "width": 26,
+       "id": "system"
+      },
+      {
+       "header": "Richtung",
+       "field": "direction",
+       "label": true,
+       "label_ctx": "dir",
+       "width": 10
+      },
+      {
+       "header": "Auswirkung im Ziel",
+       "field": "target_impact",
+       "label": true,
+       "validation": [
+        "unchanged",
+        "replace-by-standard",
+        "frontend-rewire",
+        "rebuild",
+        "retire"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "unchanged": "standard",
+        "replace-by-standard": "standard",
+        "frontend-rewire": "rework",
+        "rebuild": "rebuild",
+        "retire": "neutral"
+       },
+       "width": 20,
+       "id": "target_impact"
+      },
+      {
+       "header": "Betreiber / Verantwortung im Ziel",
+       "field": "operator",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Hinweis zum Ziel",
+       "field": "target_note",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Zweck",
+       "field": "purpose",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "header": "Mechanismus",
+       "field": "mechanism",
+       "label": true,
+       "label_ctx": "mech",
+       "width": 18
+      },
+      {
+       "header": "Umsetzung",
+       "field": "implementation",
+       "label": true,
+       "label_ctx": "impl",
+       "width": 12,
+       "id": "implementation"
+      },
+      {
+       "header": "Datenobjekte",
+       "field": "data_objects",
+       "sep": ", ",
+       "width": 30,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Auslöser",
+       "field": "trigger",
+       "label": true,
+       "label_ctx": "trig",
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Anforderungen",
+       "field": "related_requirements",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "table",
+     "name": "Migrationsaufgaben",
+     "dataset": "migration_tasks",
+     "row_key": "id",
+     "readme": "Übergreifende Migrationsaufgaben für den Migrationsplan, sortiert nach Auswirkung ({L:blocker|impact} → {L:minor|impact}) und Rang innerhalb der Auswirkung: Aufgabe, Abhängigkeiten, Reihenfolge, Befund; eingeklappt: betroffene Anforderungen und Fundstellen. Rang = Reihenfolge innerhalb der Auswirkung (Aufgaben, von denen andere abhängen, zuerst; dann Reihenfolge und Zahl betroffener Anforderungen). Deployment-Konfiguration bezieht sich ausschließlich auf Artefakte im Repository; vom Plattformbetreiber betriebene Infrastruktur ist nicht Gegenstand dieser Analyse",
+     "columns": [
+      {
+       "header": "Aufgabe-ID",
+       "field": "id",
+       "width": 10,
+       "id": "id"
+      },
+      {
+       "header": "Thema",
+       "field": "topic",
+       "label": true,
+       "label_ctx": "topic",
+       "width": 18,
+       "id": "topic"
+      },
+      {
+       "header": "Auswirkung",
+       "field": "impact",
+       "label": true,
+       "label_ctx": "impact",
+       "validation": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "standard"
+       },
+       "width": 12,
+       "id": "impact"
+      },
+      {
+       "header": "Rang",
+       "field": "rank",
+       "width": 7
+      },
+      {
+       "header": "Aufgabe",
+       "field": "task",
+       "wrap": true,
+       "width": 56
+      },
+      {
+       "header": "Hängt ab von",
+       "field": "depends_on",
+       "label": true,
+       "label_ctx": "dep",
+       "sep": ", ",
+       "width": 16
+      },
+      {
+       "header": "Reihenfolge",
+       "field": "sequence",
+       "label": true,
+       "label_ctx": "seq",
+       "validation": [
+        "before",
+        "during",
+        "after"
+       ],
+       "width": 22,
+       "id": "sequence"
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Befund",
+       "field": "finding",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Betroffene Anforderungen",
+       "field": "affected_requirements",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail",
+       "id": "affected_requirements"
+      },
+      {
+       "header": "Anzahl betroffener Anforderungen",
+       "id": "n_affected",
+       "formula": "=IF({cell:affected_requirements}=\"\",0,LEN({cell:affected_requirements})-LEN(SUBSTITUTE({cell:affected_requirements},\",\",\"\"))+1)",
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "{unit.noun_plural}",
+       "field": "units",
+       "sep": ", ",
+       "width": 26,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "width": 50,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "type": "overview",
+     "name": "Uebersicht",
+     "title": "Zielreife (Formeln über Frontend_Features / Content_Komponenten / Migrationsaufgaben / Schnittstellen)",
+     "readme": "Formelbasierte Verteilung der Urteile, Content-Unterstützung, Aufgaben und Schnittstellen",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "verdict",
+       "title": "Urteil",
+       "row_header": "Urteil",
+       "row_tokens": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Features",
+         "formula": "=COUNTIF({rng:Frontend_Features.verdict_assessed},{row})"
+        },
+        {
+         "header": "davon eigene API vorhanden",
+         "formula": "=COUNTIFS({rng:Frontend_Features.verdict_assessed},{row},{rng:Frontend_Features.custom_api_exists},\"{L:true}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Features nach Urteil",
+        "status": {
+         "ready": "standard",
+         "needs-api-work": "rework",
+         "needs-redesign": "rebuild"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "content",
+       "title": "Content-Komponenten",
+       "row_header": "Unterstützung in {target.frontend}",
+       "row_tokens": [
+        "supported",
+        "needs-custom-mapping",
+        "unsupported",
+        "unknown"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Komponententypen",
+         "formula": "=COUNTIF({rng:Content_Komponenten.target_support},{row})"
+        },
+        {
+         "header": "davon {L:custom}",
+         "formula": "=COUNTIFS({rng:Content_Komponenten.target_support},{row},{rng:Content_Komponenten.kind},\"{L:custom}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Content-Komponenten",
+        "status": {
+         "supported": "standard",
+         "needs-custom-mapping": "rework",
+         "unsupported": "rebuild",
+         "unknown": "neutral"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "tasks_impact",
+       "title": "Migrationsaufgaben nach Auswirkung",
+       "row_header": "Auswirkung",
+       "row_tokens": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "label_ctx": "impact",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Aufgaben",
+         "formula": "=COUNTIF({rng:Migrationsaufgaben.impact},{row})"
+        },
+        {
+         "header": "davon {L:before|seq}",
+         "formula": "=COUNTIFS({rng:Migrationsaufgaben.impact},{row},{rng:Migrationsaufgaben.sequence},\"{L:before|seq}\")"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Migrationsaufgaben nach Auswirkung",
+        "status": {
+         "blocker": "rebuild",
+         "major": "rework",
+         "minor": "standard"
+        }
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "tasks_seq",
+       "title": "Migrationsaufgaben nach Reihenfolge",
+       "row_header": "Reihenfolge",
+       "row_tokens": [
+        "before",
+        "during",
+        "after"
+       ],
+       "label_ctx": "seq",
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Aufgaben",
+         "formula": "=COUNTIF({rng:Migrationsaufgaben.sequence},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Migrationsaufgaben nach Reihenfolge"
+       }
+      },
+      {
+       "type": "matrix",
+       "id": "interfaces",
+       "title": "Schnittstellen nach Auswirkung im Ziel",
+       "row_header": "Auswirkung im Ziel",
+       "row_tokens": [
+        "unchanged",
+        "replace-by-standard",
+        "frontend-rewire",
+        "rebuild",
+        "retire"
+       ],
+       "total_label": "Gesamt",
+       "columns": [
+        {
+         "header": "Schnittstellen",
+         "formula": "=COUNTIF({rng:Schnittstellen.target_impact},{row})"
+        }
+       ],
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Schnittstellen nach Auswirkung im Ziel",
+        "status": {
+         "unchanged": "standard",
+         "replace-by-standard": "standard",
+         "frontend-rewire": "rework",
+         "rebuild": "rebuild",
+         "retire": "neutral"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "claims",
+     "name": "Aussagen",
+     "scopes": "D4",
+     "readme": "Alle Aussagen mit Prüfer-Scores (nur interne Fassung)"
+    }
+   ]
+  }
+ },
+ "common": {
+  "readme": {
+   "glossary_text": "{unit.noun} = ausrollbares Modul des Shop-Codes. {target.api_name} = Standard-API der Zielplattform, Grundlage der Ziel-Storefront. {target.content_model_name} = konfigurierbarer Seitenbaustein. Service-Override = Ersetzen einer Standardkomponente durch eigene Implementierung. Shadowing = eigene Klasse mit identischem Namen und Namespace überlagert die Standardklasse (hohes Upgrade-Risiko). Datenskript = Import-, Migrations- oder Stammdatenskript. Workflow = konfigurierter Ablauf (z. B. Bestellabwicklung). Clean Core = {unit.noun} ohne Eingriff in Standardverhalten. LOC bereinigt = gepflegte Codezeilen geladener {unit.noun_plural} ohne Tests, generierten Code, Vorlagenkopien, Konfiguration und Datenskripte. Kundennah = {unit.noun_plural} der Kategorien Frontend und API. Kernaussage = ein Satz zur Folge des Ergebnisses für {engagement.client}. Rang = Reihenfolge einer Migrationsaufgabe innerhalb ihrer Auswirkung. Quellen (Kundenliste) = Kürzel der Unterlagen, auf die sich eine Anforderung stützt (aufgelöst auf dem Blatt Quellenkuerzel)."
+  }
+ }
+}

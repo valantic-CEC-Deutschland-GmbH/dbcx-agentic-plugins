@@ -1,0 +1,820 @@
+{
+ "_readme": [
+  "Analysis kinds of the tech-fit-estimation method (one run, N options, row classes, scenarios). `estimation` = one chunk of the requirement list (one epic, or several small epics merged) estimated for EVERY option of the run (an option = technology x starting point, run.json `options`); `summary` = the single consolidation (calibration per option, fixed phases, the exclusions register, qualitative risks, asserted totals).",
+  "Row model: one estimation row per requirement x option (x position); rid = <req_id>[@<position>]@<option> (row_key_sep), so a claim targets D1/Schaetzung#FR-041@brownfield exactly. Sizes are labels of the size scale (estimation.sizes, default the T-shirt sizes 0 ... XXL); person days come from the workbook's mapping table. Unclear requirements never become open questions: the reading taken goes to `Assumptions taken` (A-nn on the Annahmen sheet).",
+  "methods/tech-fit-estimation/validate.py checks what a schema cannot: approach vocabulary by the option's start, sizes, estimation positions, greenfield rows without client-repository locators, the narrow-lookup budget, lookup fields.",
+  "scenario mode: estimation rows carry is_size / is_note (the integration platform effort of run.json estimation.integration_platform) and, on a refactoring row, saved_size / saves (the migration effort of the named client rows it makes unnecessary) - all `omit_empty`, so an analysis without them converts to the same JSON; the summary's fixed phases name their scenario and the optional `Fixed phase seeds` table records keep / adjust / drop per seed phase; kind `classification` is the classification agent's proposal (dbcx classify); `extend.critic` adds the client critic's scoring ground to the engine critic table.",
+  "(run.json systems only): estimation rows carry the work-package fields starting_point / coverage / gap_reason / route_suggestion (all `omit_empty`, so a run without systems converts to the same JSON; validate.py refuses them there); kind `architect` is the architect's decision per gap of a batch ARCHITECT-n (dbcx architect), with client assumptions and claims."
+ ],
+ "kinds": {
+  "estimation": {
+   "title": "Fit estimation: <chunk>",
+   "file": "estimation.md",
+   "output_dir": "analysis/scopes",
+   "id_prefix": "C-<chunk>-",
+   "head": {
+    "scope": {
+     "t": "s",
+     "req": true
+    },
+    "agent": {
+     "t": "s",
+     "req": true
+    },
+    "technology": {
+     "t": "s",
+     "req": true
+    },
+    "wave": "i",
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "scope = the chunk name from your CONTEXT (e.g. epic-03); technology = the options of your CONTEXT (label: technology version) separated by ';'; status = draft | final (the orchestrator sets final); round = the round this version answers (0 = first version)",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "help": "3-6 plain-language sentences for the client: what these requirements ask for, how each option carries them, where the effort sits, what makes the options differ and which single assumption moves the number most."
+    },
+    {
+     "heading": "Estimation",
+     "key": "estimation",
+     "type": "table",
+     "row_key": [
+      "req_id",
+      "position",
+      "option"
+     ],
+     "row_key_sep": "@",
+     "req": true,
+     "fields": {
+      "req_id": {
+       "t": "s",
+       "req": true
+      },
+      "option": {
+       "t": "s",
+       "req": true
+      },
+      "position": "s",
+      "position_title": "s",
+      "epic": {
+       "t": "s",
+       "req": true
+      },
+      "approach": {
+       "t": "s",
+       "enum": [
+        "standard",
+        "partial",
+        "custom",
+        "keep",
+        "adapt",
+        "convert-to-standard",
+        "rebuild",
+        "retire",
+        "new"
+       ],
+       "req": true
+      },
+      "size": {
+       "t": "s",
+       "enum": [
+        "",
+        "$estimation.sizes"
+       ]
+      },
+      "is_size": {
+       "t": "s",
+       "enum": [
+        "",
+        "$estimation.sizes"
+       ],
+       "omit_empty": true
+      },
+      "is_note": {
+       "t": "s",
+       "omit_empty": true
+      },
+      "mechanism": {
+       "t": "s",
+       "req": true
+      },
+      "mechanism_kind": {
+       "t": "s",
+       "enum": [
+        "module",
+        "app",
+        "api",
+        "setting",
+        "extension-point",
+        "custom-code",
+        "existing-code",
+        "none"
+       ],
+       "req": true
+      },
+      "version_plan": "s",
+      "evidence": {
+       "t": "l",
+       "req": true
+      },
+      "derivation": {
+       "t": "s",
+       "req": true
+      },
+      "estimation_assumption": "s",
+      "carried_by": "s",
+      "saved_size": {
+       "t": "s",
+       "enum": [
+        "",
+        "$estimation.sizes"
+       ],
+       "omit_empty": true
+      },
+      "saves": {
+       "t": "l",
+       "omit_empty": true
+      },
+      "depends_on": "l",
+      "integration_on_tr": "b",
+      "lookup_question": "s",
+      "lookup_locators": "l",
+      "lookup_answer": "s",
+      "lookup_extends": "s",
+      "lookup_status": {
+       "t": "s",
+       "enum": [
+        "",
+        "done",
+        "budget-exhausted"
+       ]
+      },
+      "size_before_lookup": {
+       "t": "s",
+       "enum": [
+        "",
+        "$estimation.sizes"
+       ]
+      },
+      "client_attention": "b",
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "",
+        "high",
+        "medium",
+        "low"
+       ]
+      },
+      "starting_point": {
+       "t": "s",
+       "enum": [
+        "",
+        "reuse",
+        "extend",
+        "new",
+        "clarify"
+       ],
+       "omit_empty": true
+      },
+      "coverage": {
+       "t": "s",
+       "enum": [
+        "",
+        "standard",
+        "extension",
+        "gap"
+       ],
+       "omit_empty": true
+      },
+      "gap_reason": {
+       "t": "s",
+       "omit_empty": true
+      },
+      "route_suggestion": {
+       "t": "s",
+       "omit_empty": true
+      }
+     },
+     "help": "one row per requirement of YOUR chunk and per option of the run (option = the option id from your CONTEXT), none left out. approach by the option's start: greenfield standard | partial | custom; brownfield keep | adapt | convert-to-standard | rebuild | retire | new. size = one label of the run's size scale (SIZE MAPPING; 0 = nothing to do, e.g. kept as it is); nothing is ever above the largest label. A requirement that needs more than the largest label keeps its own row with size empty and gets ESTIMATION POSITIONS below it: rows with the same req_id and option and position = 1, 2, ... (position_title = what the position builds), each at most the largest label; the workbook sums them. mechanism = the named module / app / API / setting / extension point or the existing code unit; evidence = the locators the size rests on (PS-7-NNN reference rows - vendor documentation and vendor standard code go there -, HO-<type>#<id> handover rows for brownfield facts, SRC-nnn#anchor for client documents, repository file:line only from a narrow lookup). derivation = how the size follows (what is built or changed, compared with which mechanism). estimation_assumption = the short reading the size rests on when the requirement is broad (the most probable reading; on a tie the lowest effort, closest to the standard) - register the same reading in `Assumptions taken`. carried_by = the on-top block that carries part of this row (e.g. QA surcharge, phase cutover): that part is size 0 here and estimation_assumption names the block. Lookup fields only for brownfield rows with a narrow code lookup (lookup_question written BEFORE opening code, lookup_locators = the classes read as file:line ranges, lookup_answer, lookup_extends = the HO row it extends, lookup_status done | budget-exhausted, size_before_lookup = the size before the lookup). depends_on / integration_on_tr: the integration effort sits on the technical requirement. client_attention = yes when the requirement contradicts the option's model. ROW CLASSES: a technical migration row (TM-nn) is estimated for every option it applies to, a refactoring row (RF-nn) for brownfield options only - never a greenfield row. INTEGRATION PLATFORM (only when the OPTIONS block names one; otherwise both fields stay empty): is_size = the size label of the row's effort on the integration platform (same mapping; empty when the row touches no interface; a position carries its own), is_note = what changes on the interface, one functional sentence; one interface change is carried by one row - the others name it in carried_by. SAVING (refactoring rows only): saved_size = the migration effort of the client rows named in saves that this refactoring makes unnecessary - both or neither. PRODUCT-OWNER LANGUAGE: mechanism, derivation, estimation_assumption, position_title and is_note say WHAT is used or built, never HOW in code - no file, path, class, package, extension name or line number (the CHECK refuses them). mechanism good 'standard cart import of the B2B storefront', bad 'CartImportFacade in shopcore'; derivation good 'new storefront page for the machine list on the standard B2B unit data, with filter by site and export', bad 'change MachineListController line 56'; estimation_assumption good 'assuming the standard cart import carries the CSV upload', bad 'assuming shopfacades stays'; position_title good 'machine list page with site filter', bad 'MachineListComponent'; is_note good 'the order interface carries the plant split as an additional field', bad 'extend OrderExportJob and mapping.xml'. REAL SCOPE: the BASELINE is the real scope of a requirement for EVERY option (text + description gap + what today's shop does + merged derived requirements). A row whose code-analysis row shows a description gap or custom / partial behaviour today cites HO-requirements-coverage#<id>; a greenfield derivation of such a row names the scope elements it rebuilds - good 'standard checkout with own steps for payer address and unloading point, order reference mandatory with 36 characters, file upload for function testers', bad 'standard checkout, S'. A brownfield keep sized with one of the two smallest labels (0 or XS by default) cites the HO row that shows the function exists. MULTI-SYSTEM RUN (run.json systems; otherwise these four fields stay empty): every work package (the requirement row, not a position) carries starting_point = what exists today in this system: reuse | extend | new | clarify (a greenfield option: new) and coverage = standard (shipped configuration of the system - cite the vendor reference PS-7-NNN, without one the CHECK downgrades it to extension with confidence low) | extension (built inside the system) | gap (not solvable in this system: gap_reason = why, required; route_suggestion = the run system or landscape id that could carry it, optional; size = this system's own share only, e.g. 0 or the interface end). confidence high | medium | low is required - the workbook derives the range (min / max) from it. An architect decides every gap after the wave; a work package the architect routed to you or decided finally is estimated, never a gap again."
+    },
+    {
+     "heading": "Assumptions",
+     "key": "assumptions",
+     "type": "table",
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "requirement_ids": {
+       "t": "l",
+       "req": true
+      },
+      "assumption": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "exclusion",
+        "dependency"
+       ],
+       "req": true
+      },
+      "effect": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "exclusions and dependencies (ids AE-nn): exclusion = deliberately NOT in any figure (licences, work on the ERP or S/4 side, hosting, data migration by the client); dependency = the figure holds only if something else is delivered. effect = what the number does if it does not hold. A reading the client should confirm is no exclusion - it goes to `Assumptions taken`."
+    },
+    "ASSUMPTIONS",
+    "CLAIMS",
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "optional": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": {
+       "t": "s",
+       "req": true
+      },
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "unresolvable"
+       ],
+       "req": true
+      },
+      "answer": "n"
+     },
+     "help": "ONLY questions to another chunk (to = the chunk that owns the other requirement) or to the lead. An unclear requirement never becomes a question to the client: take the most probable reading and record it in `Assumptions taken` (validate.py refuses `to = client`)."
+    }
+   ]
+  },
+  "summary": {
+   "title": "Fit estimation summary (all epics, all options)",
+   "file": "consolidated-SUMMARY.md",
+   "output_dir": "analysis/consolidated",
+   "id_prefix": "C-SUM-",
+   "head": {
+    "technology": {
+     "t": "s",
+     "req": true
+    },
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "technology = the options of your CONTEXT (label: technology version) separated by ';'; status = draft | final",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "help": "5-8 plain-language sentences for the client: the total of each option, what drives the difference between them, which assumptions move the totals, and which requirements need a decision."
+    },
+    {
+     "heading": "Totals",
+     "key": "totals",
+     "type": "table",
+     "fields": {
+      "dimension": {
+       "t": "s",
+       "enum": [
+        "option",
+        "epic",
+        "release",
+        "scenario"
+       ],
+       "req": true
+      },
+      "option": {
+       "t": "s",
+       "req": true
+      },
+      "key": {
+       "t": "s",
+       "req": true
+      },
+      "requirements": {
+       "t": "i",
+       "req": true
+      },
+      "dev_pd": {
+       "t": "s",
+       "req": true
+      },
+      "note": "s"
+     },
+     "help": "the development totals you assert (person days from the size mapping, positions summed), per option: one `option` row (key = the option id), one row per epic and per release. The workbook recomputes every total by formula - a divergence is a finding, so re-add before you write. Scenario mode (the OPTIONS block lists SCENARIOS): also one `scenario` row per scenario (key = the scenario id, option = its option) with dev_pd = its platform development after the saving.",
+     "row_key": [
+      "dimension",
+      "key",
+      "option"
+     ],
+     "row_key_sep": "@"
+    },
+    {
+     "heading": "Calibration",
+     "key": "calibration",
+     "type": "table",
+     "fields": {
+      "option": {
+       "t": "s",
+       "req": true
+      },
+      "mechanism": {
+       "t": "s",
+       "req": true
+      },
+      "rule": {
+       "t": "s",
+       "req": true
+      },
+      "before": "s",
+      "normalised_size": {
+       "t": "s",
+       "enum": "$estimation.sizes",
+       "req": true
+      },
+      "rows_changed": {
+       "t": "l",
+       "req": true
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "per option: one row per mechanism that appears in more than one chunk with diverging sizes (same mechanism, same size). rows_changed = every row id (FR-041@<option>) whose size changed - these rows are invisible to the claims register, so they reach the reviewers only through this list.",
+     "row_key": [
+      "mechanism",
+      "option"
+     ],
+     "row_key_sep": "@"
+    },
+    {
+     "heading": "Fixed phases",
+     "key": "fixed_phases",
+     "type": "table",
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "option": {
+       "t": "s",
+       "req": true
+      },
+      "scenario": {
+       "t": "s",
+       "omit_empty": true
+      },
+      "block": {
+       "t": "s",
+       "enum": [
+        "phase",
+        "migration-task"
+       ],
+       "req": true
+      },
+      "title": {
+       "t": "s",
+       "req": true
+      },
+      "pd": {
+       "t": "s",
+       "req": true
+      },
+      "derivation": {
+       "t": "s",
+       "req": true
+      },
+      "evidence": "l"
+     },
+     "help": "work no requirement describes, as fixed person days on top, per option: phases (project setup, content setup, acceptance support, cutover, hypercare, data cleanup) and - block migration-task - the technical migration tasks of the target-readiness handover that name no requirement (a task that names a requirement is sized on that requirement). pd = plain decimal; derivation = what is counted; evidence = HO rows, PS-7 rows. Nothing here repeats what a requirement row or a surcharge already carries. Scenario mode: phases are per SCENARIO (scenario = its id, option = the scenario's option; the migration-only and the refactoring scenario may differ): start from the FIXED PHASE SEEDS of the brief, keep, adjust or drop each (drop when a row already carries the work) and record the decision in `Fixed phase seeds`; add a phase only with its derivation."
+    },
+    {
+     "heading": "Fixed phase seeds",
+     "key": "seed_decisions",
+     "type": "table",
+     "optional": true,
+     "omit_empty": true,
+     "fields": {
+      "scenario": {
+       "t": "s",
+       "req": true
+      },
+      "phase": {
+       "t": "s",
+       "req": true
+      },
+      "decision": {
+       "t": "s",
+       "enum": [
+        "keep",
+        "adjust",
+        "drop"
+       ],
+       "req": true
+      },
+      "pd": "s",
+      "phase_id": "s",
+      "reason": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "scenario mode with estimation.fixed_phases_seed: one row per seed phase of the brief's FIXED PHASE SEEDS (scenario, phase = the seed's phase text): decision keep | adjust | drop, pd = the person days you keep (keep / adjust), phase_id = the Fixed phases row that carries it, reason = why (drop: which row or surcharge already carries the work; adjust: what changed)."
+    },
+    {
+     "heading": "Assumptions",
+     "key": "assumptions",
+     "type": "table",
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "requirement_ids": {
+       "t": "l",
+       "req": true
+      },
+      "assumption": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "exclusion",
+        "dependency"
+       ],
+       "req": true
+      },
+      "effect": {
+       "t": "s",
+       "req": true
+      },
+      "scope": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "the register of exclusions and dependencies (AE-nn) of the whole estimate, de-duplicated across chunks: licences, work on the ERP or S/4 side, hosting, anything a figure deliberately leaves out. scope = `all` or the epic name(s). Readings the client should confirm are `Assumptions taken`, not rows here."
+    },
+    {
+     "heading": "Risks",
+     "key": "risks",
+     "type": "table",
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "risk": {
+       "t": "s",
+       "req": true
+      },
+      "options": "l",
+      "affected": {
+       "t": "l",
+       "req": true
+      },
+      "likelihood": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      },
+      "impact": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "req": true
+      },
+      "mitigation": {
+       "t": "s",
+       "req": true
+      },
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "qualitative risks - no person days at risk (there is no risk surcharge): what would move a total or block an option. options = the option ids it concerns (empty = all); affected = requirement ids or epic names; impact blocker = the requirement cannot be met by that option as written."
+    },
+    "ASSUMPTIONS",
+    "CLAIMS",
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "optional": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": {
+       "t": "s",
+       "req": true
+      },
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "unresolvable"
+       ],
+       "req": true
+      },
+      "answer": "n"
+     },
+     "help": "only questions to a chunk or to the lead; a reading the client should confirm is an `Assumptions taken` row."
+    }
+   ]
+  },
+  "classification": {
+   "title": "Row classification (proposal)",
+   "file": "classification.md",
+   "output_dir": "analysis",
+   "id_prefix": "CL-",
+   "head": {
+    "agent": {
+     "t": "s",
+     "req": true
+    },
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    }
+   },
+   "head_help": "agent = consolidate-classification; status = draft | final",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "help": "3-5 sentences for the lead (English): how many candidates per proposed class and which ones are close calls the lead should look at first."
+    },
+    {
+     "heading": "Candidates",
+     "key": "candidates",
+     "type": "table",
+     "req": true,
+     "row_key": [
+      "candidate_id"
+     ],
+     "fields": {
+      "candidate_id": {
+       "t": "s",
+       "req": true
+      },
+      "proposed_class": {
+       "t": "s",
+       "enum": [
+        "client-row",
+        "tech-migration",
+        "refactoring",
+        "drop",
+        "keep"
+       ],
+       "req": true
+      },
+      "client_rows": "l",
+      "title_de": "s",
+      "description_de": "s",
+      "rationale": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per candidate of work/classification.json, none left out (candidate_id as listed). proposed_class: client-row = the work belongs to the named client rows (client_rows = their ids, no new row; the estimate of those rows includes it) | tech-migration = a technical necessity of the move no client row describes (TM row, every option) | refactoring = a clean-core / quality change not needed to run today's functions on the target (RF row, brownfield options only: refactor to the standard, security findings, deprecated APIs, dead code, replaced standard behaviour) | drop = no work (say why). title_de (<= 90 characters) and description_de (2-4 sentences) for tech-migration and refactoring, in the deliverable language and at product-owner level: WHAT changes for the shop, never HOW in code - no file, class, package, extension name or line number (the CHECK refuses them); good 'Standard-Vorlagen für die Wartungsbenachrichtigung statt eigener Versandlogik', bad 'shopnotify-Job durch CronJob ersetzen'. rationale = why this class (English, for the lead). A candidate of a derived row (source HO-requirements-set#<id>, a row the code analysis proposed without a client decision): client-row with exactly one client row it merges into, drop, or keep (it stays an estimation row of its own)."
+    }
+   ]
+  },
+  "triage": {
+   "title": "Impact per system (triage)",
+   "file": "triage.md",
+   "output_dir": "analysis/triage",
+   "id_prefix": "C-TRIAGE-",
+   "head": {
+    "agent": {
+     "t": "s",
+     "req": true
+    },
+    "scope": {
+     "t": "s",
+     "req": true
+    },
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "agent = consolidate-triage (a chunk TRIAGE-n: consolidate-triage-n); scope = TRIAGE or TRIAGE-n (your CONTEXT SCOPE); status = draft | final; round = the gauntlet round you answer (0 before the first)",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "help": "3-5 sentences (English): rows per system, the rows that touch no system of the run, the pre-fills you removed and the close calls."
+    },
+    {
+     "heading": "Impacts",
+     "key": "impacts",
+     "type": "table",
+     "req": true,
+     "row_key": [
+      "row_id",
+      "system"
+     ],
+     "row_key_sep": "@",
+     "fields": {
+      "row_id": {
+       "t": "s",
+       "req": true
+      },
+      "system": {
+       "t": "s",
+       "req": true
+      },
+      "affected": {
+       "t": "s",
+       "enum": [
+        "yes",
+        "no"
+       ],
+       "req": true
+      },
+      "impact": "s",
+      "reason": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per requirement row x system it touches - every row of your chunk at least once (the skeleton lists them with their pre-filled systems). system = a system id of the run (estimated by the agents, by a partner, the client or the team, or a discipline) or `none` (the row touches no system of the run: its only row, reason required). affected yes + impact = what changes in that system for this requirement, in the deliverable language and in customer language (WHAT changes, never HOW in code; one or two sentences: 'Registrierung und Einwilligung laufen über die Screen-Sets; neue Felder im Profil'), reason = why this system (the basis: the column that names it, the interface end, the landscape entry, the corpus passage). affected no = a pre-filled system the row does not touch after all - only for a pre-filled system, the reason says why. Add every system the row touches beyond the pre-fill (also partner, client and team systems: their owner needs the impact text to estimate). Every row is covered by a claim (target triage/impacts#<row_id>@<system>, several rows separated by ',')."
+    },
+    "CLAIMS"
+   ]
+  },
+  "architect": {
+   "title": "Gap decisions (architect)",
+   "file": "architect.md",
+   "output_dir": "analysis/architect",
+   "id_prefix": "C-<scope>-",
+   "head": {
+    "agent": {
+     "t": "s",
+     "req": true
+    },
+    "scope": {
+     "t": "s",
+     "req": true
+    },
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "agent = consolidate-architect-<n> (your CONTEXT AGENT NAME); scope = ARCHITECT-<n> (your CONTEXT SCOPE); status = draft | final; round = the gauntlet round you answer (0 before the first)",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "help": "3-5 sentences (English): the gaps per reporting system, how many you overrule, route to an estimated system, route outside the run and reduce to the standard, and the close calls."
+    },
+    {
+     "heading": "Decisions",
+     "key": "decisions",
+     "type": "table",
+     "req": true,
+     "row_key": [
+      "row_id",
+      "from_system",
+      "to"
+     ],
+     "row_key_sep": "@",
+     "fields": {
+      "row_id": {
+       "t": "s",
+       "req": true
+      },
+      "from_system": {
+       "t": "s",
+       "req": true
+      },
+      "decision": {
+       "t": "s",
+       "enum": [
+        "overrule",
+        "route-estimated",
+        "route-landscape",
+        "reduce-to-standard"
+       ],
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "reasoning": {
+       "t": "s",
+       "req": true
+      },
+      "solution": "s",
+      "assumption": "s"
+     },
+     "help": "one row per gap of GAPS (row_id and from_system as listed), none left out. decision: overrule = solvable in the reporting system after all (to = from_system; reasoning = what the analyst overlooked - it goes back to that analyst in the next wave) | route-estimated = another system of this run carries it (to = that system id; solution = the sketch its analyst estimates - it is not asked again whether it is feasible) | route-landscape = a landscape system this run does not estimate carries it (to = the landscape id; solution = what is built there; the cell stays an empty input and a client assumption names the solution) | reduce-to-standard = the requirement is met by the reporting system's standard (to = from_system; solution = the standard variant it estimates; a client assumption records the reduction). reasoning = why (English or the deliverable language, internal). solution in the deliverable language and customer language: WHAT carries the work, never HOW in code. assumption = the id of your `Assumptions taken` row (route-landscape and reduce-to-standard: required; its affects names the receiving cell <row_id>@<to> (route-landscape) or the reporting work packages listed under the gap (reduce-to-standard) - never the bare row id). A gap marked FINAL is the row's second visit: your decision is final - no third routing. Every row is covered by a claim (target architect/decisions#<row_id>@<from_system>@<to>; the last part names the system whose standard critic scores it)."
+    },
+    "ASSUMPTIONS",
+    "CLAIMS"
+   ]
+  }
+ },
+ "extend": {
+  "critic": {
+   "scores": {
+    "fields": {
+     "ground": {
+      "t": "s",
+      "enum": [
+       "",
+       "requirement-reading",
+       "current-shop",
+       "effort-driver",
+       "size-plausibility",
+       "standard-dispute"
+      ],
+      "omit_empty": true
+     }
+    },
+    "help": "ground (the client critic, every row; mandatory below the PASS THRESHOLD): requirement-reading (the reading of the requirement) | current-shop (what today's shop does, the size leaves out behaviour it has) | effort-driver (a missing driver: sites, languages, variants, data, interfaces) | size-plausibility | standard-dispute (you doubt a standard statement - it is no score: routed to the standard critic, your score on it does not count). The standard critic leaves ground empty."
+   }
+  }
+ }
+}

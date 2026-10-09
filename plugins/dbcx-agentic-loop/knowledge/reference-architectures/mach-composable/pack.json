@@ -1,0 +1,16 @@
+{
+  "name": "mach-composable",
+  "display": "MACH / Composable Commerce Patterns",
+  "kind": "reference-architecture",
+  "roles": [
+    "reference_architecture"
+  ],
+  "_readme": "Vendor-neutral reference on MACH and composable commerce: what each principle demands of the client organisation, the recurring composable patterns and when each fits, the cases where composable is the wrong answer, the cost and operating-model consequences, and a decision checklist. Hand-written from delivery practice, not from a vendor document; every statement is reference guidance to be confirmed against the client's team, operating model and integration budget.",
+  "snippets": {
+    "reference_persona": "architect who has both delivered and un-delivered composable programmes and therefore prices the operating model and the integration budget before the architecture",
+    "reference_focus": "whether the MACH claim survives contact with the client's team size, operating model and integration budget; which capability is actually being decomposed and why that capability is the constraint; whether the client can run N vendors' upgrade cycles and on-call load; whether the real problem is data ownership rather than the platform",
+    "docs_domains": ""
+  },
+  "research_seed": "research-seed.md",
+  "reference_cache": "reference-cache.md"
+}

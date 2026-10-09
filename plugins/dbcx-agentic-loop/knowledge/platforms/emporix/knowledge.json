@@ -1,0 +1,60 @@
+{
+  "_readme": [
+    "Emporix pack knowledge. Both lists are a SEED (see _stamp) and the weakest-sourced: the vendor material names services but no paths, so the entries below reconstruct the documented per-service REST shape (<service>/{tenant}/<resource> on api.emporix.io). Confirm every entry against developer.emporix.io before quoting it in a deliverable, and correct this file through the reference cache.",
+    "target_api_endpoint_families groups the resources by the service that owns them, because Emporix is sold service by service - a fit estimation must first establish which services the tenant actually subscribes to.",
+    "target_content_component_types is not a list of platform content types: Emporix ships no CMS. The entries name the content-shaped platform primitives that exist and then the external-CMS component types a project has to provide itself, each of which is custom work."
+  ],
+  "target_api_endpoint_families": [
+    "product service: /product/{tenant}/products, /products/{id}/variants, /product-templates",
+    "catalog/category service: /category/{tenant}/categories, /category-assignments",
+    "price service: /price/{tenant}/prices, /price-lists, /price-models (tiers, contract and customer-specific prices)",
+    "tax, currency and country services: /tax/{tenant}/taxes, /tax-classes, /currency/{tenant}/currencies, /country/{tenant}/countries",
+    "unit-handling service: /unit-handling/{tenant}/units, /unit-conversions (B2B units of measure and packaging)",
+    "availability/inventory service: /availability/{tenant}/availability, /reservations, sites/warehouses",
+    "cart service: /cart/{tenant}/carts, /carts/{id}/items",
+    "checkout service: /checkout/{tenant}/checkouts (order placement, payment and shipping selection)",
+    "order service: /order/{tenant}/orders, /orders/{id}/status, /order-events",
+    "quote service: /quote/{tenant}/quotes, /quote-requests (B2B RFQ and negotiation)",
+    "approval service: /approval/{tenant}/approvals, /approval-configurations (B2B order approval)",
+    "customer service: /customer/{tenant}/customers, /customer-addresses, /customer-consents",
+    "customer-management service: /customer-management/{tenant}/companies, /contacts, /legal-entities, /cost-centers (B2B account hierarchy)",
+    "coupon service: /coupon/{tenant}/coupons, /coupon-redemptions",
+    "rebate/promotion service: /rebate/{tenant}/rebates, /promotions, /campaigns",
+    "shipping service: /shipping/{tenant}/zones, /shipping-methods, /delivery-windows",
+    "payment service: /payment/{tenant}/payment-methods, /payment-modes, PSP gateway configuration",
+    "media/asset service: /media/{tenant}/assets, /asset-links",
+    "indexing/search service: /indexing/{tenant}/index, product search and faceting endpoints",
+    "schema service: /schema/{tenant}/schemas (mixins - schema-registered JSON extensions on any entity)",
+    "configuration and site-settings services: /configuration/{tenant}/configurations, /site-settings/{tenant}/sites",
+    "label service: /label/{tenant}/labels (localized UI strings)",
+    "tenant and IAM services: /tenant/{tenant}, /iam/{tenant}/users, /iam/roles (API clients, scopes)",
+    "auth: POST /oauth/token (OAuth2 client credentials, tenant-scoped)",
+    "events/webhooks: webhook registration and event subscriptions per service (verify the delivery guarantees before depending on them)"
+  ],
+  "target_content_component_types": [
+    "NO native CMS - Emporix ships no page, template, slot or block resource (verify against the current service catalogue)",
+    "platform primitive: media/asset (images, videos, documents, linked to products and categories)",
+    "platform primitive: localized product texts (name, description, marketing text)",
+    "platform primitive: localized category texts and category tree as the navigation source",
+    "platform primitive: mixin (schema-registered JSON extension carrying structured extra fields on any entity)",
+    "platform primitive: label (localized UI string per tenant and site)",
+    "platform primitive: site settings / configuration document (per-site behaviour and presentation options)",
+    "external CMS component: hero / banner",
+    "external CMS component: rich text / editorial block",
+    "external CMS component: media gallery, image, video",
+    "external CMS component: navigation menu and footer (bound to the category tree)",
+    "external CMS component: landing / campaign page",
+    "external CMS component: curated product grid or slider bound to the search service",
+    "external CMS component: category and brand content page",
+    "external CMS component: content slot for personalisation",
+    "external CMS component: FAQ / accordion, teaser, CTA",
+    "external CMS component: form (contact, newsletter, request-a-quote)",
+    "external CMS component: technical documents and downloads per product or customer",
+    "external CMS component: SEO metadata, sitemap and redirect management"
+  ],
+  "_stamp": {
+    "date": "2026-09-08",
+    "source": "seed from general platform knowledge, to be verified",
+    "verify_first": "the current service catalogue and the exact service names and paths on developer.emporix.io (the list here is reconstructed, not quoted), which services the tenant subscribes to, which CMS and frontend the target architecture uses (the platform provides neither), event/webhook delivery guarantees, API rate limits per tenant, back-office UI scope for business users, and a reference customer at comparable scale"
+  }
+}

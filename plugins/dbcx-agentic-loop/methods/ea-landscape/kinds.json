@@ -1,0 +1,668 @@
+{
+ "_readme": [
+  "Analysis kinds of the ea-landscape method: `inventory` = the landscape inventory (D1), `system` = one system of the landscape (one analyst each),",
+  "`data_flows` = the FLOWS consolidation (D3), `target_architecture` = the TARGET consolidation (D4).",
+  "The marker CLAIMS embeds the engine claims table. Templates and schemas are generated per run with `dbcx md_to_json --generate`.",
+  "Every locator field holds corpus locators (SRC-nnn#p12 / #s7 / #para12 / #Sheet!R12 / #item:<id> / #L120), a reference row id (PS-7-NNN), a URL,",
+  "an imported handover row (HO-<type>#<id>) or the exact phrase `visual, unverified` for a source without a text layer."
+ ],
+ "kinds": {
+  "inventory": {
+   "title": "Landscape inventory (D1)",
+   "file": "landscape-inventory.md",
+   "output_dir": "analysis/inventory",
+   "id_prefix": "C-D1-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "status = draft | final; round = the round this version answers (0 = first version)",
+   "sections": [
+    {
+     "heading": "Sources",
+     "key": "sources",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "title": {
+       "t": "s",
+       "req": true
+      },
+      "type": {
+       "t": "s",
+       "req": true
+      },
+      "date": "s",
+      "origin": "s",
+      "quality": {
+       "t": "s",
+       "enum": [
+        "good",
+        "partial",
+        "none",
+        "unextractable"
+       ],
+       "req": true
+      },
+      "covers": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per client document in corpus/index.json - id = SRC-nnn, type = pdf | docx | pptx | xlsx | md | board | other, date = the date the document itself carries (not the day it was indexed), origin = who wrote it for which purpose, quality from corpus/index.json (unextractable sources are citable only as `visual, unverified`), covers = which part of the landscape this document is evidence for"
+    },
+    {
+     "heading": "Systems",
+     "key": "systems",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "name": {
+       "t": "s",
+       "req": true
+      },
+      "category": {
+       "t": "s",
+       "enum": "$system.categories",
+       "req": true
+      },
+      "vendor_product": {
+       "t": "s",
+       "req": true
+      },
+      "version": "s",
+      "owner": "s",
+      "hosting": "s",
+      "lifecycle": {
+       "t": "s",
+       "enum": "$system.lifecycles",
+       "req": true
+      },
+      "relevance": {
+       "t": "s",
+       "enum": "$system.relevances",
+       "req": true
+      },
+      "description": {
+       "t": "s",
+       "req": true
+      },
+      "depends_on": "l",
+      "interfaces_mentioned": "i",
+      "sources": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "one row per system of the landscape; name = the short name every later document uses (it becomes the scope name, so keep it short, lowercase and without spaces); vendor_product = vendor and product as the documents name them; owner = the department or role that owns the system; hosting = on-premise | private cloud | SaaS | vendor-managed as documented; lifecycle = active | planned | retiring | retired; relevance = core (analysed in full) | peripheral (light pass) | out-of-scope (named here, not analysed) - back every peripheral/out-of-scope verdict with a claim, `dbcx discover` and `dbcx plan_waves` read it; depends_on = the systems this system RECEIVES data from (drives the wave order); interfaces_mentioned = how many interfaces the documents mention for this system (drives its size); sources = the locators this row rests on"
+    },
+    {
+     "heading": "Data objects",
+     "key": "data_objects",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "name": {
+       "t": "s",
+       "req": true
+      },
+      "description": {
+       "t": "s",
+       "req": true
+      },
+      "claimed_master_systems": {
+       "t": "l",
+       "req": true
+      },
+      "consumer_systems": "l",
+      "sources": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "one row per business data object that crosses a system boundary (customer, product, price, stock, order, invoice, contract, ticket ...). claimed_master_systems = EVERY system a document claims mastership for, not the one you consider right - two or more entries are a mastership conflict and become a client question. consumer_systems = systems that read the object. sources = the locators of the mastership claims."
+    },
+    {
+     "heading": "Strategic vision",
+     "key": "strategic_vision",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "topic": {
+       "t": "s",
+       "req": true
+      },
+      "statement": {
+       "t": "s",
+       "req": true
+      },
+      "source_locators": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "one row per strategic statement the client's own documents make about where the landscape should go (growth, channels, consolidation, cost, compliance, time to market). Quote the statement, do not interpret it - the target architecture is derived from these rows and from nothing else. A statement without a locator does not belong here."
+    },
+    "CLAIMS"
+   ]
+  },
+  "system": {
+   "title": "System analysis: <system>",
+   "file": "system-analysis.md",
+   "output_dir": "analysis/scopes",
+   "id_prefix": "C-<system>-",
+   "head": {
+    "system": {
+     "t": "s",
+     "req": true
+    },
+    "agent": "s",
+    "wave": "i",
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "system = the scope name from the inventory; status = draft | final; round = the round this version answers (0 = first version)",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "req": true,
+     "help": "3-6 plain-language sentences for the client: what this system does for the business, who uses it, which data it owns, what hurts today."
+    },
+    {
+     "heading": "Profile",
+     "key": "profile",
+     "type": "kv",
+     "req": true,
+     "fields": {
+      "purpose": {
+       "t": "s",
+       "req": true
+      },
+      "vendor_product": {
+       "t": "s",
+       "req": true
+      },
+      "version": "s",
+      "owner": "s",
+      "hosting": "s",
+      "lifecycle": {
+       "t": "s",
+       "enum": "$system.lifecycles",
+       "req": true
+      },
+      "users": "s",
+      "sources": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "confirm or correct the inventory row with your own locators; a correction is reported as `handover correction: C-D1-nnn`. version/owner/hosting stay empty when no document states them - and then become a client question, never a guess."
+    },
+    {
+     "heading": "Interfaces",
+     "key": "interfaces",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "counterpart": {
+       "t": "s",
+       "req": true
+      },
+      "direction": {
+       "t": "s",
+       "enum": [
+        "in",
+        "out",
+        "bidirectional"
+       ],
+       "req": true
+      },
+      "protocol_style": {
+       "t": "s",
+       "enum": "$system.protocol_styles",
+       "req": true
+      },
+      "frequency": "s",
+      "data_objects": {
+       "t": "l",
+       "req": true
+      },
+      "middleware": "s",
+      "source_locators": {
+       "t": "l",
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      }
+     },
+     "help": "one row per interface of YOUR system; id = I-<system>-nn; direction from your system's point of view (in = your system receives); protocol_style other than `unknown` needs a locator naming the mechanism; frequency quoted as the document states it; middleware named only when a document names it; source_locators = corpus locators or the exact phrase `visual, unverified` (then confidence low and a client question); confidence high = a document describes the interface, medium = a document mentions it without details, low = only a picture or a stakeholder statement"
+    },
+    {
+     "heading": "Data ownership",
+     "key": "data_ownership",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "data_object": {
+       "t": "s",
+       "req": true
+      },
+      "role": {
+       "t": "s",
+       "enum": [
+        "master",
+        "consumer",
+        "copy",
+        "unknown"
+       ],
+       "req": true
+      },
+      "note": "s",
+      "source_locators": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "one row per data object of the inventory this system touches. role = master (the system of record per a document that says so) | consumer (reads only) | copy (holds a redundant copy it may also write) | unknown (no document says). A `master` row NAMES the document that claims it; where another system claims the same object, say so in `note` - the conflict is the finding."
+    },
+    {
+     "heading": "Capabilities",
+     "key": "capabilities",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "capability": {
+       "t": "s",
+       "req": true
+      },
+      "provided_by": {
+       "t": "s",
+       "enum": [
+        "standard",
+        "custom",
+        "unknown"
+       ],
+       "req": true
+      },
+      "note": "s"
+     },
+     "help": "the business capabilities this system provides in this landscape (pricing, product data enrichment, order orchestration, campaign management ...). provided_by = standard (product capability as licensed) | custom (built for this client) | unknown; `custom` is the signal for what a replacement would have to rebuild."
+    },
+    {
+     "heading": "Pain points",
+     "key": "pain_points",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "topic": {
+       "t": "s",
+       "req": true
+      },
+      "finding": {
+       "t": "s",
+       "req": true
+      },
+      "impact": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor",
+        "none"
+       ],
+       "req": true
+      },
+      "source_locators": {
+       "t": "l",
+       "req": true
+      },
+      "client_attention": "b"
+     },
+     "help": "what the documents and the stakeholders say hurts about this system today: data quality, latency, manual steps, double maintenance, outages, licence cost, missing capability. impact = blocker (the strategy fails without fixing it) | major | minor | none. client_attention = yes when the finding is worth acting on independent of any target decision."
+    },
+    {
+     "heading": "Constraints",
+     "key": "constraints",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "constraint": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "contract",
+        "end-of-life",
+        "regulation",
+        "technical",
+        "organisational"
+       ],
+       "req": true
+      },
+      "until": "s",
+      "source_locators": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "everything that limits what may be done with this system: contract and notice periods, licence terms, end-of-life and maintenance dates, regulatory requirements (data residency, retention, audit), technical limits, organisational commitments. `until` = the date or period the document states; a constraint without a date becomes a client question."
+    },
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": "s",
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "unresolvable"
+       ],
+       "req": true
+      },
+      "answer": "n"
+     },
+     "help": "`to` = client (the documents cannot settle it - state the effect of the answer in `why_needed`), `inventory` (a system the documents mention that the inventory does not list, or an inventory row your locators contradict), or another system's scope name (never answered by reading that system's documents yourself). These rows feed the client question list, which is a deliverable of this method."
+    },
+    "CLAIMS"
+   ]
+  },
+  "data_flows": {
+   "title": "Consolidation FLOWS: data flows and single source of truth",
+   "file": "consolidated-FLOWS.md",
+   "output_dir": "analysis/consolidated",
+   "id_prefix": "C-FLOWS-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "status = draft | final",
+   "sections": [
+    {
+     "heading": "Flows",
+     "key": "flows",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "from_system": {
+       "t": "s",
+       "req": true
+      },
+      "to_system": {
+       "t": "s",
+       "req": true
+      },
+      "data_objects": {
+       "t": "l",
+       "req": true
+      },
+      "style": {
+       "t": "s",
+       "enum": "$system.protocol_styles",
+       "req": true
+      },
+      "frequency": "s",
+      "middleware": "s",
+      "evidence": {
+       "t": "l",
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      }
+     },
+     "help": "one row per DIRECTED flow, id F-001..; the two ends of one interface described by two system analyses are ONE row (keep both ends' evidence, report the disagreement as a finding); a bidirectional interface becomes two rows with the same data objects. evidence = the claim ids of the system analyses this flow rests on (C-<system>-nnn); a flow no claim evidences is not a flow but an open question. This table is the input of the as-is diagram (`dbcx build_landscape_diagram`)."
+    },
+    {
+     "heading": "SSOT matrix",
+     "key": "ssot_matrix",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "data_object": {
+       "t": "s",
+       "req": true
+      },
+      "master_system": {
+       "t": "s",
+       "req": true
+      },
+      "conflicting_claims": "l",
+      "verdict": {
+       "t": "s",
+       "enum": [
+        "single-master",
+        "conflict",
+        "unknown"
+       ],
+       "req": true
+      },
+      "recommendation": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per data object of the inventory. verdict = single-master (exactly one system is claimed as master and no analysis contradicts it) | conflict (two or more systems are claimed, or one analysis contradicts another) | unknown (no document says). master_system holds the claimed master and stays EMPTY where no single master is established (the verdict says why); conflicting_claims lists every other system claimed with the claim id that carries the claim. recommendation = where the master belongs and what would settle it; a conflict row always has a client question behind it."
+    },
+    {
+     "heading": "Integration debt",
+     "key": "integration_debt",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "finding": {
+       "t": "s",
+       "req": true
+      },
+      "systems": {
+       "t": "l",
+       "req": true
+      },
+      "impact": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor",
+        "none"
+       ],
+       "req": true
+      },
+      "recommendation": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "structural findings over the whole flow list: point-to-point meshes where a hub is documented, the same data object flowing over three different styles, manual steps in a chain that has an SLA, undocumented interfaces, missing idempotency in event chains, staleness a batch window causes. State the number the finding rests on and how it was counted (rows of the Flows table matching which predicate)."
+    },
+    "CLAIMS"
+   ]
+  },
+  "target_architecture": {
+   "title": "Consolidation TARGET: target architecture options and roadmap",
+   "file": "consolidated-TARGET.md",
+   "output_dir": "analysis/consolidated",
+   "id_prefix": "C-TARGET-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "status = draft | final",
+   "sections": [
+    {
+     "heading": "Options",
+     "key": "options",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "strategic_move": {
+       "t": "s",
+       "enum": "$system.strategic_moves",
+       "req": true
+      },
+      "systems_affected": {
+       "t": "l",
+       "req": true
+      },
+      "flows_changed": {
+       "t": "l",
+       "req": true
+      },
+      "data_objects_re_mastered": "l",
+      "rationale": {
+       "t": "s",
+       "req": true
+      },
+      "risks": {
+       "t": "s",
+       "req": true
+      },
+      "prerequisites": {
+       "t": "s",
+       "req": true
+      },
+      "phase": {
+       "t": "s",
+       "req": true
+      },
+      "recommendation": {
+       "t": "s",
+       "enum": [
+        "preferred",
+        "alternative",
+        "rejected"
+       ],
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      }
+     },
+     "help": "one row per option, id O-001..; strategic_move = introduce | replace | consolidate | re-home-ssot | retire | keep; flows_changed = the flow ids (F-nnn) that appear, disappear or change style; data_objects_re_mastered = the objects whose master changes; rationale names the strategic statement (with its locator) the option serves; risks and prerequisites are concrete (a contract term, a data migration, a capability that must exist first); phase = the roadmap phase this option belongs to; recommendation = preferred (exactly one per decision) | alternative | rejected (name the constraint or risk that rejects it). An option no documented vision asks for does not belong in the table."
+    },
+    {
+     "heading": "Roadmap",
+     "key": "roadmap",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "phase": {
+       "t": "s",
+       "req": true
+      },
+      "options": {
+       "t": "l",
+       "req": true
+      },
+      "outcome": {
+       "t": "s",
+       "req": true
+      },
+      "dependencies": "l"
+     },
+     "help": "one row per phase, in the order they must run. options = the option ids of that phase; outcome = what is true for the business at the end of the phase (a capability, a retired system, a data object with one master); dependencies = phases or prerequisites that must be finished first. The horizon in the brief is the frame - a phase beyond it is named as such."
+    },
+    {
+     "heading": "Principles",
+     "key": "principles",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "principle": {
+       "t": "s",
+       "req": true
+      },
+      "source_locators": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "the architecture principles the target rests on, each traced to a client statement (strategy document, workshop record) or to a reference-architecture row cited by its id. A principle nobody at the client stated is a proposal and is marked as one in its own text."
+    },
+    "CLAIMS"
+   ]
+  }
+ }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "valantic-cx-target",
+  "display": "valantic CX Target-Architecture Standard",
+  "kind": "reference-architecture",
+  "roles": [
+    "reference_architecture"
+  ],
+  "_readme": "How valantic draws and assesses CX target architectures: canvas lanes, legend and palette, element and arrow rules, the interface and system tables behind every diagram, SSOT placement per data domain, hub policy, views (as-is, target, delta, data-flow zoom), common anti-patterns and target-option patterns with prerequisites. Best practice, not hard guardrails - a pattern applies where the client's landscape has the element. Every row is reference guidance to be confirmed against the client's own systems and interfaces before it appears in a deliverable.",
+  "snippets": {
+    "reference_persona": "valantic CX solution architect who has drawn and defended target architectures for B2B manufacturers and retailers (ERP, PIM, DAM, CMS, commerce, CRM, iPaaS, search, analytics) and judges a landscape by where the single source of truth sits per data domain, whether every interface is a row in a table, and whether the target picture states lifecycle status, decision status and phase for every element",
+    "reference_focus": "SSOT placement per data domain and duplicate mastership; every arrow as an identified interface with direction, data objects, style and frequency; hub policy stated and direct links justified where a hub exists (never an empty placeholder hub); lifecycle status (keep, new, replace, retire, open) and decision status per element; manual steps kept visible; undecided systems named by their capability term; one box per deployable system with capability detail in zoom views; as-is, target and delta never mixed; data-flow zooms for the critical flows (product, price, stock, customer, order); the tables (system inventory, interface list, decision log) behind the picture",
+    "docs_domains": ""
+  },
+  "research_seed": "research-seed.md",
+  "reference_cache": "reference-cache.md"
+}

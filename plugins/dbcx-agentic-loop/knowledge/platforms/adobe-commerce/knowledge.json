@@ -1,0 +1,62 @@
+{
+  "_readme": [
+    "Adobe Commerce pack knowledge. The two lists below are a SEED (see _stamp): they were written from stable platform knowledge and must be re-verified per engagement against developer.adobe.com/commerce (GraphQL and REST references) and the Page Builder documentation for the exact target version and edition.",
+    "target_api_endpoint_families covers two surfaces: GraphQL (storefront) entries are written as 'graphql query:' / 'graphql mutation:' plus the operation name, REST entries as their /V1 path. B2B operations only exist on Adobe Commerce with the B2B module installed - a fit estimation must check the edition first.",
+    "target_content_component_types lists Page Builder content types and the classic CMS/widget building blocks. Page Builder content is stored as HTML with data-content-type markup, so in a headless frontend each of these types needs its own renderer."
+  ],
+  "target_api_endpoint_families": [
+    "graphql query: products (search, filter, sort, aggregations)",
+    "graphql query: categoryList / categories",
+    "graphql query: route / urlResolver, cmsPage, cmsBlocks",
+    "graphql query: storeConfig, countries, currency, availableStores",
+    "graphql query: cart / customerCart",
+    "graphql query: customer (orders, addresses, wishlists, reviews)",
+    "graphql query: B2B - requisitionLists, negotiableQuote / negotiableQuotes, company (structure, roles, users, credit)",
+    "graphql mutation: cart lifecycle - createEmptyCart, mergeCarts, addProductsToCart, updateCartItems, removeItemFromCart",
+    "graphql mutation: checkout steps - setGuestEmailOnCart, setShippingAddressesOnCart, setBillingAddressOnCart, setShippingMethodsOnCart, setPaymentMethodOnCart, applyCouponToCart",
+    "graphql mutation: placeOrder / setPaymentMethodAndPlaceOrder",
+    "graphql mutation: createCustomerV2, generateCustomerToken, requestPasswordResetEmail, updateCustomerV2, addProductsToWishlist",
+    "graphql mutation: B2B - createRequisitionList, addProductsToRequisitionList, createCompany, createCompanyUser, requestNegotiableQuote, sendNegotiableQuoteForReview, placeNegotiableQuoteOrder",
+    "/V1/products, /V1/products/{sku}, /V1/products/attributes, /V1/products/media",
+    "/V1/categories, /V1/categories/{id}/products",
+    "/V1/carts/mine, /V1/carts/mine/items, /V1/carts/mine/shipping-information, /V1/carts/mine/payment-information",
+    "/V1/guest-carts/{cartId} (+ items, shipping-information, payment-information)",
+    "/V1/orders, /V1/orders/{id}/comments, /V1/invoices, /V1/shipment, /V1/creditmemo",
+    "/V1/customers, /V1/customers/me, /V1/customers/{id}/password, /V1/customerGroups",
+    "/V1/inventory/source-items, /V1/inventory/sources, /V1/inventory/stocks, /V1/stockItems/{sku}",
+    "/V1/salesRules, /V1/coupons, /V1/catalogPriceRules, /V1/products/tier-prices, /V1/products/special-price",
+    "/V1/cmsPage, /V1/cmsBlock",
+    "/V1/store/websites, /V1/store/storeViews, /V1/store/storeConfigs",
+    "/V1/company, /V1/company-credit, /V1/shared-catalog, /V1/negotiable-quotes, /V1/requisition_lists (B2B)",
+    "/V1/integration/customer/token, /V1/integration/admin/token (+ OAuth 1.0a integrations)",
+    "/async/V1/... and /async/bulk/V1/... (asynchronous and bulk variants of the REST routes)"
+  ],
+  "target_content_component_types": [
+    "Page Builder layout: Row",
+    "Page Builder layout: Column Group / Column",
+    "Page Builder layout: Tabs / Tab Item",
+    "Page Builder element: Text",
+    "Page Builder element: Heading",
+    "Page Builder element: Buttons / Button Item",
+    "Page Builder element: Divider",
+    "Page Builder element: HTML Code",
+    "Page Builder element: Block (CMS block reference)",
+    "Page Builder element: Dynamic Block (customer-segment driven, Adobe Commerce only)",
+    "Page Builder element: Products (product list by condition or SKU)",
+    "Page Builder media: Image",
+    "Page Builder media: Video",
+    "Page Builder media: Banner",
+    "Page Builder media: Slider / Slide",
+    "Page Builder media: Map",
+    "Page Builder add-on: Adobe Stock image",
+    "CMS Page (with Page Builder or raw HTML content)",
+    "CMS Block (embedded via widget, layout XML or Page Builder Block element)",
+    "Widget: CMS Static Block, Catalog Products List, Recently Viewed/Compared Products, Catalog Category Link, Catalog Product Link, CMS Page Link, Orders and Returns",
+    "Custom Page Builder content type (configuration XML + admin form + Luma renderer + headless renderer)"
+  ],
+  "_stamp": {
+    "date": "2026-09-08",
+    "source": "seed from general platform knowledge, to be verified",
+    "verify_first": "target 2.4.x version and edition (Open Source vs Adobe Commerce vs Cloud), GraphQL coverage of the required B2B operations, Page Builder renderer coverage in the chosen frontend, Page Builder vs Edge Delivery Services as the target content model"
+  }
+}

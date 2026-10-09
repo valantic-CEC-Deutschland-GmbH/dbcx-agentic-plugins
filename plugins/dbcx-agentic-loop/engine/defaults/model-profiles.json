@@ -1,0 +1,61 @@
+{
+ "schema_version": 1,
+ "roles": {
+  "orchestrator": "orchestrator",
+  "analyst": "code_analysis",
+  "analyst_light": "light_analysis",
+  "inventory": "code_analysis",
+  "consolidator": "deep_reasoning",
+  "critic_client": "code_analysis",
+  "critic_client_light": "balanced_review",
+  "critic_standard": "balanced_review",
+  "critic_standard_consolidation": "deep_reasoning",
+  "gate": "balanced_review",
+  "verifier": "balanced_review",
+  "editor": "deep_reasoning",
+  "researcher": "deep_reasoning",
+  "feature": "deep_reasoning",
+  "helper": "mechanical",
+  "progress": "light_analysis",
+  "postpass": "light_analysis",
+  "escalation": "escalation"
+ },
+ "providers": {
+  "claude": {
+   "orchestrator": {
+    "model": "opus",
+    "reasoning_effort": "high"
+   },
+   "deep_reasoning": {
+    "model": "opus",
+    "reasoning_effort": "high"
+   },
+   "code_analysis": {
+    "model": "opus",
+    "reasoning_effort": "high"
+   },
+   "balanced_review": {
+    "model": "sonnet",
+    "reasoning_effort": "high"
+   },
+   "light_analysis": {
+    "model": "sonnet",
+    "reasoning_effort": "medium"
+   },
+   "mechanical": {
+    "model": "haiku",
+    "reasoning_effort": "low"
+   },
+   "escalation": {
+    "model": "fable",
+    "reasoning_effort": "high"
+   }
+  }
+ },
+ "legacy_aliases": {
+  "opus": "deep_reasoning",
+  "sonnet": "balanced_review",
+  "haiku": "mechanical",
+  "fable": "escalation"
+ }
+}

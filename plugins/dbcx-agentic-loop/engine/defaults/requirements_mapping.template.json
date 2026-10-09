@@ -1,0 +1,42 @@
+{
+  "_readme": [
+    "How tools/requirements_to_json.py reads the client's requirements workbook. One entry per sheet that holds requirements.",
+    "columns: normalized field -> header text (exact, case-insensitive) OR column letter ('D') OR 1-based index (4). Missing fields stay empty.",
+    "Normalized fields: id, epic, title, description, acceptance_criteria, exclusions, references, phase, sources, priority, owner. Anything else goes to 'extra' if listed under extra_columns.",
+    "If the client list has no ids, set id to null and an id is generated as <id_prefix><row number>.",
+    "Output: docs/reference/requirements.json = {source_file, requirements:[{id, group, epic, title, description, acceptance_criteria, exclusions, references[], phase, sources[], extra{}}], legend{}}"
+  ],
+  "sheets": [
+    {
+      "sheet": "<<PLACEHOLDER: sheet name holding functional requirements, e.g. 'Functional Requirements'>>",
+      "group": "functional",
+      "id_prefix": "FR-",
+      "header_row": 1,
+      "columns": {
+        "id": "<<PLACEHOLDER: header text of the id column, or null to generate ids>>",
+        "epic": "<<PLACEHOLDER: header of the epic / area / capability column>>",
+        "title": "<<PLACEHOLDER: header of the title column>>",
+        "description": "<<PLACEHOLDER: header of the description column>>",
+        "acceptance_criteria": null,
+        "exclusions": null,
+        "references": null,
+        "phase": null,
+        "sources": null,
+        "priority": null
+      },
+      "extra_columns": []
+    },
+    {
+      "sheet": "<<PLACEHOLDER: sheet name holding technical / non-functional requirements, or delete this entry>>",
+      "group": "technical",
+      "id_prefix": "TR-",
+      "header_row": 1,
+      "columns": {"id": null, "epic": null, "title": null, "description": null, "acceptance_criteria": null, "exclusions": null, "references": null, "phase": null, "sources": null, "priority": null},
+      "extra_columns": []
+    }
+  ],
+  "list_fields": ["references", "sources"],
+  "list_separator_regex": "[,;\\n]",
+  "legend_sheet": null,
+  "phase_values_in_scope": ["<<PLACEHOLDER: phase token(s) that count as 'first go-live', e.g. MVP; used for the KPI 'MVP requirements with gap'>>"]
+}

@@ -1,0 +1,84 @@
+{
+ "_readme": [
+  "sap-emarsys pack knowledge (target only). Lists read from the official endpoint list on help.sap.com (Support Center > List of All Public API Endpoints), the dev.emarsys.com Core API reference and the Application Help table of contents on 2026-10-05; see _stamp and reference-cache.md for the verified rows.",
+  "target_api_endpoint_families: paths relative to https://api.emarsys.net/api unless a host is named. Every Core API call needs an OAuth 2.0 bearer token (v3) or the WSSE header of the legacy v2 authentication that is being sunset; several endpoint permissions are disabled per API credential by default.",
+  "target_content_component_types: the content and message building blocks the product renders itself - Emarsys has no web CMS; channel content is built in its editors and personalised with tokens.",
+  "target_estimation_patterns, target_multi_account_options and target_standard_vs_config_vs_extension are pack-specific keys (target_ prefix: a target pack contributes only target_* keys to `dbcx knowledge show`) for the tech-fit-estimation analyst and the standard critic; every statement is backed by a reference-cache.md row or marked verify. No deprecation_patterns: a target-only pack is never scanned as source - the deprecations are in reference-cache.md and the critic2_focus snippet."
+ ],
+ "target_api_endpoint_families": [
+  "Contacts: POST /v3/contact (create), PUT /v3/contact (update, ?create_if_not_exists=1), POST /v3/contact/getdata, GET /v3/contact/query, POST /v3/contact/delete, POST /v3/contact/checkids - max 1000 contacts per call, 8 MB payload",
+  "Fields: POST /v3/field, GET /v3/field/translate/{languageId}, GET /v3/field/{fieldId}/choice/translate/{languageId}, DELETE /v3/field/{fieldId}",
+  "Contact lists: /v3/contactlist (create, add, remove, replace, count, rename, delete)",
+  "Segments: PUT /v3/filter, /v3/filter/{segmentId}/contacts/count, /v3/filter/{segmentId}/runs and /single_runs (asynchronous segment runs with polling)",
+  "Contact sources and forms: GET /v3/source, GET /v3/form, POST /v3/form/{formId}/trigger (contact registration)",
+  "Email campaigns: /v3/email (create, patch, copy, preview, sendtestmail, launch, broadcast, stop, sections, tracked links, responses, unsubscribe, getdeliverystatus), GET /v3/email/templates",
+  "External events (accounts that started before January 2026): POST /v3/event, GET /v3/event, POST /v3/event/{eventId}/trigger (batch up to 1000 objects, payload max 1 MB, trigger_id deduplication, optional event_time), POST /v3/event/{eventId}/delete",
+  "Wishlist: POST /api/v3/wishlist/update",
+  "Automation Center: GET /v3/ac/programs, POST /v3/ac/programs/{program_id}/delete",
+  "Exports: POST /v3/contact/getchanges, POST /v3/email/getcontacts, POST /v3/export/filter, POST /v3/contact/getregistrations, POST /v3/email/getresponses, GET /v3/export/{exportId}/data; Bulk response summary and Delivery results (max 90-day interval) endpoints",
+  "Auto-import profiles: /v3/settings/autoimports",
+  "Relational Data Service: /rds/connections/{connectionName}/tables/{tableName}/records (insert, upsert, patch, replace, remove)",
+  "Engagement Events ingestion: POST /integrations/{integrationId}/eventConfigurations/{eventConfigurationId}/events (endpoint URL generated per configured event type)",
+  "Account administration: /v3/administrator, GET /v3/settings, /v3/settings/keyrings and /v3/keyring/keys",
+  "Product Catalog API: PUT {host}/api/productcatalog/v1/productItems, DELETE {host}/api/productcatalog/v1/productItems/{itemID}",
+  "SMS API: /sms/campaigns (list, get, create, update, launch), GET /sms/inbound-messages; SMS Partner API at https://api.sms-partner.io/sms/partner",
+  "Loyalty API v4 at https://contact-api.loyalsys.io/api/v4 (x-api-key): /contact/join, /contact/points, /contact/tiers, /contact/vouchers, /contact/referrals, /contact/activities, /contact/actions - context only, see the loyalty pack",
+  "Vouchers API (Omnichannel Voucher) and Corporate Account API (SAP Emarsys Account Engagement, B2B) - separate references on dev.emarsys.com",
+  "Web Extend: JavaScript data collection commands on the website; mobile SDKs (engagement-cloud-sdk, Android, iOS, React Native)",
+  "Auth: POST https://auth.emarsys.net/oauth2/token (client credentials, JWT valid 1 hour with standard OpenID Connect); GET https://api.emarsys.net/healthcheck"
+ ],
+ "target_content_component_types": [
+  "VCE (Visual Content Editor) block-based email campaign",
+  "VCE email template (blocks, template variables, editable and optional content, fonts)",
+  "Custom HTML email campaign (not distributable to other accounts)",
+  "Multi-language email campaign (language versions keyed by the IETF language tag field, master language as fallback)",
+  "Triggered (on-event) email campaign",
+  "Batch email campaign",
+  "Web Channel overlay campaign",
+  "Brand Center omnichannel content block - prebuilt / branded / custom (Early Adopter at 2026-10-05; Web Channel and in-app only)",
+  "Brand Center design theme, variables, stylesheets, scripts (Early Adopter; Web Channel and in-app only)",
+  "Web Channel embedded campaign",
+  "Web Channel ribbon campaign",
+  "Mobile Engage push message",
+  "Mobile Engage in-app message",
+  "Mobile Engage inbox (persistent) message",
+  "Web Push message",
+  "SMS / MMS message",
+  "Mobile Wallet pass",
+  "Conversational channel message (Sinch Conversation API, e.g. WhatsApp)",
+  "Direct Mail (postcards, flyers; selected countries only)",
+  "Digital Ads audience",
+  "Form (registration, profile change, contact request; reCAPTCHA, login)",
+  "Personalization token (system field, relational data, external content, Predict, Loyalty, voucher)",
+  "SAP Engagement Cloud Scripting Language (ESL) block",
+  "Predict / Recommendation Center recommendation widget (web and email)",
+  "Omnichannel voucher"
+ ],
+ "target_estimation_patterns": {
+  "triggered_journey": "Per journey and account: event (reuse a connector event = configuration; new Engagement Event integration + event type = small Emarsys configuration plus separately sized integration work in the sending system; External Events only for accounts that started before January 2026 and their trigger source is deprecated from Q2 2026) -> data (contact exists and is identifiable by externalId / customerID - Engagement Events never create contacts; consent; payload below 20 kB for EBA; product / sales data) -> audience logic (segments, Decision on opt-in because Triggered Email ignores opt-in, Participation, trigger event timeout) -> content (VCE campaign per language; new brand template = medium to large) -> program (Event-based Automation program, one trigger each, start from a Tactic) -> testing (program test mode, test events, draft endpoints, end-to-end in an account that can send email) -> go-live (activation, Integration Monitor, fail-safe). Event already flowing: mostly configuration + content. Event missing: dominated by source-system integration.",
+  "new_country_or_brand_account": "Provisioning (SAP for Me), account owner, users / roles / SSO, security settings, API credentials and endpoint permissions, sender + link domains and DNS (SPF, DKIM, DMARC, MX), shared or dedicated IPs and ramp-up, Web Extend / SDK per site or app, Predict data sources, custom fields (distribute), connectors per account (CDC / CDP connection with filter rules, Commerce Cloud connection), consent set-up, content templates and Brand Center assets, distribution of programs and campaigns, then manual fixes for what distribution does not copy (contact lists, relational segments, API nodes, Custom HTML campaigns), testing and go-live.",
+  "same_account_new_language_or_brand": "Language versions in VCE campaigns (IETF tag field per contact, master language fallback; unsubscribe / online links and voucher pools do not follow the language), language / brand segments, brand-specific templates (Brand Center themes are Early Adopter and not for email), consents per brand via CDC / CDP mapping (CD_C_* fields), multiple SMS short codes per brand, localized product fields in the catalog (Localized Product Personalization is Early Adopter Care until 2027), one Predict account and one Web Extend merchant per Emarsys account - verify sender-name and reporting separation needs."
+ },
+ "target_multi_account_options": [
+  "Separate account (tenant) per country or brand - supported by the CDC and CDP connectors (one connection per account with filtering rules / processing purposes; consents mappable per brand or country); the SAP Commerce Cloud connector links one Commerce Backoffice to one Emarsys account",
+  "Distribution between connected accounts (same billing profile by default; other legal entities via Support): Automation programs (single, bulk up to 15), block-based email campaigns and templates, Web Channel content blocks, custom fields (up to 100 at once); not: contact lists, relational segments, API nodes, Custom HTML / VCMS campaigns, triggered-email sender domain",
+  "Repository / staging account pattern: build once, distribute to brand, business-unit or regional accounts, or staging -> production (documented use cases); there is no other config-promotion mechanism",
+  "Account Switcher and IdP-based multi-account user management (SSO with SAP Cloud Identity Services, role rules by IdP group)",
+  "Unified dashboard across accounts (Feature Scope Description)",
+  "Single account with language versions, brand / country segments, per-brand consents and SMS short codes (verify sender and reporting separation needs)",
+  "Loyalty: Multiplan (several plans per account, e.g. per country) or Multi Market (one plan, translations) - context only, see the loyalty pack"
+ ],
+ "target_standard_vs_config_vs_extension": {
+  "standard_configuration": "segments, Audience- and Event-based Automation programs, Tactics, VCE campaigns and templates, multi-language versions, Brand Center blocks and themes, forms, double opt-in node, webhook node presets, personalization tokens, Web Channel campaigns, program testing, distribution between accounts, user roles",
+  "standard_connector_setup": "SAP Commerce Cloud integration (customers, consent, real-time events, products), SAP Customer Data Cloud, SAP Customer Data Platform, SAP Sales Cloud Version 1, Shopify, Adobe Commerce, Google Analytics, Segment.com, mParticle, Zapier add-ons",
+  "integration_work_outside_emarsys": "sending External / Engagement Events from shop, ERP or middleware; Web Extend tags in the storefront; mobile SDK in the app; sales data and product catalog feeds; relational data / Open Data set-ups; Integration Suite flows; custom marketing automation nodes; webhook receivers",
+  "licensed_options": "E-Commerce Accelerator (full Predict, Smart Insight), Loyalty Module, Mobile app marketing option, Omnichannel Marketing Option, Advanced Integration Capabilities, Account Engagement option, additional account, test tenant, additional emails / web channel impressions (product packages per the Solution Glossary)",
+  "support_or_csm_switches": "transactional opt-in, ignore Robinson list, account connections for distribution, Account Switcher linking, extra loyalty plans, indexed custom key fields, Product Catalog Stream API, Google Pub/Sub trigger, External Events for additional accounts, raising API / EBA rate limits",
+  "pilot_or_early_adopter_2026_10": "Brand Center, Design Themes, Branded Blocks, Universal Schema Builder, Localized Product Personalization, SAP Engagement Cloud SDK, Embedded Messaging, Multi-Contact ID handling - never count as standard without a current GA statement"
+ },
+ "_stamp": {
+  "date": "2026-10-05",
+  "source": "help.sap.com SAP_EMARSYS (content service) and dev.emarsys.com (headless browser), see reference-cache.md",
+  "verify_first": "which packages / SKUs the client licenses (Core, E-Commerce Accelerator, Loyalty, Mobile, Account Engagement, additional accounts, test tenant); whether the client's account started before January 2026 (External Events available) or uses Engagement Events; account topology (one account per country / brand or shared); which connectors are live (SAP Commerce Cloud, CDC, CDP); API authentication in use (WSSE or OAuth 2.0); data centre / hosting location for data residency"
+ }
+}

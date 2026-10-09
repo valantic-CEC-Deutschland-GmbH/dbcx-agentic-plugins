@@ -1,0 +1,62 @@
+{
+  "_readme": [
+    "Pimcore pack knowledge. Structural conventions (bundles, composer.json, src/, vendor/pimcore, DI decoration, var/classes definitions) are STABLE and live in pack.json as_source.",
+    "The two lists below are SEED, not verified facts: assembled from general Pimcore/Symfony knowledge. Re-verify per engagement against pimcore.com/docs and the installed bundle versions.",
+    "SCOPE WARNING that applies to both lists: Pimcore is primarily PIM/MDM + DAM + CMS; commerce is the OPTIONAL E-Commerce Framework bundle, which ships building blocks and no storefront. Neither list implies a shipped shop API or a shipped set of editorial components.",
+    "target_api_endpoint_families: Data Hub GraphQL operation names are GENERATED from the Data Object class names and from the Data Hub configuration, so the entries below are PATTERNS with <ClassName> placeholders, not fixed endpoints. The project's Data Hub configuration is the only authoritative source; no integration contract can be written without it.",
+    "target_content_component_types lists Document types, Document editables and the brick mechanism. Pimcore ships the MECHANISMS and the admin UI, not a library of ready-made editorial components - every area brick in a project is custom-built. See pack.json as_target.snippets.content_model_notes."
+  ],
+  "target_api_endpoint_families": [
+    "Data Hub GraphQL endpoint: POST /pimcore-graphql-webservices/<configuration> with an API key (verify exact path and auth scheme per version)",
+    "graphql query: get<ClassName>(id | fullpath) - generated per Data Object class enabled in the Data Hub configuration",
+    "graphql query: get<ClassName>Listing(ids, filter, sortBy, first, after) - generated listing per Data Object class",
+    "graphql query: getAsset(id | fullpath) and getAssetListing",
+    "graphql query: getAssetFolder and getAssetFolderListing",
+    "graphql query: getDocumentPage, getDocumentSnippet, getDocumentLink and getDocumentFolder (verify which document types the version exposes)",
+    "graphql query: getDocumentListing / document tree traversal (verify)",
+    "graphql mutation: create<ClassName>, update<ClassName>, delete<ClassName> - only when mutations are enabled in the Data Hub configuration",
+    "graphql mutation: createAsset, updateAsset, deleteAsset, createAssetFolder (verify)",
+    "graphql: element relation resolution and localized field arguments (language parameter on every localized field)",
+    "graphql: classification store and object brick / field collection sub-selections inside a class query (verify field naming)",
+    "Simple REST adapter: GET /pimcore-datahub-webservices/simplerest/<configuration>/tree-items (verify bundle name and path)",
+    "Simple REST adapter: GET /pimcore-datahub-webservices/simplerest/<configuration>/search (Elasticsearch-backed, read-only - verify)",
+    "Simple REST adapter: GET /pimcore-datahub-webservices/simplerest/<configuration>/get-element (verify)",
+    "Studio backend REST API: /pimcore-studio/api/* (accompanies the newer admin UI - verify existence, stability and whether it is intended for integrations for the version in scope)",
+    "Legacy Webservice REST API: removed in the Pimcore 10 line (verify the exact release) - an old integration against it has no successor by the same paths",
+    "Commerce shopper APIs: NONE shipped - cart, checkout, order and customer endpoints are project-built Symfony controllers over CartManager / CheckoutManager / OrderManager / PricingManager services (verify)",
+    "Inbound data: Data Importer bundle configurations (file, HTTP, SQL, SFTP pull) - a scheduled import mechanism, not an HTTP API surface (verify)",
+    "Outbound events: PHP-level events only (DataObjectEvents, AssetEvents, DocumentEvents, ecommerce framework events) - no shipped outbound webhook family, so webhooks are project code or a bundle (verify)",
+    "Admin/permission surface: Pimcore user, role and workspace permissions govern API access per Data Hub configuration and per element path (verify how the project scopes API keys)"
+  ],
+  "target_content_component_types": [
+    "Document type: page (the CMS page, bound to a Twig template and a controller)",
+    "Document type: snippet (reusable content fragment included into pages)",
+    "Document type: link (managed outbound or internal link)",
+    "Document type: hardlink (mirrors a document subtree, used for multi-site and multi-language)",
+    "Document type: email (transactional email document)",
+    "Document type: newsletter (newsletter document with recipient sources)",
+    "Document type: folder (structure only)",
+    "Document type: printpage / printcontainer (Web-to-Print bundle - verify it is installed)",
+    "Area brick (AreabrickInterface class plus Twig view - Pimcore's reusable component type, always custom-built per project)",
+    "Editable: areablock (the container editors use to place, sort and configure bricks)",
+    "Editable: block (repeatable group of editables inside a template)",
+    "Editable: input and textarea (plain text)",
+    "Editable: wysiwyg (rich text)",
+    "Editable: image (asset reference with thumbnail configuration and hotspots/markers)",
+    "Editable: video and audio (asset or external provider reference)",
+    "Editable: pdf (asset reference with page rendering)",
+    "Editable: link (internal element or external URL)",
+    "Editable: select, multiselect, checkbox, numeric, date (configuration-style editables)",
+    "Editable: table (tabular content)",
+    "Editable: relation and relations (references to Data Objects, Assets or Documents - the bridge from page to PIM content)",
+    "Editable: embed / renderlet (embed external content or render an element through a controller)",
+    "Editable: scheduledblock (time-scheduled content variants)",
+    "Editable: snippet (include a snippet document)",
+    "Data Object content carriers: localized fields, field collections, object bricks, classification store (PIM/product content, not page layout)",
+    "Thumbnail and video-thumbnail configuration (the rendering contract for every image and video component)"
+  ],
+  "_stamp": {
+    "date": "2026-09-08",
+    "source": "seed from general platform knowledge, to be verified"
+  }
+}

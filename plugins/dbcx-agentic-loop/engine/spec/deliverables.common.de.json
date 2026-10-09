@@ -1,0 +1,183 @@
+{
+ "_readme": [
+  "Common Excel wording and style shared by every method (README, Management_Summary, engine sheets Annahmen / Quellen / Offene_Fragen, claims sheet). Method deliverables.<lang>.json adds the `deliverables` block; both are deep-merged with <run>/overrides/deliverables.<lang>.json, then the override `patches` are applied.",
+  "style: valantic palette only (DESIGN §7). status keys: standard | rework | rebuild | neutral | assumption. Header tiers: normal | decision | support. Tab roles: result | assumptions | reference | internal."
+ ],
+ "style": {
+  "font": "Segoe UI",
+  "text": "100C2A",
+  "muted": "6B6880",
+  "accent": "FF4B4B",
+  "title_band": "100C2A",
+  "separator": "E3E3E8",
+  "input_fill": "FFF7F5",
+  "header": {
+   "normal": {
+    "fill": "3C4BC8",
+    "color": "FFFFFF"
+   },
+   "decision": {
+    "fill": "100C2A",
+    "color": "FFFFFF"
+   },
+   "support": {
+    "fill": "CDCDCD",
+    "color": "100C2A"
+   }
+  },
+  "status": {
+   "standard": {
+    "fill": "D4D7F3",
+    "chart": "3C4BC8"
+   },
+   "rework": {
+    "fill": "E9E1D3",
+    "chart": "C0AA81"
+   },
+   "rebuild": {
+    "fill": "FFD2D2",
+    "chart": "FF4B4B"
+   },
+   "neutral": {
+    "fill": "E8E8E8",
+    "chart": "CDCDCD"
+   },
+   "assumption": {
+    "fill": "E5DDE9",
+    "chart": "A78DB6"
+   }
+  },
+  "chart_sequence": [
+   "3C4BC8",
+   "C0AA81",
+   "A78DB6",
+   "CDCDCD",
+   "100C2A",
+   "8C95DE",
+   "D9CCB3"
+  ],
+  "option_bands": [
+   {"band": "3C4BC8", "color": "FFFFFF", "header": "D4D7F3"},
+   {"band": "C0AA81", "color": "100C2A", "header": "E9E1D3"},
+   {"band": "A78DB6", "color": "100C2A", "header": "E5DDE9"},
+   {"band": "100C2A", "color": "FFFFFF", "header": "E8E8E8"}
+  ],
+  "tabs": {
+   "result": "3C4BC8",
+   "assumptions": "A78DB6",
+   "reference": "CDCDCD",
+   "internal": "100C2A"
+  },
+  "max_decision_columns": 2,
+  "max_row_lines": 6,
+  "zoom": 90,
+  "footer": "{engagement.consultancy} · Vertraulich · Seite &P von &N"
+ },
+ "common": {
+  "readme": {
+   "subtitle": "{engagement.consultancy} für {engagement.client} – {engagement.title}",
+   "purpose": "Zweck",
+   "created": "Stand",
+   "basis": "Grundlage",
+   "basis_intro": "Jede Ergebniszeile nennt in der Spalte „Grundlage“, worauf sie beruht:",
+   "basis_code": "„Code“ – eine Fundstelle im Repository (Pfad relativ zum Checkout, ggf. mit Zeilenbereich)",
+   "basis_vendor": "„Herstellerdokumentation“ – eine Quelle [Qn], die auf dem Blatt „{sources_sheet}“ mit Titel, Adresse und Prüfdatum steht",
+   "basis_assumption": "„Annahme (A-nn)“ – eine Voraussetzung, die auf dem Blatt „{assumptions_sheet}“ steht und die {engagement.client} bestätigen oder korrigieren kann",
+   "evidence_text": "Jede Faktenzeile nennt ihre Fundstelle – Datei und Zeile, Dokumentseite oder Tabellenzelle –, an der sie nachvollzogen werden kann.",
+   "sources": "Quellen",
+   "aggregates": "Kennzahlen",
+   "aggregates_text": "Alle Kennzahlen, Anzahlen und Anteile sind Excel-Formeln über die Detailblätter. Wird eine Detailzeile geändert, folgen Übersicht und Management Summary automatisch.",
+   "glossary": "Begriffe",
+   "glossary_text": "Standard = dokumentierte Fähigkeit des Herstellerprodukts in der genannten Version. Custom = für {engagement.client} gebaut oder zu bauen. Fundstelle = Datei (ggf. mit Zeilenbereich), Dokumentseite oder Tabellenzelle, an der eine Aussage nachvollzogen werden kann.",
+   "glossary_sources": "[Qn] = Quelle in der Herstellerdokumentation (Blatt „{sources_sheet}“).",
+   "glossary_assumptions": "A-nn = Annahme, die {engagement.client} bestätigen oder korrigieren kann (Blatt „{assumptions_sheet}“).",
+   "notes": "Hinweise",
+   "sheet": "Blatt",
+   "content": "Inhalt",
+   "claims_row": "Aussagen und Bewertungen",
+   "claims_text": "Nur in der internen Fassung: Jede Aussage auf dem Blatt „{claims_sheet}“ wurde unabhängig von Prüfern mit 0–10 bewertet – einer gegen die Unterlagen des Kunden, einer oder mehrere gegen den externen Standard. Ein Deliverable wird erst freigegeben, wenn der Mittelwert jedes Prüfers {threshold} erreicht und keine Aussage widerlegt wurde. Die Prüfnotizen bleiben in den internen Review-Notizen.",
+   "questions_row": "Fragen und Antworten",
+   "questions_text": "Nur in der internen Fassung: Das Blatt „{questions_sheet}“ führt jede Frage an den Kunden mit Status (offen / beantwortet / nicht klärbar) und Antworttyp: „Entscheidung“ = von der Projektleitung als Tatsache gesetzt, „Arbeitsannahme“ = Vorschlag, unter dem die Analyse weiterläuft, „Angabe {engagement.client}“ = vom Kunden selbst beantwortet. In der Kundenfassung erscheinen alle nicht vom Kunden beantworteten Fragen als Annahmen.",
+   "sheet_texts": {
+    "assumptions": "Annahmen, auf denen Ergebnisse beruhen – bitte je Zeile bestätigen (ja / nein / teilweise) und bei Bedarf kommentieren; die betroffenen Zeilen sind genannt",
+    "sources": "Herstellerdokumentation, auf die sich Ergebnisse stützen ([Qn]), mit Adresse und Prüfdatum",
+    "open_questions": "Fragen an den Kunden mit Status, Antworttyp und Antwort (nur interne Fassung)",
+    "claims": "Alle Aussagen mit Prüfer-Scores (nur interne Fassung)"
+   },
+   "basis_client": "„Angabe {engagement.client}“ – eine Auskunft von {engagement.client} selbst"
+  },
+  "mgmt": {
+   "basis_line": "{engagement.consultancy} für {engagement.client} · {engagement.title} · Stand {date}",
+   "kpi": "Kennzahl",
+   "value": "Wert",
+   "note": "Erläuterung",
+   "heading": "Einordnung und Empfehlung",
+   "kpi_heading": "Kennzahlen",
+   "assumptions_heading": "Wichtigste Annahmen (Blatt {assumptions_sheet})",
+   "missing": "Die Einordnung wird nach Abschluss der Analyse ergänzt."
+  },
+  "claims": {
+   "scope": "Scope",
+   "id": "Aussage-ID",
+   "type": "Art",
+   "target": "Fließt ein in",
+   "statement": "Aussage",
+   "evidence": "Evidenz",
+   "score": "Score {critic}",
+   "avg": "Mittelwert",
+   "n_claims": "Aussagen",
+   "avg_critic": "Ø {critic}",
+   "below": "Aussagen < {threshold} (je Prüfer)",
+   "unscored": "Unbewertet",
+   "reviewed": "Geprüft"
+  },
+  "open_questions": {
+   "name": "Offene_Fragen",
+   "headers": [
+    "ID",
+    "Frage an den Kunden",
+    "Wirkung der Antwort",
+    "Gestellt von",
+    "Status",
+    "Antwort"
+   ],
+   "answer_type_header": "Antworttyp"
+  },
+  "assumptions": {
+   "name": "Annahmen",
+   "alt_name": "Annahmen_Analyse",
+   "headers": [
+    "Nr.",
+    "Annahme",
+    "Warum wir davon ausgehen",
+    "Falls nicht zutreffend",
+    "Betroffen",
+    "Zutreffend? ({engagement.client})",
+    "Anmerkung {engagement.client}"
+   ],
+   "options": [
+    "ja",
+    "nein",
+    "teilweise"
+   ],
+   "default_wording": "Die Analyse geht davon aus: {text}.",
+   "comment_prompt": "Freitext, z. B. Ergänzung oder Einschränkung"
+  },
+  "sources": {
+   "name": "Quellen",
+   "alt_name": "Herstellerquellen",
+   "headers": [
+    "Nr.",
+    "Quelle",
+    "Aussage",
+    "gilt für",
+    "Adresse",
+    "geprüft am"
+   ],
+   "missing": "(nicht im Referenzkatalog)"
+  },
+  "basis": {
+   "header": "Grundlage"
+  }
+ }
+}

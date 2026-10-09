@@ -1,0 +1,2756 @@
+{
+ "deliverables": {
+  "D1": {
+   "title": "Aufwandsschätzung je Lösungsoption",
+   "requires": [
+    "req",
+    "estimation"
+   ],
+   "resolve_handover": true,
+   "vendor_code_basis": true,
+   "purpose": "Jede Anforderung der Kundenliste je Lösungsoption geschätzt: das Vorgehen (Neubau: Standard, teilweise, Eigenentwicklung; Migration: beibehalten, anpassen, auf Standard umstellen, neu bauen, entfällt, neu), eine {estimation.size_term.de}-Größe mit ihrer Herleitung und Grundlage, der Aufwand aus der editierbaren Größenzuordnung, darauf die Zuschläge PM, SA, BA und QA und die festen Phasen je Option - alle Summen und Kosten als Formel.",
+   "sources": "state/requirements.json, analysis/scopes/*.md, analysis/consolidated/SUMMARY.md, input/handover/*.json, reference/platform-standard.md",
+   "sources_client": "Die Anforderungsliste des Kunden wie erhalten; je Anforderung und Option eine Schätzung gegen die Dokumentation und den Standardcode des Herstellers sowie - für eine Migration - die Code-Analyse des heutigen Shops; die konsolidierten Phasen, Abgrenzungen und Risiken; verifizierte Technologiefakten.",
+   "extra": "Größen sind {estimation.size_term.de}-Größen; der Aufwand in {estimation.unit_short.de} folgt aus der Zuordnung auf dem Blatt Parameter, ebenso die Zuschläge je Option und der Tagessatz. Einen Wert dort geändert, und jede Summe, alle Kosten und jedes Diagramm folgt. Keine Summe ist eingetippt; nur die festen Phasen haben einen eingetragenen, editierbaren Aufwand.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "Summe und Kosten je Option (Formeln über die Detailblätter) und die Bewertung in Worten",
+     "kpis": [
+      {
+       "id": "req_total",
+       "label": "Anforderungen in der Liste",
+       "formula": "=COUNTA({rng:Schaetzung.req_id})",
+       "note": "eine Zeile je Anforderung auf dem Blatt Schaetzung",
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "options",
+       "kpis": [
+        {
+         "id": "total_{o.id}",
+         "label": "{o.label}: Gesamtaufwand ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.option},\"{o.label}\",{rng:Zuschlaege_und_Phasen.pd})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "Entwicklung, Zuschläge und feste Phasen (Blatt Zuschlaege_und_Phasen)",
+         "when": "!scenario_mode"
+        },
+        {
+         "id": "cost_{o.id}",
+         "label": "{o.label}: Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.option},\"{o.label}\",{rng:Zuschlaege_und_Phasen.cost})",
+         "number_format": "#,##0",
+         "text_decimals": 0,
+         "note": "Gesamtaufwand zum Tagessatz des Blattes Parameter - eine Größenordnung, kein Angebot",
+         "when": "!scenario_mode"
+        },
+        {
+         "id": "dev_{o.id}",
+         "label": "{o.label}: Entwicklung ({estimation.unit_short.de})",
+         "formula": "=SUM({rng:Schaetzung.pd_{o.id}})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "die {estimation.size_term.de}-Größen aller Anforderungen, Positionen summiert",
+         "when": "!scenario_mode"
+        },
+        {
+         "id": "xxl_{o.id}",
+         "label": "{o.label}: Anforderungen über der Sprintgrenze",
+         "formula": "=COUNTIF({rng:Schaetzung.flag_{o.id}},\"{L:_not_sprint}\")+COUNTIF({rng:Schaetzung.flag_{o.id}},\"{L:_cut}\")",
+         "note": "{last:estimation.sizes} oder in Positionen aufgeteilt (Blatt Schaetzpositionen)"
+        },
+        {
+         "id": "open_{o.id}",
+         "label": "{o.label}: nicht bewertet",
+         "formula": "=COUNTIF({rng:Schaetzung.appr_{o.id}},\"{L:NOT-ASSESSED}\")",
+         "note": "muss 0 sein",
+         "edition": "full"
+        }
+       ],
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "scenarios",
+       "when": "scenario_mode",
+       "kpis": [
+        {
+         "id": "total_{s.id}",
+         "label": "{s.label}: Gesamtaufwand ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},\"{s.label}\",{rng:Zuschlaege_und_Phasen.pd})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "{s.option_label}: {target.platform} mit Zuschlägen und festen Phasen, dazu {estimation.integration_platform} (Blatt Szenarien)",
+         "when_set": [
+          {
+           "when": "!is",
+           "set": {
+            "note": "{s.option_label}: Entwicklung, Zuschläge und feste Phasen der Zeilenklassen dieses Szenarios (Blatt Szenarien)"
+           }
+          }
+         ]
+        },
+        {
+         "id": "cost_{s.id}",
+         "label": "{s.label}: Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},\"{s.label}\",{rng:Zuschlaege_und_Phasen.cost})",
+         "number_format": "#,##0",
+         "text_decimals": 0,
+         "note": "Gesamtaufwand zum Tagessatz des Blattes Parameter - eine Größenordnung, kein Angebot"
+        },
+        {
+         "id": "platform_{s.id}",
+         "label": "{s.label}: {target.platform} ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},\"{s.label}\",{rng:Zuschlaege_und_Phasen.area},\"{target.platform}\")",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "Entwicklung, Einsparung, Zuschläge und feste Phasen"
+        },
+        {
+         "id": "is_{s.id}",
+         "when": "is",
+         "label": "{s.label}: {estimation.integration_platform} ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},\"{s.label}\",{rng:Zuschlaege_und_Phasen.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "Entwicklung auf {estimation.integration_platform} mit denselben Zuschlägen"
+        }
+       ]
+      },
+      {
+       "id": "wp_total",
+       "when": "system_mode",
+       "label": "Arbeitspakete im gewählten Szenario",
+       "formula": "=SUM({rng:Schaetzung.insel})",
+       "note": "eine Zeile je Arbeitspaket auf dem Blatt Schaetzung, Eingaben anderer eingeschlossen"
+      },
+      {
+       "id": "total_sel",
+       "when": "system_mode",
+       "label": "Gesamtaufwand im gewählten Szenario ({estimation.unit_short.de})",
+       "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.insel},1)",
+       "number_format": "#,##0.0",
+       "text_decimals": 1,
+       "note": "alle Systeme: Entwicklung, Zuschläge und feste Phasen (Blatt Zuschlaege_und_Phasen); das Szenario wählt das Blatt Parameter"
+      },
+      {
+       "id": "cost_sel",
+       "when": [
+        "system_mode",
+        "!hide_cost"
+       ],
+       "label": "Kosten im gewählten Szenario ({estimation.currency})",
+       "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.cost},{rng:Zuschlaege_und_Phasen.insel},1)",
+       "number_format": "#,##0",
+       "text_decimals": 0,
+       "note": "Gesamtaufwand zum Tagessatz des Blattes Parameter - eine Größenordnung, kein Angebot"
+      },
+      {
+       "repeat": "scenarios",
+       "when": "system_multi",
+       "kpis": [
+        {
+         "id": "sctotal_{s.id}",
+         "label": "{s.label}: Gesamtaufwand ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},\"{s.q}\",{rng:Szenarien.pd})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "alle Systeme dieses Szenarios (Blatt Szenarien)"
+        }
+       ]
+      },
+      {
+       "repeat": "systems",
+       "when": "system_mode",
+       "kpis": [
+        {
+         "id": "sys_{y.id}",
+         "label": "{y.label}: Aufwand im gewählten Szenario ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.system},\"{y.q}\",{rng:Zuschlaege_und_Phasen.insel},1)",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "Entwicklung, Zuschläge und feste Phasen; geschätzt durch {y.owner}"
+        }
+       ]
+      },
+      {
+       "id": "cond_sel",
+       "when": "system_mode",
+       "label": "davon bedingte Entwicklung ({estimation.unit_short.de})",
+       "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.insel},1,{rng:Schaetzung.condition},\"<>\")",
+       "number_format": "#,##0.0",
+       "text_decimals": 1,
+       "note": "Arbeitspakete von Zeilen mit einer Bedingung (Spalte Bedingung)"
+      },
+      {
+       "id": "interim_sel",
+       "when": "system_mode",
+       "label": "davon Entwicklung für Zwischenlösungen ({estimation.unit_short.de})",
+       "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.insel},1,{rng:Schaetzung.interim},\"<>\")",
+       "number_format": "#,##0.0",
+       "text_decimals": 1,
+       "note": "Arbeitspakete von Zeilen, die eine Zwischenlösung beschreiben"
+      },
+      {
+       "id": "open_total",
+       "when": "system_mode",
+       "label": "Offene Eingaben anderer Eigentümer",
+       "formula": "=COUNTIFS({rng:Schaetzung.pd},\"\",{rng:Schaetzung.req_id},\"<>\")",
+       "note": "leere Aufwandszellen auf dem Blatt Schaetzung - ihr Aufwand fehlt in jeder Summe, bis er eingetragen ist"
+      },
+      {
+       "repeat": "owners",
+       "when": "system_mode",
+       "kpis": [
+        {
+         "id": "open_{w.id}",
+         "label": "Offene Eingaben: {w.label}",
+         "formula": "=COUNTIFS({rng:Schaetzung.owner},\"{w.q}\",{rng:Schaetzung.pd},\"\")",
+         "note": "leere Aufwandszellen dieses Eigentümers"
+        }
+       ]
+      },
+      {
+       "id": "open_share",
+       "when": "system_mode",
+       "label": "Anteil offener Eingaben an allen Arbeitspaketen",
+       "formula": "=IFERROR(COUNTIFS({rng:Schaetzung.pd},\"\",{rng:Schaetzung.req_id},\"<>\")/SUM({rng:Schaetzung.insel}),0)",
+       "number_format": "0%",
+       "note": "offene Eingaben je Arbeitspaket im gewählten Szenario"
+      },
+      {
+       "id": "gaps",
+       "when": "system_mode",
+       "label": "Lücken: in ihrem System nicht lösbar",
+       "formula": "=COUNTIFS({rng:Schaetzung.coverage},\"{L:gap|cov}\",{rng:Schaetzung.insel},1)",
+       "note": "wie entschieden wurde: Blatt Vollstaendigkeit"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "req_total",
+       "status": "neutral",
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "options",
+       "kpis": [
+        {
+         "kpi": "total_{o.id}",
+         "status": "standard"
+        },
+        {
+         "kpi": "cost_{o.id}",
+         "status": "rework"
+        }
+       ],
+       "when": [
+        "!scenario_mode",
+        "!system_mode"
+       ]
+      },
+      {
+       "repeat": "scenarios",
+       "when": "scenario_mode",
+       "kpis": [
+        {
+         "kpi": "total_{s.id}",
+         "status": "standard"
+        }
+       ]
+      },
+      {
+       "kpi": "total_sel",
+       "status": "standard",
+       "when": "system_mode"
+      },
+      {
+       "kpi": "cost_sel",
+       "status": "rework",
+       "when": [
+        "system_mode",
+        "!hide_cost"
+       ]
+      },
+      {
+       "kpi": "open_total",
+       "status": "neutral",
+       "when": "system_mode"
+      },
+      {
+       "kpi": "wp_total",
+       "status": "neutral",
+       "when": "system_mode"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "cmp",
+       "title": "Gesamtaufwand je Option ({estimation.unit_short.de})",
+       "when": [
+        "!scenario_mode",
+        "!system_mode"
+       ]
+      },
+      {
+       "type": "bar",
+       "block": "cmp",
+       "title": "Gesamtaufwand je Szenario ({estimation.unit_short.de})",
+       "when": "scenario_mode"
+      },
+      {
+       "type": "bar",
+       "block": "sys",
+       "title": "Gesamtaufwand je System im gewählten Szenario ({estimation.unit_short.de})",
+       "when": "system_mode"
+      },
+      {
+       "type": "bar",
+       "block": "cmp",
+       "title": "Gesamtaufwand je Szenario ({estimation.unit_short.de})",
+       "when": "system_multi"
+      }
+     ],
+     "when_set": [
+      {
+       "when": "system_mode",
+       "set": {
+        "readme": "Gesamtaufwand und Kosten des gewählten Szenarios, je System, offene Eingaben anderer Eigentümer und die Bewertung in Worten (Formeln über die Detailblätter)"
+       }
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Parameter",
+     "type": "parameters",
+     "readme": "Tagessatz, Sprintgrenze, {estimation.size_term.de}-Zuordnung und Zuschläge je Option - editierbar; jede Summe, alle Kosten und jedes Diagramm rechnet neu",
+     "headers": [
+      "Parameter",
+      "Wert",
+      "Bedeutung"
+     ],
+     "tables_beside": true,
+     "rows": [
+      {
+       "name": "Tagessatz",
+       "value": "$estimation.day_rate",
+       "meaning": "Tagessatz in {estimation.currency} für die Kosten je Option - eine Größenordnung, kein Angebot",
+       "when": "!hide_cost"
+      },
+      {
+       "name": "Sprintgrenze",
+       "value": "$estimation.sprint_limit_pd",
+       "meaning": "ab diesem Aufwand in {estimation.unit_short.de} passt eine Anforderung nicht in einen Sprint ({last:estimation.sizes}, gekennzeichnet); was darüber hinausgeht, ist in Positionen aufgeteilt",
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "selsc",
+       "when": "system_mode",
+       "rows": [
+        {
+         "name": "Szenario",
+         "value": "{f.label}",
+         "validation": "{f.labels}",
+         "meaning": "das Szenario, das die Blätter mit einem Szenario zeigen (Kundenlisten, Schaetzung, Summen, Kennzahlen); Auswahl aus der Tabelle der Szenarien"
+        }
+       ]
+      }
+     ],
+     "tables": [
+      {
+       "id": "tshirt",
+       "title": "{estimation.size_term.de}-Zuordnung: Größe zu {estimation.unit_short.de}",
+       "headers": [
+        {
+         "id": "size",
+         "header": "Größe",
+         "width": 18
+        },
+        {
+         "id": "pd",
+         "header": "Aufwand ({estimation.unit_short.de})",
+         "width": 12
+        }
+       ],
+       "rows": "$estimation.tshirt_map"
+      },
+      {
+       "id": "surcharge",
+       "title": "Zuschläge je Option in % auf die Entwicklung: PM Projektleitung, SA Solution Architecture, BA Business-Analyse, QA Qualitätssicherung",
+       "headers": [
+        {
+         "id": "role",
+         "header": "Rolle",
+         "width": 18
+        },
+        {
+         "repeat": "options",
+         "headers": [
+          {
+           "id": "{o.id}",
+           "header": "{o.label}: Zuschlag (%)",
+           "from": "pct",
+           "width": 16
+          }
+         ]
+        }
+       ],
+       "rows": "$estimation.surcharges",
+       "when": "!system_mode"
+      },
+      {
+       "id": "surcharge",
+       "when": "system_mode",
+       "title": "Zuschläge je System und Option in % auf die Entwicklung: PM Projektleitung, SA Solution Architecture, BA Business-Analyse, QA Qualitätssicherung",
+       "headers": [
+        {
+         "id": "role",
+         "header": "Rolle",
+         "width": 18
+        },
+        {
+         "repeat": "sysopts",
+         "headers": [
+          {
+           "id": "{k.key}",
+           "header": "{k.label}: Zuschlag (%)",
+           "from": "pct",
+           "width": 16
+          }
+         ]
+        }
+       ],
+       "rows": "$estimation.surcharges"
+      },
+      {
+       "id": "range",
+       "when": [
+        "system_mode",
+        "range"
+       ],
+       "title": "Spanne: Faktor auf den Aufwand je Sicherheit der Schätzung",
+       "headers": [
+        {
+         "id": "level",
+         "header": "Sicherheit",
+         "label": true,
+         "width": 14
+        },
+        {
+         "id": "min",
+         "header": "Faktor min",
+         "width": 11
+        },
+        {
+         "id": "max",
+         "header": "Faktor max",
+         "width": 11
+        }
+       ],
+       "rows": "$estimation.range_factors"
+      },
+      {
+       "id": "pick",
+       "when": "system_mode",
+       "title": "Szenarien: die Option je System",
+       "headers": [
+        {
+         "id": "scenario",
+         "header": "Szenario",
+         "width": 20
+        },
+        {
+         "id": "system",
+         "header": "System",
+         "width": 20
+        },
+        {
+         "id": "option",
+         "header": "Option",
+         "width": 20
+        },
+        {
+         "id": "parent",
+         "header": "Basis-Option",
+         "width": 16
+        }
+       ],
+       "rows": [
+        {
+         "repeat": "picks",
+         "rows": [
+          {
+           "scenario": "{k.scenario}",
+           "system": "{k.system}",
+           "option": "{k.option}",
+           "parent": "{k.parent}"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "components",
+       "when": [
+        "system_mode",
+        "components"
+       ],
+       "title": "Zugesagte Komponenten je System",
+       "headers": [
+        {
+         "id": "component",
+         "header": "Komponente",
+         "width": 24
+        },
+        {
+         "id": "system",
+         "header": "System",
+         "width": 20
+        }
+       ],
+       "rows": [
+        {
+         "repeat": "components",
+         "rows": [
+          {
+           "component": "{c.label}",
+           "system": "{c.system}"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "system_mode",
+       "set": {
+        "readme": "Tagessatz, das gewählte Szenario, {estimation.size_term.de}-Zuordnung, Zuschläge je System und Option, die Spanne je Sicherheit der Schätzung und die Option je System in jedem Szenario - editierbar; jede Summe, alle Kosten und jedes Diagramm rechnet neu"
+       }
+      }
+     ]
+    },
+    {
+     "repeat": "passthrough",
+     "when": "system_mode",
+     "sheets": [
+      {
+       "name": "{p.name}",
+       "type": "table",
+       "dataset": "passthrough:{p.group}",
+       "table_name": "{p.table}",
+       "readme": "Die Liste des Kunden wie erhalten (Liste „{p.sheet}“, Spalten unverändert und in ihrer Reihenfolge), daneben je System der Aufwand im gewählten Szenario (Blatt Parameter): die Summe der Arbeitspakete, die auf die Zeile summieren, davon bedingt und davon Zwischenlösung, die Zahl der Arbeitspakete und die Auswirkung je System",
+       "columns": [
+        {
+         "splice": "p.columns"
+        },
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "id": "sys_{y.id}",
+           "header": "{y.label} ({estimation.unit_short.de})",
+           "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:c_{p.idcol}}&\"\",{rng:Schaetzung.insel},1,{rng:Schaetzung.system},\"{y.q}\"))",
+           "number_format": "#,##0.0",
+           "width": 12
+          }
+         ]
+        },
+        {
+         "id": "total",
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:c_{p.idcol}}&\"\",{rng:Schaetzung.insel},1))",
+         "number_format": "#,##0.0",
+         "width": 11
+        },
+        {
+         "id": "cond",
+         "header": "davon bedingt ({estimation.unit_short.de})",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:c_{p.idcol}}&\"\",{rng:Schaetzung.insel},1,{rng:Schaetzung.condition},\"<>\"))",
+         "number_format": "#,##0.0",
+         "width": 11
+        },
+        {
+         "id": "interim",
+         "header": "davon Zwischenlösung ({estimation.unit_short.de})",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:c_{p.idcol}}&\"\",{rng:Schaetzung.insel},1,{rng:Schaetzung.interim},\"<>\"))",
+         "number_format": "#,##0.0",
+         "width": 12
+        },
+        {
+         "id": "wpn",
+         "header": "Anzahl Arbeitspakete",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",COUNTIFS({rng:Schaetzung.rollup},{cell:c_{p.idcol}}&\"\",{rng:Schaetzung.insel},1))",
+         "width": 11
+        },
+        {
+         "id": "impacts",
+         "header": "Auswirkung je System",
+         "field": "impacts",
+         "wrap": true,
+         "sparse": true,
+         "width": 50
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Weitere_Zeilen",
+     "type": "table",
+     "dataset": "other_rows",
+     "table_name": "OtherRows",
+     "when": [
+      "system_mode",
+      "other_rows"
+     ],
+     "readme": "Zeilen, die in keiner Liste des Kunden stehen (technische Zeilen ohne Kundenbezug, Schnittstellen, ergänzte Abschnitte) - je System ihr Aufwand im gewählten Szenario; zusammen mit den Kundenlisten ergibt das die gesamte Entwicklung (Abgleich auf dem Blatt Summen)",
+     "columns": [
+      {
+       "id": "rid",
+       "header": "ID",
+       "field": "id",
+       "width": 11
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "wrap": true,
+       "verbatim": true,
+       "width": 30
+      },
+      {
+       "header": "Gruppe",
+       "field": "group",
+       "label": true,
+       "width": 14
+      },
+      {
+       "repeat": "systems",
+       "columns": [
+        {
+         "id": "sys_{y.id}",
+         "header": "{y.label} ({estimation.unit_short.de})",
+         "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:rid}&\"\",{rng:Schaetzung.insel},1,{rng:Schaetzung.system},\"{y.q}\"))",
+         "number_format": "#,##0.0",
+         "width": 12
+        }
+       ]
+      },
+      {
+       "id": "total",
+       "header": "Gesamt ({estimation.unit_short.de})",
+       "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:rid}&\"\",{rng:Schaetzung.insel},1))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "cond",
+       "header": "davon bedingt ({estimation.unit_short.de})",
+       "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:rid}&\"\",{rng:Schaetzung.insel},1,{rng:Schaetzung.condition},\"<>\"))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "interim",
+       "header": "davon Zwischenlösung ({estimation.unit_short.de})",
+       "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.rollup},{cell:rid}&\"\",{rng:Schaetzung.insel},1,{rng:Schaetzung.interim},\"<>\"))",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "wpn",
+       "header": "Anzahl Arbeitspakete",
+       "formula": "=IF({cell:rid}=\"\",\"\",COUNTIFS({rng:Schaetzung.rollup},{cell:rid}&\"\",{rng:Schaetzung.insel},1))",
+       "width": 11
+      },
+      {
+       "id": "impacts",
+       "header": "Auswirkung je System",
+       "field": "impacts",
+       "wrap": true,
+       "sparse": true,
+       "width": 50
+      }
+     ]
+    },
+    {
+     "name": "Anforderungen",
+     "type": "table",
+     "dataset": "requirements",
+     "readme": "Die Anforderungsliste des Kunden wie erhalten - Referenz für jede Nachverfolgung",
+     "table_name": "Requirements",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 10
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 18,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "width": 30,
+       "wrap": true,
+       "verbatim": true
+      },
+      {
+       "header": "Beschreibung",
+       "field": "description",
+       "width": 55,
+       "wrap": true,
+       "verbatim": true,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Akzeptanzkriterien",
+       "field": "acceptance_criteria",
+       "width": 45,
+       "wrap": true,
+       "verbatim": true,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Release",
+       "field": "phase",
+       "width": 10,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Priorität",
+       "field": "priority",
+       "width": 9,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Gruppe",
+       "field": "group",
+       "width": 11,
+       "label": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Abgrenzungen",
+       "field": "exclusions",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "verbatim": true,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Referenzen",
+       "field": "references",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail",
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Quellen",
+       "field": "sources",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "detail",
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Schaetzung",
+     "type": "table",
+     "dataset": "wps",
+     "row_key": "req_id",
+     "table_name": "Estimation",
+     "when": "system_mode",
+     "readme": "Eine Zeile je Arbeitspaket (Anforderung × System × Option, bei einem abhängigen System je Basis-Option), nach Anforderung gruppiert: Ausgangslage, Abdeckung, Vorgehen, {estimation.size_term.de}-Größe, Aufwand aus der {estimation.size_term.de}-Zuordnung (bei Positionen deren Summe) mit Spanne nach der Sicherheit der Schätzung (Blatt Parameter), Schätzannahmen und Grundlage; Zeilen anderer Eigentümer sind leere Eingabezellen",
+     "columns": [
+      {
+       "header": "Anforderung",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "width": 24,
+       "wrap": true,
+       "verbatim": true
+      },
+      {
+       "id": "rollup",
+       "header": "Summiert auf",
+       "field": "rollup",
+       "width": 11
+      },
+      {
+       "id": "epic",
+       "header": "Epic",
+       "field": "epic",
+       "width": 14
+      },
+      {
+       "id": "release",
+       "header": "Release",
+       "field": "release",
+       "width": 10
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 18
+      },
+      {
+       "id": "option",
+       "header": "Option",
+       "field": "option",
+       "width": 16,
+       "sparse": true
+      },
+      {
+       "id": "parent",
+       "header": "Basis-Option",
+       "field": "parent",
+       "width": 14,
+       "sparse": true
+      },
+      {
+       "id": "start",
+       "header": "Ausgangslage",
+       "field": "starting_point",
+       "label": true,
+       "label_ctx": "sp",
+       "width": 13,
+       "sparse": true
+      },
+      {
+       "id": "coverage",
+       "header": "Abdeckung",
+       "field": "coverage",
+       "label": true,
+       "label_ctx": "cov",
+       "width": 12,
+       "sparse": true
+      },
+      {
+       "id": "appr",
+       "header": "Vorgehen",
+       "field": "approach",
+       "label": true,
+       "label_ctx": "appr",
+       "width": 16,
+       "sparse": true
+      },
+      {
+       "id": "impact",
+       "header": "Auswirkung",
+       "field": "impact",
+       "wrap": true,
+       "width": 30,
+       "sparse": true
+      },
+      {
+       "id": "mech",
+       "header": "Mechanismus",
+       "field": "mechanism",
+       "wrap": true,
+       "width": 24,
+       "sparse": true
+      },
+      {
+       "id": "size",
+       "header": "{estimation.size_column.de}",
+       "field": "size",
+       "emphasis": "decision",
+       "status": "$estimation.size_status",
+       "validation": "$estimation.sizes",
+       "sparse": true,
+       "width": 9,
+       "number_format": "@"
+      },
+      {
+       "id": "pd",
+       "header": "Aufwand ({estimation.unit_short.de})",
+       "field": "pd_input",
+       "formula_field": "pd_formula",
+       "default": null,
+       "input_field": "input",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "pd_min",
+       "header": "{estimation.unit_short.de} min",
+       "formula": "=IF({cell:pd}=\"\",\"\",{cell:pd}*IFERROR(INDEX({pt:range.min},MATCH({cell:certainty},{pt:range.level},0)),1))",
+       "number_format": "#,##0.0",
+       "width": 9,
+       "when": "range"
+      },
+      {
+       "id": "pd_max",
+       "header": "{estimation.unit_short.de} max",
+       "formula": "=IF({cell:pd}=\"\",\"\",{cell:pd}*IFERROR(INDEX({pt:range.max},MATCH({cell:certainty},{pt:range.level},0)),1))",
+       "number_format": "#,##0.0",
+       "width": 9,
+       "when": "range"
+      },
+      {
+       "id": "certainty",
+       "header": "Sicherheit der Schätzung",
+       "field": "confidence",
+       "label": true,
+       "internal": false,
+       "sparse": true,
+       "width": 12
+      },
+      {
+       "id": "asm",
+       "header": "Schätzannahmen",
+       "field": "assumption",
+       "wrap": true,
+       "sparse": true,
+       "width": 30
+      },
+      {
+       "id": "basis",
+       "header": "Grundlage",
+       "grundlage": true,
+       "grundlage_from": [
+        "ev"
+       ],
+       "grundlage_text_from": [
+        "asm"
+       ],
+       "grundlage_default_field": "basis_default",
+       "grundlage_key": "akeys",
+       "grundlage_key_labels": "akey_labels",
+       "width": 26
+      },
+      {
+       "id": "routed",
+       "header": "Umgeleitet von",
+       "field": "routed_from",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "condition",
+       "header": "Bedingung",
+       "field": "condition",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "interim",
+       "header": "Zwischenlösung",
+       "field": "interim",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "owner",
+       "header": "Schätzung durch",
+       "field": "owner",
+       "width": 16
+      },
+      {
+       "id": "insel",
+       "header": "Im gewählten Szenario",
+       "formula_field": "insel_f",
+       "field": "insel_f",
+       "emphasis": "support",
+       "group": "sc",
+       "width": 10
+      },
+      {
+       "repeat": "scenarios",
+       "columns": [
+        {
+         "id": "in_{s.id}",
+         "header": "In {s.label}",
+         "formula_field": "in_f.{s.id}",
+         "field": "in_f.{s.id}",
+         "emphasis": "support",
+         "group": "sc",
+         "width": 10
+        }
+       ]
+      },
+      {
+       "id": "ev",
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "d",
+       "edition": "full",
+       "width": 40
+      },
+      {
+       "id": "der",
+       "header": "Herleitung",
+       "field": "derivation",
+       "wrap": true,
+       "emphasis": "support",
+       "group": "d",
+       "width": 40
+      }
+     ]
+    },
+    {
+     "name": "Schaetzung",
+     "type": "table",
+     "dataset": "estimation",
+     "row_key": "req_id",
+     "decision_budget": "per_block",
+     "table_name": "Estimation",
+     "pages_wide": 1,
+     "readme": "Eine Zeile je Anforderung, ein Spaltenblock je Option: Vorgehen, {estimation.size_term.de}-Größe, Aufwand aus der {estimation.size_term.de}-Zuordnung (bei Positionen deren Summe), Hinweis zur Sprintgrenze, Schätzannahmen und Grundlage; eingeklappt: Fundstellen, Herleitung, Mechanismus",
+     "columns": [
+      {
+       "header": "Anforderung",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "width": 26,
+       "wrap": true,
+       "verbatim": true
+      },
+      {
+       "id": "klasse",
+       "header": "Klasse",
+       "field": "klasse",
+       "label": true,
+       "label_ctx": "cls",
+       "width": 16,
+       "when": "row_classes"
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 16
+      },
+      {
+       "header": "Release",
+       "field": "release",
+       "width": 10
+      },
+      {
+       "header": "Priorität",
+       "field": "priority",
+       "width": 9
+      },
+      {
+       "repeat": "options",
+       "columns": [
+        {
+         "id": "appr_{o.id}",
+         "header": "{o.label}: Vorgehen",
+         "field": "opt.{o.id}.approach",
+         "label": true,
+         "label_ctx": "appr",
+         "validation": "$estimation.approaches.{o.start}",
+         "width": 21
+        },
+        {
+         "id": "size_{o.id}",
+         "header": "{o.label}: {estimation.size_term.de}",
+         "field": "opt.{o.id}.size",
+         "emphasis": "decision",
+         "status": "$estimation.size_status",
+         "validation": "$estimation.sizes",
+         "sparse": true,
+         "width": 9,
+         "number_format": "@"
+        },
+        {
+         "id": "pd_{o.id}",
+         "header": "{o.label}: Aufwand ({estimation.unit_short.de})",
+         "formula": "=IF(COUNTIFS({rng:Schaetzpositionen.req_id},{cell:req_id},{rng:Schaetzpositionen.option},\"{o.label}\")>0,SUMIFS({rng:Schaetzpositionen.pd},{rng:Schaetzpositionen.req_id},{cell:req_id},{rng:Schaetzpositionen.option},\"{o.label}\"),IF({cell:size_{o.id}}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:size_{o.id}},\",\",\".\"),{pt:tshirt.size},0)),0)))",
+         "number_format": "#,##0.0",
+         "width": 11
+        },
+        {
+         "id": "flag_{o.id}",
+         "header": "{o.label}: Hinweis",
+         "formula": "=IF(COUNTIFS({rng:Schaetzpositionen.req_id},{cell:req_id},{rng:Schaetzpositionen.option},\"{o.label}\")>0,\"{L:_cut}\",IF({cell:pd_{o.id}}>={p:Sprintgrenze},\"{L:_not_sprint}\",\"\"))",
+         "width": 14
+        },
+        {
+         "id": "is_size_{o.id}",
+         "header": "{o.label}: {estimation.integration_platform} {estimation.size_term.de}",
+         "field": "opt.{o.id}.is_size",
+         "validation": "$estimation.sizes",
+         "sparse": true,
+         "width": 11,
+         "when": "is",
+         "number_format": "@"
+        },
+        {
+         "id": "is_pd_{o.id}",
+         "header": "{o.label}: {estimation.integration_platform} ({estimation.unit_short.de})",
+         "formula": "=IF(COUNTIFS({rng:Schaetzpositionen.req_id},{cell:req_id},{rng:Schaetzpositionen.option},\"{o.label}\")>0,SUMIFS({rng:Schaetzpositionen.is_pd},{rng:Schaetzpositionen.req_id},{cell:req_id},{rng:Schaetzpositionen.option},\"{o.label}\"),IF({cell:is_size_{o.id}}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:is_size_{o.id}},\",\",\".\"),{pt:tshirt.size},0)),0)))",
+         "number_format": "#,##0.0",
+         "width": 11,
+         "when": "is"
+        },
+        {
+         "id": "is_note_{o.id}",
+         "header": "{o.label}: {estimation.integration_platform} Hinweis",
+         "field": "opt.{o.id}.is_note",
+         "wrap": true,
+         "sparse": true,
+         "width": 26,
+         "when": "is"
+        },
+        {
+         "id": "asm_{o.id}",
+         "header": "{o.label}: Schätzannahmen",
+         "field": "opt.{o.id}.assumption",
+         "wrap": true,
+         "sparse": true,
+         "width": 30
+        },
+        {
+         "id": "basis_{o.id}",
+         "header": "{o.label}: Grundlage",
+         "grundlage": true,
+         "grundlage_from": [
+          "ev_{o.id}"
+         ],
+         "grundlage_text_from": [
+          "asm_{o.id}"
+         ],
+         "grundlage_key": "req_id@{o.id}",
+         "width": 28
+        },
+        {
+         "id": "save_size_{o.id}",
+         "header": "{o.label}: Einsparung {estimation.size_term.de}",
+         "field": "opt.{o.id}.saved_size",
+         "validation": "$estimation.sizes",
+         "sparse": true,
+         "width": 11,
+         "when": "savings_{o.id}",
+         "number_format": "@"
+        },
+        {
+         "id": "save_pd_{o.id}",
+         "header": "{o.label}: Einsparung ({estimation.unit_short.de})",
+         "formula": "=IF({cell:save_size_{o.id}}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:save_size_{o.id}},\",\",\".\"),{pt:tshirt.size},0)),0))",
+         "number_format": "#,##0.0",
+         "width": 11,
+         "when": "savings_{o.id}"
+        },
+        {
+         "id": "saves_{o.id}",
+         "header": "{o.label}: entlastet",
+         "field": "opt.{o.id}.saves",
+         "sep": ", ",
+         "sparse": true,
+         "width": 16,
+         "when": "savings_{o.id}"
+        },
+        {
+         "id": "ev_{o.id}",
+         "header": "{o.label}: Fundstellen",
+         "field": "opt.{o.id}.evidence",
+         "evidence": true,
+         "wrap": true,
+         "emphasis": "support",
+         "group": "d_{o.id}",
+         "width": 40,
+         "when_set": [
+          {
+           "when": "scenario_mode",
+           "set": {
+            "edition": "full"
+           }
+          }
+         ]
+        },
+        {
+         "id": "der_{o.id}",
+         "header": "{o.label}: Herleitung",
+         "field": "opt.{o.id}.derivation",
+         "wrap": true,
+         "emphasis": "support",
+         "group": "d_{o.id}",
+         "width": 40
+        },
+        {
+         "id": "mech_{o.id}",
+         "header": "{o.label}: Mechanismus",
+         "field": "opt.{o.id}.mechanism",
+         "wrap": true,
+         "emphasis": "support",
+         "group": "d_{o.id}",
+         "width": 28
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "readme": "Eine Zeile je Anforderung (Kundenanforderung, technische Migration, Refactoring), ein Spaltenblock je Option: Vorgehen, {estimation.size_term.de}-Größe, Aufwand aus der {estimation.size_term.de}-Zuordnung (bei Positionen deren Summe), Hinweis zur Sprintgrenze, Aufwand auf {estimation.integration_platform}, Schätzannahmen und Grundlage; bei Refactoring die Einsparung in der Migration"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Schaetzpositionen",
+     "type": "table",
+     "dataset": "positions",
+     "row_key": "req_id",
+     "table_name": "EstimationPositions",
+     "readme": "Anforderungen über der Sprintgrenze, in Positionen aufgeteilt (jede höchstens {last:estimation.sizes}); ihr Aufwand auf dem Blatt Schaetzung ist die Summe dieser Zeilen",
+     "columns": [
+      {
+       "header": "Anforderung",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "Position",
+       "field": "position",
+       "width": 9
+      },
+      {
+       "header": "Option",
+       "field": "option",
+       "width": 14
+      },
+      {
+       "header": "Inhalt der Position",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "{estimation.size_term.de}",
+       "id": "size",
+       "field": "size",
+       "emphasis": "decision",
+       "status": "$estimation.size_status",
+       "validation": "$estimation.sizes",
+       "width": 9,
+       "number_format": "@"
+      },
+      {
+       "header": "Aufwand ({estimation.unit_short.de})",
+       "id": "pd",
+       "formula": "=IF({cell:size}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:size},\",\",\".\"),{pt:tshirt.size},0)),0))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "header": "{estimation.integration_platform} {estimation.size_term.de}",
+       "id": "is_size",
+       "field": "is_size",
+       "validation": "$estimation.sizes",
+       "sparse": true,
+       "width": 11,
+       "when": "is",
+       "number_format": "@"
+      },
+      {
+       "header": "{estimation.integration_platform} ({estimation.unit_short.de})",
+       "id": "is_pd",
+       "formula": "=IF({cell:is_size}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:is_size},\",\",\".\"),{pt:tshirt.size},0)),0))",
+       "number_format": "#,##0.0",
+       "width": 11,
+       "when": "is"
+      },
+      {
+       "header": "Schätzannahmen",
+       "field": "assumption",
+       "wrap": true,
+       "sparse": true,
+       "width": 30
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 28
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "width": 40,
+       "when_set": [
+        {
+         "when": "scenario_mode",
+         "set": {
+          "edition": "full"
+         }
+        }
+       ]
+      },
+      {
+       "header": "Herleitung",
+       "field": "derivation",
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "width": 40
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Schaetzpositionen",
+     "type": "table",
+     "dataset": "sys_positions",
+     "row_key": "req_id",
+     "table_name": "EstimationPositions",
+     "when": "system_mode",
+     "readme": "Arbeitspakete über der Sprintgrenze, in Positionen aufgeteilt (jede höchstens {last:estimation.sizes}); ihr Aufwand auf dem Blatt Schaetzung ist die Summe dieser Zeilen",
+     "columns": [
+      {
+       "id": "req_id",
+       "header": "Anforderung",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 18
+      },
+      {
+       "id": "option",
+       "header": "Option",
+       "field": "option",
+       "width": 16,
+       "sparse": true
+      },
+      {
+       "id": "parent",
+       "header": "Basis-Option",
+       "field": "parent",
+       "width": 14,
+       "sparse": true
+      },
+      {
+       "header": "Position",
+       "field": "position",
+       "width": 9
+      },
+      {
+       "header": "Inhalt der Position",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "id": "size",
+       "header": "{estimation.size_column.de}",
+       "field": "size",
+       "emphasis": "decision",
+       "status": "$estimation.size_status",
+       "validation": "$estimation.sizes",
+       "width": 9,
+       "number_format": "@"
+      },
+      {
+       "id": "pd",
+       "header": "Aufwand ({estimation.unit_short.de})",
+       "formula": "=IF({cell:size}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:size},\",\",\".\"),{pt:tshirt.size},0)),0))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "asm",
+       "header": "Schätzannahmen",
+       "field": "assumption",
+       "wrap": true,
+       "sparse": true,
+       "width": 30
+      },
+      {
+       "header": "Grundlage",
+       "grundlage": true,
+       "width": 28
+      },
+      {
+       "id": "ev",
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "edition": "full",
+       "width": 40
+      },
+      {
+       "header": "Herleitung",
+       "field": "derivation",
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "width": 40
+      }
+     ]
+    },
+    {
+     "name": "Zuschlaege_und_Phasen",
+     "type": "table",
+     "dataset": "ontop",
+     "table_name": "SurchargesPhases",
+     "readme": "Je Option: die Entwicklung (Summe der Schätzung), die Zuschläge PM, SA, BA und QA (Sätze vom Blatt Parameter) und die festen Phasen samt technischen Migrationsaufgaben ohne Anforderung - deren Aufwand ist editierbar",
+     "columns": [
+      {
+       "header": "Option",
+       "field": "option",
+       "option_tint": true,
+       "width": 14,
+       "when": "!scenario_mode"
+      },
+      {
+       "header": "Szenario",
+       "id": "scenario",
+       "field": "scenario",
+       "width": 20,
+       "when": "scenario_mode"
+      },
+      {
+       "header": "Bereich",
+       "id": "area",
+       "field": "area",
+       "width": 20,
+       "when": "scenario_mode"
+      },
+      {
+       "header": "Block",
+       "id": "block",
+       "field": "block",
+       "label": true,
+       "label_ctx": "blk",
+       "width": 26
+      },
+      {
+       "header": "Position",
+       "field": "title",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Satz",
+       "id": "rate",
+       "field": "rate",
+       "formula_field": "rate_formula",
+       "number_format": "0%",
+       "sparse": true,
+       "width": 8
+      },
+      {
+       "header": "Aufwand ({estimation.unit_short.de})",
+       "id": "pd",
+       "field": "pd",
+       "formula_field": "pd_formula",
+       "numeric": true,
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "header": "Kosten ({estimation.currency})",
+       "id": "cost",
+       "formula": "={cell:pd}*{p:Tagessatz}",
+       "number_format": "#,##0",
+       "width": 12
+      },
+      {
+       "header": "Herleitung",
+       "field": "derivation",
+       "wrap": true,
+       "width": 45
+      },
+      {
+       "header": "Summenzeile",
+       "id": "line",
+       "field": "line",
+       "width": 22,
+       "emphasis": "support",
+       "group": "detail",
+       "when": "scenario_mode"
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "sparse": true,
+       "emphasis": "support",
+       "width": 36,
+       "when_set": [
+        {
+         "when": "scenario_mode",
+         "set": {
+          "edition": "full"
+         }
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "readme": "Je Szenario: die {target.platform}-Entwicklung seiner Zeilenklassen (Summe der Schätzung), die Einsparung durch Refactoring, die Zuschläge PM, SA, BA und QA (Sätze vom Blatt Parameter), die festen Phasen des Szenarios - deren Aufwand ist editierbar - und die {estimation.integration_platform}-Entwicklung mit denselben Zuschlägen"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Zuschlaege_und_Phasen",
+     "type": "table",
+     "dataset": "sys_ontop",
+     "table_name": "SurchargesPhases",
+     "when": "system_mode",
+     "readme": "Je System und Option: die Entwicklung (Summe der Arbeitspakete auf dem Blatt Schaetzung; ein abhängiges System je Basis-Option), die Zuschläge PM, SA, BA und QA (Sätze vom Blatt Parameter, auf Eingaben anderer nur auf Wunsch) und die festen Phasen - deren Aufwand ist editierbar",
+     "columns": [
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 18
+      },
+      {
+       "id": "option",
+       "header": "Option",
+       "field": "option",
+       "sparse": true,
+       "width": 16
+      },
+      {
+       "id": "parent",
+       "header": "Basis-Option",
+       "field": "parent",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "scenario",
+       "header": "Szenario",
+       "field": "scenario",
+       "sparse": true,
+       "width": 18,
+       "when": "ontop_total"
+      },
+      {
+       "id": "block",
+       "header": "Block",
+       "field": "block",
+       "label": true,
+       "label_ctx": "blk",
+       "width": 20
+      },
+      {
+       "header": "Position",
+       "field": "title",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "id": "rate",
+       "header": "Satz",
+       "field": "rate",
+       "formula_field": "rate_formula",
+       "number_format": "0%",
+       "sparse": true,
+       "width": 8
+      },
+      {
+       "id": "pd",
+       "header": "Aufwand ({estimation.unit_short.de})",
+       "field": "pd",
+       "formula_field": "pd_formula",
+       "numeric": true,
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "cost",
+       "header": "Kosten ({estimation.currency})",
+       "formula": "={cell:pd}*{p:Tagessatz}",
+       "number_format": "#,##0",
+       "width": 12,
+       "when": "!hide_cost"
+      },
+      {
+       "header": "Herleitung",
+       "field": "derivation",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "id": "insel",
+       "header": "Im gewählten Szenario",
+       "formula_field": "insel_f",
+       "field": "insel_f",
+       "emphasis": "support",
+       "group": "sc",
+       "width": 10
+      },
+      {
+       "repeat": "scenarios",
+       "columns": [
+        {
+         "id": "in_{s.id}",
+         "header": "In {s.label}",
+         "formula_field": "in_f.{s.id}",
+         "field": "in_f.{s.id}",
+         "emphasis": "support",
+         "group": "sc",
+         "width": 10
+        }
+       ]
+      },
+      {
+       "header": "Fundstellen",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "sparse": true,
+       "emphasis": "support",
+       "edition": "full",
+       "width": 36
+      }
+     ]
+    },
+    {
+     "name": "Szenarien",
+     "type": "overview",
+     "class": "overview",
+     "when": "scenario_mode",
+     "title": "Szenarien: Aufwand und Kosten je Szenario",
+     "readme": "Je Szenario (Option und Zeilenklassen): {target.platform}-Entwicklung, Einsparung, Zuschläge PM, SA, BA und QA, feste Phasen; {estimation.integration_platform}-Entwicklung mit denselben Zuschlägen; Gesamtaufwand und Kosten - alles Formeln über das Blatt Zuschlaege_und_Phasen",
+     "when_set": [
+      {
+       "when": "!is",
+       "set": {
+        "readme": "Je Szenario (Option und Zeilenklassen): Entwicklung, Einsparung, Zuschläge PM, SA, BA und QA, feste Phasen, Gesamtaufwand und Kosten - alles Formeln über das Blatt Zuschlaege_und_Phasen"
+       }
+      }
+     ],
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "{target.platform} je Szenario ({estimation.unit_short.de})",
+       "row_header": "Position",
+       "row_values_from": "scenario_lines.platform",
+       "total_label": "{target.platform} gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}",
+           "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},\"{s.label}\",{rng:Zuschlaege_und_Phasen.area},\"{target.platform}\",{rng:Zuschlaege_und_Phasen.line},{row})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "is",
+       "title": "{estimation.integration_platform} je Szenario ({estimation.unit_short.de})",
+       "row_header": "Position",
+       "row_values_from": "scenario_lines.is",
+       "total_label": "{estimation.integration_platform} gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}",
+           "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},\"{s.label}\",{rng:Zuschlaege_und_Phasen.area},\"{estimation.integration_platform}\",{rng:Zuschlaege_und_Phasen.line},{row})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "id": "sc",
+       "title": "Gesamt je Szenario",
+       "row_header": "Szenario",
+       "row_values_from": "scenarios.label",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Gesamtaufwand je Szenario ({estimation.unit_short.de})"
+       },
+       "columns": [
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "{target.platform} ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{target.platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{estimation.integration_platform} ({estimation.unit_short.de})",
+         "when": "is",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Szenarien",
+     "type": "table",
+     "dataset": "sys_scenarios",
+     "table_name": "ScenarioSystems",
+     "when": "system_multi",
+     "readme": "Je Szenario und System: Entwicklung, Zuschläge, feste Phasen, Gesamtaufwand und Kosten, davon bedingt und davon Zwischenlösung - Formeln über die Blätter Zuschlaege_und_Phasen und Schaetzung",
+     "columns": [
+      {
+       "id": "scenario",
+       "header": "Szenario",
+       "field": "scenario",
+       "width": 20
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 20
+      },
+      {
+       "id": "dev",
+       "header": "Entwicklung ({estimation.unit_short.de})",
+       "formula_field": "dev_f",
+       "field": "dev_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "sur",
+       "header": "Zuschläge ({estimation.unit_short.de})",
+       "formula_field": "sur_f",
+       "field": "sur_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "ph",
+       "header": "Feste Phasen ({estimation.unit_short.de})",
+       "formula_field": "ph_f",
+       "field": "ph_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "pd",
+       "header": "Gesamt ({estimation.unit_short.de})",
+       "formula_field": "pd_f",
+       "field": "pd_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "cost",
+       "header": "Kosten ({estimation.currency})",
+       "formula": "={cell:pd}*{p:Tagessatz}",
+       "number_format": "#,##0",
+       "width": 12,
+       "when": "!hide_cost"
+      },
+      {
+       "id": "cond",
+       "header": "davon bedingt ({estimation.unit_short.de})",
+       "formula_field": "cond_f",
+       "field": "cond_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "interim",
+       "header": "davon Zwischenlösung ({estimation.unit_short.de})",
+       "formula_field": "interim_f",
+       "field": "interim_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      }
+     ]
+    },
+    {
+     "name": "Summen",
+     "type": "overview",
+     "class": "overview",
+     "title": "Summen je Option, je Epic und je Release",
+     "readme": "Aufbau der Summe je Option (Entwicklung, Zuschläge, feste Phasen, Gesamt, Kosten) und die Entwicklung je Epic und je Release - alles Formeln",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Aufbau je Option",
+       "row_header": "Option",
+       "rows_are": "options",
+       "total": false,
+       "chart": false,
+       "columns": [
+        {
+         "header": "Entwicklung ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Zuschläge ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Feste Phasen ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:phase|blk}\")+SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "Über der Sprintgrenze",
+         "formula": "=COUNTIF({rng:Schaetzung.flag_{o.id}},\"{L:_not_sprint}\")+COUNTIF({rng:Schaetzung.flag_{o.id}},\"{L:_cut}\")"
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "when": "scenario_mode",
+       "title": "Aufbau je Szenario",
+       "row_header": "Szenario",
+       "row_values_from": "scenarios.label",
+       "total": false,
+       "chart": false,
+       "columns": [
+        {
+         "header": "{target.platform}: Entwicklung ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{target.platform}\",{rng:Zuschlaege_und_Phasen.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Einsparung ({estimation.unit_short.de})",
+         "when": "refactoring",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:saving|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{target.platform}: Zuschläge ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{target.platform}\",{rng:Zuschlaege_und_Phasen.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Feste Phasen ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:phase|blk}\")+SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{target.platform} gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{target.platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{estimation.integration_platform} gesamt ({estimation.unit_short.de})",
+         "when": "is",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.cost})",
+         "number_format": "#,##0"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "title": "Entwicklung je Epic",
+       "row_header": "Epic",
+       "row_values_from": "estimation.epic",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "options",
+         "columns": [
+          {
+           "header": "{o.label}: Entwicklung ({estimation.unit_short.de})",
+           "formula": "=SUMIF({rng:Schaetzung.epic},{row},{rng:Schaetzung.pd_{o.id}})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "title": "Entwicklung je Release",
+       "row_header": "Release",
+       "row_values_from": "estimation.release",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "options",
+         "columns": [
+          {
+           "header": "{o.label}: Entwicklung ({estimation.unit_short.de})",
+           "formula": "=SUMIF({rng:Schaetzung.release},{row},{rng:Schaetzung.pd_{o.id}})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "when": "scenario_mode",
+       "title": "Entwicklung je Epic",
+       "row_header": "Epic",
+       "row_values_from": "estimation.epic",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}: Entwicklung ({estimation.unit_short.de})",
+           "formula": "={s.f_epic}",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "scenario_mode",
+       "title": "Entwicklung je Release",
+       "row_header": "Release",
+       "row_values_from": "estimation.release",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}: Entwicklung ({estimation.unit_short.de})",
+           "formula": "={s.f_release}",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "row_classes",
+       "title": "Entwicklung je Zeilenklasse",
+       "row_header": "Zeilenklasse",
+       "row_values_from": "classes.label",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}: Entwicklung ({estimation.unit_short.de})",
+           "formula": "={s.f_class}",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "title": "Summen je Szenario, je Epic, je Release und je Zeilenklasse",
+        "readme": "Aufbau der Summe je Szenario (Entwicklung, Einsparung, Zuschläge, feste Phasen, {estimation.integration_platform}, Gesamt, Kosten) aus dem Blatt Zuschlaege_und_Phasen und die Entwicklung je Szenario nach Epic, Release und Zeilenklasse (abzüglich der Einsparung) - alles Formeln"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Summen",
+     "type": "overview",
+     "class": "overview",
+     "when": "system_mode",
+     "title": "Summen je System, Release und Epic",
+     "readme": "Für das gewählte Szenario (Blatt Parameter): Aufbau je System (Entwicklung mit Spanne, Zuschläge, feste Phasen, Gesamt, Kosten, davon bedingt, davon Zwischenlösung, offene Eingaben), Entwicklung je Release und System und je Epic und System; mit mehreren Szenarien der Gesamtaufwand je System und Szenario; der Abgleich der Kundenlisten mit der gesamten Entwicklung - alles Formeln",
+     "blocks": [
+      {
+       "type": "kv",
+       "rows": [
+        {
+         "label": "Gewähltes Szenario (Blatt Parameter)",
+         "formula": "={p:Szenario}"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "id": "sys",
+       "title": "Aufbau je System im gewählten Szenario",
+       "row_header": "System",
+       "row_values_from": "sum_systems.label",
+       "total_label": "Gesamt",
+       "chart": {
+        "type": "bar",
+        "column": 4,
+        "title": "Gesamtaufwand je System ({estimation.unit_short.de})"
+       },
+       "columns": [
+        {
+         "header": "Entwicklung ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.system},{row},{rng:Zuschlaege_und_Phasen.insel},1,{rng:Zuschlaege_und_Phasen.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Zuschläge ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.system},{row},{rng:Zuschlaege_und_Phasen.insel},1,{rng:Zuschlaege_und_Phasen.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Feste Phasen ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.system},{row},{rng:Zuschlaege_und_Phasen.insel},1,{rng:Zuschlaege_und_Phasen.block},\"{L:phase|blk}\")+SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.system},{row},{rng:Zuschlaege_und_Phasen.insel},1,{rng:Zuschlaege_und_Phasen.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.system},{row},{rng:Zuschlaege_und_Phasen.insel},1)",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Kosten ({estimation.currency})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.cost},{rng:Zuschlaege_und_Phasen.system},{row},{rng:Zuschlaege_und_Phasen.insel},1)",
+         "number_format": "#,##0",
+         "when": "!hide_cost"
+        },
+        {
+         "header": "Entwicklung min ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd_min},{rng:Schaetzung.system},{row},{rng:Schaetzung.insel},1)",
+         "number_format": "#,##0.0",
+         "when": "range"
+        },
+        {
+         "header": "Entwicklung max ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd_max},{rng:Schaetzung.system},{row},{rng:Schaetzung.insel},1)",
+         "number_format": "#,##0.0",
+         "when": "range"
+        },
+        {
+         "header": "davon bedingt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.system},{row},{rng:Schaetzung.insel},1,{rng:Schaetzung.condition},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "davon Zwischenlösung ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.system},{row},{rng:Schaetzung.insel},1,{rng:Schaetzung.interim},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Offene Eingaben",
+         "formula": "=COUNTIFS({rng:Schaetzung.system},{row},{rng:Schaetzung.pd},\"\")"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "title": "Entwicklung je Release und System im gewählten Szenario",
+       "row_header": "Release",
+       "row_values_from": "wps.release",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "header": "{y.label} ({estimation.unit_short.de})",
+           "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.release},{row},{rng:Schaetzung.system},\"{y.q}\",{rng:Schaetzung.insel},1)",
+           "number_format": "#,##0.0"
+          }
+         ]
+        },
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.release},{row},{rng:Schaetzung.insel},1)",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "davon bedingt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.release},{row},{rng:Schaetzung.insel},1,{rng:Schaetzung.condition},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "davon Zwischenlösung ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.release},{row},{rng:Schaetzung.insel},1,{rng:Schaetzung.interim},\"<>\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "title": "Entwicklung je Epic und System im gewählten Szenario",
+       "row_header": "Epic",
+       "row_values_from": "wps.epic",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "header": "{y.label} ({estimation.unit_short.de})",
+           "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.epic},{row},{rng:Schaetzung.system},\"{y.q}\",{rng:Schaetzung.insel},1)",
+           "number_format": "#,##0.0"
+          }
+         ]
+        },
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.epic},{row},{rng:Schaetzung.insel},1)",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "davon bedingt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.epic},{row},{rng:Schaetzung.insel},1,{rng:Schaetzung.condition},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "davon Zwischenlösung ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.epic},{row},{rng:Schaetzung.insel},1,{rng:Schaetzung.interim},\"<>\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "system_multi",
+       "title": "Gesamtaufwand je System und Szenario ({estimation.unit_short.de})",
+       "row_header": "System",
+       "row_values_from": "sum_systems.label",
+       "total_label": "Gesamt",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}",
+           "formula": "=SUMIFS({rng:Szenarien.pd},{rng:Szenarien.system},{row},{rng:Szenarien.scenario},\"{s.q}\")",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "components",
+       "title": "Zugesagte Komponenten im gewählten Szenario",
+       "row_header": "Komponente",
+       "row_values_from": "components.label",
+       "total": false,
+       "chart": false,
+       "columns": [
+        {
+         "header": "System",
+         "formula": "=INDEX({pt:components.system},MATCH({row},{pt:components.component},0))"
+        },
+        {
+         "header": "Gesamtaufwand des Systems ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.system},INDEX({pt:components.system},MATCH({row},{pt:components.component},0)),{rng:Zuschlaege_und_Phasen.insel},1)",
+         "number_format": "#,##0.0"
+        }
+       ]
+      },
+      {
+       "type": "kv",
+       "title": "Abgleich: Kundenlisten und weitere Zeilen ergeben die gesamte Entwicklung",
+       "rows": [
+        {
+         "repeat": "passthrough",
+         "rows": [
+          {
+           "label": "Liste „{p.sheet}“: Entwicklung ({estimation.unit_short.de})",
+           "formula": "=SUM({rng:{p.name}.total})"
+          }
+         ]
+        },
+        {
+         "when": "other_rows",
+         "label": "Weitere Zeilen: Entwicklung ({estimation.unit_short.de})",
+         "formula": "=SUM({rng:Weitere_Zeilen.total})"
+        },
+        {
+         "label": "Entwicklung gesamt (Blatt Schaetzung) ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.insel},1)"
+        },
+        {
+         "repeat": "selsc",
+         "rows": [
+          {
+           "label": "Abweichung (muss 0 sein)",
+           "formula": "=SUMIFS({rng:Schaetzung.pd},{rng:Schaetzung.insel},1)-({f.recon})"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Vergleich",
+     "type": "overview",
+     "class": "overview",
+     "title": "Optionen im Vergleich",
+     "readme": "Die Optionen nebeneinander: Gesamtaufwand, Kosten und ihre Bestandteile, mit Diagramm",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "cmp",
+       "title": "Gesamtaufwand und Kosten je Option",
+       "row_header": "Option",
+       "rows_are": "options",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Gesamtaufwand je Option ({estimation.unit_short.de})"
+       },
+       "columns": [
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "Entwicklung ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Zuschläge ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Feste Phasen ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:phase|blk}\")+SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.option},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "id": "cmp",
+       "when": "scenario_mode",
+       "title": "Gesamtaufwand und Kosten je Szenario",
+       "row_header": "Szenario",
+       "row_values_from": "scenarios.label",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Gesamtaufwand je Szenario ({estimation.unit_short.de})"
+       },
+       "columns": [
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "{target.platform} gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{target.platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{estimation.integration_platform} gesamt ({estimation.unit_short.de})",
+         "when": "is",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Feste Phasen ({estimation.unit_short.de})",
+         "formula": "=SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:phase|blk}\")+SUMIFS({rng:Zuschlaege_und_Phasen.pd},{rng:Zuschlaege_und_Phasen.scenario},{row},{rng:Zuschlaege_und_Phasen.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "title": "Szenarien im Vergleich",
+        "readme": "Die Szenarien nebeneinander: Gesamtaufwand, Kosten und ihre Bestandteile, mit Diagramm (dieselben Zeilen wie Blatt Szenarien)"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Vergleich",
+     "type": "overview",
+     "class": "overview",
+     "when": "system_multi",
+     "title": "Szenarien im Vergleich",
+     "readme": "Die Szenarien nebeneinander: Gesamtaufwand, Kosten, ihre Bestandteile und der Aufwand je System - welche Systeme den Unterschied treiben -, mit Diagramm (Formeln über das Blatt Szenarien)",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "cmp",
+       "title": "Gesamtaufwand und Kosten je Szenario",
+       "row_header": "Szenario",
+       "row_values_from": "sys_scenario_rows.label",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Gesamtaufwand je Szenario ({estimation.unit_short.de})"
+       },
+       "columns": [
+        {
+         "header": "Gesamt ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},{row},{rng:Szenarien.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Kosten ({estimation.currency})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},{row},{rng:Szenarien.cost})",
+         "number_format": "#,##0",
+         "when": "!hide_cost"
+        },
+        {
+         "header": "Entwicklung ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},{row},{rng:Szenarien.dev})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Zuschläge ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},{row},{rng:Szenarien.sur})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Feste Phasen ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},{row},{rng:Szenarien.ph})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "davon bedingt ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},{row},{rng:Szenarien.cond})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "davon Zwischenlösung ({estimation.unit_short.de})",
+         "formula": "=SUMIF({rng:Szenarien.scenario},{row},{rng:Szenarien.interim})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "header": "{y.label} ({estimation.unit_short.de})",
+           "formula": "=SUMIFS({rng:Szenarien.pd},{rng:Szenarien.scenario},{row},{rng:Szenarien.system},\"{y.q}\")",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Vollstaendigkeit",
+     "type": "table",
+     "dataset": "completeness",
+     "table_name": "Completeness",
+     "when": "system_mode",
+     "readme": "Ist alles erfasst? Jede Zeile hat ein Arbeitspaket oder ist begründet ohne System; jedes Schnittstellenende an einem System dieser Schätzung hat ein Arbeitspaket; offene Eingaben anderer Eigentümer; Lücken (in einem System nicht lösbar) und wie entschieden wurde",
+     "columns": [
+      {
+       "header": "Prüfung",
+       "field": "check_label",
+       "width": 20
+      },
+      {
+       "id": "row",
+       "header": "Zeile",
+       "field": "row",
+       "width": 11
+      },
+      {
+       "header": "Titel",
+       "field": "title",
+       "wrap": true,
+       "verbatim": true,
+       "width": 26
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "sparse": true,
+       "width": 18
+      },
+      {
+       "header": "Detail",
+       "field": "detail",
+       "wrap": true,
+       "sparse": true,
+       "width": 40
+      },
+      {
+       "header": "Entscheidung",
+       "field": "decision",
+       "wrap": true,
+       "sparse": true,
+       "width": 40
+      },
+      {
+       "id": "count",
+       "header": "Arbeitspakete",
+       "field": "count_f",
+       "formula_field": "count_f",
+       "width": 12
+      },
+      {
+       "id": "status",
+       "header": "Status",
+       "field": "status",
+       "formula_field": "status_f",
+       "emphasis": "decision",
+       "label_ctx": "chk",
+       "width": 18,
+       "status": {
+        "ok": "standard",
+        "filled": "standard",
+        "missing": "rebuild",
+        "open": "rework",
+        "none": "neutral",
+        "removed": "neutral",
+        "route": "standard",
+        "route-external": "assumption",
+        "overrule": "rework",
+        "reduce": "assumption"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Abgrenzungen",
+     "type": "table",
+     "dataset": "exclusions",
+     "table_name": "Exclusions",
+     "readme": "Was keine Zahl dieser Datei enthält (Lizenzen, Arbeiten auf ERP- oder S/4-Seite, Hosting, ...) und wovon eine Zahl abhängt - mit der Wirkung, falls es nicht gilt",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 8
+      },
+      {
+       "header": "Art",
+       "field": "kind",
+       "label": true,
+       "width": 13,
+       "emphasis": "decision",
+       "status": {
+        "dependency": "rework",
+        "exclusion": "neutral"
+       }
+      },
+      {
+       "header": "Abgrenzung",
+       "field": "assumption",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Wirkung auf die Schätzung",
+       "field": "effect",
+       "width": 50,
+       "wrap": true
+      },
+      {
+       "header": "Anforderungen",
+       "field": "requirement_ids",
+       "sep": ", ",
+       "width": 22,
+       "wrap": true
+      },
+      {
+       "header": "Gilt für",
+       "field": "scope",
+       "width": 20
+      }
+     ]
+    },
+    {
+     "name": "Risiken",
+     "type": "table",
+     "dataset": "risks",
+     "row_key": "id",
+     "table_name": "Risks",
+     "readme": "Was eine Summe bewegen oder eine Option blockieren kann - qualitativ, ohne Zuschlag, mit Gegenmaßnahme",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 8
+      },
+      {
+       "header": "Risiko",
+       "field": "risk",
+       "width": 50,
+       "wrap": true
+      },
+      {
+       "header": "Auswirkung",
+       "field": "impact",
+       "label": true,
+       "width": 11,
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "neutral"
+       }
+      },
+      {
+       "header": "Eintrittswahrscheinlichkeit",
+       "field": "likelihood",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Optionen",
+       "field": "options",
+       "sep": ", ",
+       "width": 16
+      },
+      {
+       "header": "Betrifft",
+       "field": "affected",
+       "sep": ", ",
+       "width": 18,
+       "wrap": true
+      },
+      {
+       "header": "Gegenmaßnahme",
+       "field": "mitigation",
+       "width": 50,
+       "wrap": true
+      },
+      {
+       "header": "Nachweis",
+       "field": "evidence",
+       "width": 40,
+       "wrap": true,
+       "evidence": true,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Aussagen",
+     "type": "claims",
+     "scopes": "all",
+     "readme": "Jede Aussage dieser Datei mit Nachweis und Bewertung"
+    }
+   ],
+   "when_set": [
+    {
+     "when": "scenario_mode",
+     "set": {
+      "resolve_handover": null,
+      "code_locators": false,
+      "grundlage_refs": true,
+      "handover_basis": [
+       "requirements-coverage",
+       "target-readiness",
+       "customization-depth",
+       "code-inventory"
+      ],
+      "purpose": "Jede Anforderung der Kundenliste und jede technische Migrations- und Refactoring-Zeile je Lösungsoption geschätzt: das Vorgehen, eine {estimation.size_term.de}-Größe mit Herleitung und Grundlage, der Aufwand aus der editierbaren Größenzuordnung - für {target.platform} und {estimation.integration_platform} getrennt -, darauf die Zuschläge PM, SA, BA und QA und die festen Phasen je Szenario; alle Summen und Kosten als Formel."
+     }
+    },
+    {
+     "when": "system_mode",
+     "set": {
+      "resolve_handover": null,
+      "code_locators": false,
+      "grundlage_refs": true,
+      "handover_basis": [
+       "requirements-coverage",
+       "target-readiness",
+       "customization-depth",
+       "code-inventory"
+      ],
+      "title": "Aufwandsschätzung je System",
+      "purpose": "Jede Anforderung, die ein System dieser Lösung berührt, als Arbeitspaket je System und Option geschätzt: Ausgangslage, Abdeckung, Vorgehen, eine {estimation.size_term.de}-Größe mit Herleitung und Grundlage, der Aufwand aus der editierbaren Größenzuordnung mit Spanne; Systeme anderer Eigentümer als leere Eingabezellen; je System und Option die Zuschläge und festen Phasen; die Listen des Kunden mit dem Aufwand je System daneben - alle Summen und Kosten als Formel.",
+      "sources_client": "Die Listen des Kunden wie erhalten; die Auswirkung jeder Zeile je System; je Arbeitspaket eine Schätzung gegen die Dokumentation des Herstellers; die Entscheidungen zu Lücken; die konsolidierten Phasen, Abgrenzungen und Risiken; verifizierte Technologiefakten.",
+      "extra": "Größen sind {estimation.size_term.de}-Größen; der Aufwand in {estimation.unit_short.de} folgt aus der Zuordnung auf dem Blatt Parameter, ebenso die Spanne, die Zuschläge je System und Option, der Tagessatz und das gezeigte Szenario. Einen Wert dort geändert, und jede Summe, alle Kosten und jedes Diagramm folgt. Eingaben anderer Eigentümer (leere, hinterlegte Zellen auf dem Blatt Schaetzung) zählen in jeder Summe, sobald sie eingetragen sind."
+     }
+    }
+   ]
+  }
+ },
+ "common": {
+  "readme": {
+   "basis_handover": "„Code-Analyse · <Id>“ – eine Zeile der freigegebenen Code-Analyse des heutigen Shops (die Anforderung, Aufgabe oder Einheit, die sie beschreibt); die Stellen im Code stehen dort, nicht in dieser Datei",
+   "when_set": [
+    {
+     "when": "scenario_mode",
+     "set": {
+      "glossary_text": "Standard = dokumentierte Fähigkeit des Herstellerprodukts in der genannten Version. Custom = für {engagement.client} gebaut oder zu bauen. Code-Analyse = die freigegebene Analyse des heutigen Shops; die Grundlage nennt die Zeile, auf der eine Schätzung beruht (Anforderung, Aufgabe oder Einheit)."
+     }
+    },
+    {
+     "when": "system_mode",
+     "set": {
+      "glossary_text": "Standard = dokumentierte Fähigkeit des Herstellerprodukts in der genannten Version. Arbeitspaket = eine Anforderung in einem System und einer Option. Lücke = in diesem System nicht lösbar; wohin die Arbeit geht, steht auf dem Blatt Vollstaendigkeit. Szenario = je System eine Option."
+     }
+    }
+   ]
+  }
+ }
+}

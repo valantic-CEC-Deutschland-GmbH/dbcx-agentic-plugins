@@ -1,0 +1,708 @@
+{
+ "_readme": [
+  "Excel deliverable of the tech-scoring method (English). One workbook: D1 Technology scoring and shortlist.",
+  "Every aggregate is a formula: the weights on the Parameters sheet drive the weighted totals on Ranking and Shortlist through SUMPRODUCT, so re-weighting a criterion re-ranks the technologies live.",
+  "Sheet Parameters is a TABLE (not the engine's `parameters` sheet type) because the criteria come from the run configuration, not from this spec: its `value` column is the editable input, addressed from formulas by INDEX/MATCH on the `key` column.",
+  "The consolidation's Calibration table is deliberately NOT exported: it records how scores were aligned internally and is not client-facing."
+ ],
+ "deliverables": {
+  "D1": {
+   "title": "Technology scoring and shortlist",
+   "requires": [
+    "scopes"
+   ],
+   "purpose": "Which technologies fit {engagement.client}'s strategic context, guardrails and requirements, how strongly, and which of them go on the shortlist. Every criterion score is an assessment measured against a statement of {engagement.client} and documented in the vendor documentation; every capability is a fact for the named version or plan. The weights are editable on the sheet Parameters - totals, ranks and the shortlist recalculate from them.",
+   "sources": "analysis/scopes/<technology>.md (one scoring per technology), analysis/consolidated/SHORTLIST.md (calibration, ranking, shortlist, guardrails), state/requirements.json",
+   "extra": "The weighted total is the weighted average of the criterion scores on the scale 0-10 (SUMPRODUCT of score and weight, divided by the sum of the weights of the scored criteria). Change a weight on Parameters and every total, rank and shortlist flag follows. A guardrail criterion scored below the guardrail floor counts as a guardrail hit.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "KPIs (formulas over the detail sheets) and the assessment text",
+     "kpis": [
+      {
+       "label": "Technologies scored",
+       "formula": "=IFERROR(SUMPRODUCT(({rng:Scores.technology}<>\"\")/COUNTIF({rng:Scores.technology},{rng:Scores.technology}&\"\")),0)",
+       "note": "distinct technologies with scored criteria (sheet Scores)",
+       "id": "technologies"
+      },
+      {
+       "label": "Technologies in the ranking",
+       "formula": "=COUNTA({rng:Shortlist.technology})",
+       "note": "one row per technology on the sheet Shortlist",
+       "id": "ranked"
+      },
+      {
+       "label": "On the shortlist",
+       "formula": "=COUNTIF({rng:Shortlist.shortlist_formula},\"{L:true}\")",
+       "note": "the best entries by weighted total, as many as the shortlist size on Parameters allows",
+       "id": "shortlisted"
+      },
+      {
+       "label": "Leading technology",
+       "formula": "=IFERROR(INDEX({rng:Shortlist.technology},MATCH(MAX({rng:Shortlist.weighted}),{rng:Shortlist.weighted},0)),\"\")",
+       "note": "highest weighted total with the weights currently on Parameters",
+       "id": "leader"
+      },
+      {
+       "label": "Best weighted total",
+       "formula": "=IFERROR(ROUND(MAX({rng:Shortlist.weighted}),2)&\" / \"&INDEX({rng:Parameters.value},MATCH(\"{L:score_max}\",{rng:Parameters.key},0)),\"\")",
+       "note": "weighted average of the criterion scores on the scale 0-10",
+       "id": "best_total"
+      },
+      {
+       "label": "Weighted criteria",
+       "formula": "=COUNTIF({rng:Parameters.type},\"{L:criterion}\")",
+       "note": "criteria on the sheet Parameters (weights editable)",
+       "id": "criteria"
+      },
+      {
+       "label": "Sum of the weights",
+       "formula": "=SUMIF({rng:Parameters.type},\"{L:criterion}\",{rng:Parameters.value})",
+       "note": "the weights are shares of this sum - they need not add up to a fixed total",
+       "id": "weight_sum"
+      },
+      {
+       "label": "Scored criterion rows",
+       "formula": "=COUNTA({rng:Scores.criterion_id})",
+       "note": "technologies x criteria (sheet Scores), each with rationale and two evidence locators",
+       "id": "score_rows"
+      },
+      {
+       "label": "Technologies with a guardrail hit",
+       "formula": "=COUNTIF({rng:Shortlist.guardrail_hits},\">0\")",
+       "note": "a guardrail of {engagement.client} this technology cannot hold (sheet Guardrails)",
+       "id": "guardrail_techs"
+      },
+      {
+       "label": "Blocking risks",
+       "formula": "=COUNTIF({rng:Risks.impact},\"{L:blocker}\")",
+       "note": "risks that would break a guardrail or the date (sheet Risks)",
+       "id": "blockers"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "shortlisted",
+       "status": "standard",
+       "label": "on the shortlist"
+      },
+      {
+       "kpi": "technologies",
+       "status": "neutral",
+       "label": "technologies scored"
+      },
+      {
+       "kpi": "guardrail_techs",
+       "status": "rebuild",
+       "label": "technologies with a guardrail hit"
+      },
+      {
+       "kpi": "blockers",
+       "status": "rebuild",
+       "label": "blocking risks"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "ranking",
+       "title": "Weighted total per {unit.noun}"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Parameters",
+     "type": "table",
+     "dataset": "parameters_rows",
+     "table_name": "Parameters",
+     "readme": "The criteria with their weights and the two settings of the model - the only cells meant to be edited. Every total, rank and shortlist flag recalculates from them.",
+     "columns": [
+      {
+       "header": "Key",
+       "field": "key",
+       "id": "key",
+       "width": 16,
+       "label": true
+      },
+      {
+       "header": "Criterion / setting",
+       "field": "name",
+       "id": "name",
+       "width": 40
+      },
+      {
+       "header": "Kind",
+       "field": "type",
+       "id": "type",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Weight / value (editable)",
+       "field": "value",
+       "id": "value",
+       "numeric": true,
+       "width": 14
+      },
+      {
+       "header": "Guardrail criterion",
+       "field": "guardrail",
+       "id": "guardrail",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Share of the weights",
+       "id": "share",
+       "formula": "=IF({cell:type}<>\"{L:criterion}\",\"\",IFERROR({cell:value}/SUMIF({rng:Parameters.type},\"{L:criterion}\",{rng:Parameters.value}),\"\"))",
+       "number_format": "0%",
+       "width": 12
+      },
+      {
+       "header": "Meaning",
+       "field": "meaning",
+       "wrap": true,
+       "width": 90
+      }
+     ],
+     "tab": "reference"
+    },
+    {
+     "name": "Scores",
+     "type": "table",
+     "dataset": "scores",
+     "table_name": "Scores",
+     "readme": "One row per technology and criterion: the score 0-10 with the mechanism in the rationale, the guardrail verdict and the basis; collapsed: the evidence on the client side and in the vendor documentation, the version or plan",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Criterion",
+       "field": "criterion_id",
+       "id": "criterion_id",
+       "width": 9
+      },
+      {
+       "header": "Criterion name",
+       "field": "criterion",
+       "id": "criterion",
+       "wrap": true,
+       "width": 30
+      },
+      {
+       "header": "Score 0-10",
+       "field": "score",
+       "id": "score",
+       "numeric": true,
+       "number_format": "0",
+       "validation": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+       ],
+       "scale": {
+        "min": 0,
+        "mid": 5,
+        "max": 10,
+        "min_color": "rebuild",
+        "mid_color": "rework",
+        "max_color": "standard"
+       },
+       "width": 11
+      },
+      {
+       "header": "Weight",
+       "id": "weight",
+       "formula": "=IFERROR(INDEX({rng:Parameters.value},MATCH({cell:criterion_id},{rng:Parameters.key},0)),0)",
+       "width": 8
+      },
+      {
+       "header": "Weighted points",
+       "id": "weighted",
+       "formula": "={cell:score}*{cell:weight}",
+       "width": 11
+      },
+      {
+       "header": "Guardrail hit",
+       "field": "guardrail_hit",
+       "id": "gr_hit",
+       "label": true,
+       "validation": [
+        "yes",
+        "no",
+        "not-applicable"
+       ],
+       "width": 12,
+       "emphasis": "decision",
+       "status": {
+        "yes": "rebuild",
+        "no": "standard"
+       }
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Rationale",
+       "field": "rationale",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Guardrail criterion",
+       "id": "gr_crit",
+       "formula": "=IFERROR(INDEX({rng:Parameters.guardrail},MATCH({cell:criterion_id},{rng:Parameters.key},0)),\"\")",
+       "width": 11,
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Client evidence",
+       "field": "client_evidence",
+       "width": 40,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Vendor evidence",
+       "field": "vendor_evidence",
+       "width": 40,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Version / plan",
+       "field": "version_or_plan",
+       "width": 20,
+       "emphasis": "support",
+       "group": "evidence"
+      },
+      {
+       "header": "Guardrail (formula)",
+       "id": "gr_formula",
+       "formula": "=IF({cell:gr_crit}<>\"{L:true}\",\"{L:not-applicable}\",IF({cell:score}<IFERROR(INDEX({rng:Parameters.value},MATCH(\"{L:guardrail_floor}\",{rng:Parameters.key},0)),0),\"{L:yes}\",\"{L:no}\"))",
+       "width": 12,
+       "internal": true
+      },
+      {
+       "header": "Check",
+       "id": "gr_check",
+       "formula": "=IF({cell:gr_formula}={cell:gr_hit},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "Confidence",
+       "field": "confidence",
+       "label": true,
+       "width": 10,
+       "internal": true
+      }
+     ],
+     "row_key": "row_id"
+    },
+    {
+     "name": "Ranking",
+     "type": "overview",
+     "title": "Weighted ranking - every column a formula over Scores and the weights on Parameters",
+     "readme": "The ranking: weighted total per technology (SUMPRODUCT of score and weight), guardrail hits, rank and shortlist flag, with the distribution as a chart",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Weighted total per {unit.noun}",
+       "row_header": "{unit.noun}",
+       "row_values_from": "scores.technology",
+       "total": false,
+       "columns": [
+        {
+         "header": "Weighted total (0-10)",
+         "formula": "=IFERROR(SUMPRODUCT(({rng:Scores.technology}={row})*{rng:Scores.score}*{rng:Scores.weight})/SUMPRODUCT(({rng:Scores.technology}={row})*{rng:Scores.weight}),\"\")"
+        },
+        {
+         "header": "Weighted points",
+         "formula": "=SUMPRODUCT(({rng:Scores.technology}={row})*{rng:Scores.score}*{rng:Scores.weight})"
+        },
+        {
+         "header": "Criteria scored",
+         "formula": "=COUNTIFS({rng:Scores.technology},{row})"
+        },
+        {
+         "header": "Guardrail hits",
+         "formula": "=SUMPRODUCT(({rng:Scores.technology}={row})*({rng:Scores.gr_hit}=\"{L:yes}\"))"
+        },
+        {
+         "header": "Scores below the guardrail floor",
+         "formula": "=SUMPRODUCT(({rng:Scores.technology}={row})*({rng:Scores.score}<>\"\")*({rng:Scores.score}<IFERROR(INDEX({rng:Parameters.value},MATCH(\"{L:guardrail_floor}\",{rng:Parameters.key},0)),0)))"
+        },
+        {
+         "header": "Rank",
+         "formula": "=IFERROR(INDEX({rng:Shortlist.rank_formula},MATCH({row},{rng:Shortlist.technology},0)),\"\")"
+        },
+        {
+         "header": "On the shortlist",
+         "formula": "=IFERROR(INDEX({rng:Shortlist.shortlist_formula},MATCH({row},{rng:Shortlist.technology},0)),\"\")"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "type": "bar",
+        "title": "Weighted total per {unit.noun}"
+       },
+       "id": "ranking"
+      }
+     ]
+    },
+    {
+     "name": "Shortlist",
+     "type": "table",
+     "dataset": "ranking",
+     "table_name": "Shortlist",
+     "readme": "The shortlist per technology: rank, shortlist flag and weighted total (all formulas over Scores and the weights on Parameters), guardrail hits, blocking risks, the fit statement and the explanation; collapsed: what carries the total and the evidence",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 22
+      },
+      {
+       "header": "Rank",
+       "id": "rank_formula",
+       "formula": "=IF({cell:weighted}=\"\",\"\",RANK({cell:weighted},{rng:Shortlist.weighted}))",
+       "number_format": "0",
+       "width": 8
+      },
+      {
+       "header": "On the shortlist",
+       "id": "shortlist_formula",
+       "formula": "=IF({cell:rank_formula}=\"\",\"\",IF({cell:rank_formula}<=IFERROR(INDEX({rng:Parameters.value},MATCH(\"{L:shortlist_size}\",{rng:Parameters.key},0)),3),\"{L:true}\",\"{L:false}\"))",
+       "width": 12,
+       "emphasis": "decision",
+       "status": {
+        "true": "standard",
+        "false": "neutral"
+       }
+      },
+      {
+       "header": "Weighted total (0-10)",
+       "id": "weighted",
+       "formula": "=IFERROR(SUMPRODUCT(({rng:Scores.technology}={cell:technology})*{rng:Scores.score}*{rng:Scores.weight})/SUMPRODUCT(({rng:Scores.technology}={cell:technology})*{rng:Scores.weight}),\"\")",
+       "number_format": "0.00",
+       "scale": {
+        "min": 0,
+        "mid": 5,
+        "max": 10,
+        "min_color": "rebuild",
+        "mid_color": "rework",
+        "max_color": "standard"
+       },
+       "width": 14
+      },
+      {
+       "header": "Guardrail hits",
+       "id": "guardrail_hits",
+       "formula": "=SUMPRODUCT(({rng:Scores.technology}={cell:technology})*({rng:Scores.gr_hit}=\"{L:yes}\"))",
+       "width": 11
+      },
+      {
+       "header": "Blocking risks",
+       "id": "blocking_risks",
+       "formula": "=COUNTIFS({rng:Risks.technology},{cell:technology},{rng:Risks.impact},\"{L:blocker}\")",
+       "width": 12
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Fit for {engagement.client}",
+       "field": "fit_statement",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "Explanation",
+       "field": "partner_explanation",
+       "wrap": true,
+       "width": 60
+      },
+      {
+       "header": "What carries the total",
+       "field": "weighted_total_note",
+       "width": 50,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "sep": "; ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Rank (assessed)",
+       "field": "rank",
+       "id": "rank_assessed",
+       "numeric": true,
+       "number_format": "0",
+       "width": 9,
+       "internal": true
+      },
+      {
+       "header": "Check",
+       "id": "rank_check",
+       "formula": "=IF({cell:rank_formula}={cell:rank_assessed},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      },
+      {
+       "header": "On the shortlist (assessed)",
+       "field": "shortlisted",
+       "id": "shortlisted_assessed",
+       "label": true,
+       "width": 12,
+       "internal": true
+      },
+      {
+       "header": "Check",
+       "id": "shortlist_check",
+       "formula": "=IF({cell:shortlist_formula}={cell:shortlisted_assessed},\"{L:_yes}\",\"{L:_check}\")",
+       "width": 8,
+       "internal": true
+      }
+     ],
+     "row_key": "technology"
+    },
+    {
+     "name": "Capabilities",
+     "type": "table",
+     "dataset": "capabilities",
+     "table_name": "Capabilities",
+     "readme": "The capability facts the scores rest on: what the technology offers for the named version or plan, the basis and notes; collapsed: the source",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Capability",
+       "field": "capability",
+       "id": "capability",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Available",
+       "field": "available",
+       "id": "available",
+       "label": true,
+       "width": 11,
+       "emphasis": "decision",
+       "status": {
+        "yes": "standard",
+        "partial": "rework",
+        "no": "rebuild",
+        "unknown": "neutral"
+       }
+      },
+      {
+       "header": "Version / plan",
+       "field": "version_or_plan",
+       "width": 22
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Notes",
+       "field": "notes",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Source",
+       "field": "locator",
+       "id": "locator",
+       "width": 50,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Source named (formula)",
+       "id": "verified",
+       "formula": "=IF({cell:locator}=\"\",\"{L:_no}\",\"{L:_yes}\")",
+       "width": 12,
+       "internal": true
+      }
+     ]
+    },
+    {
+     "name": "Guardrails",
+     "type": "table",
+     "dataset": "guardrails",
+     "table_name": "Guardrails",
+     "readme": "Every guardrail of {engagement.client} against every technology: can it be held, the score rows flagged as a guardrail hit, and the fact that decides it",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Guardrail",
+       "field": "guardrail",
+       "id": "guardrail",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Cannot be held",
+       "field": "hit",
+       "id": "hit",
+       "label": true,
+       "width": 12,
+       "emphasis": "decision",
+       "status": {
+        "yes": "rebuild",
+        "no": "standard",
+        "unclear": "rework"
+       }
+      },
+      {
+       "header": "Flagged score rows",
+       "id": "flagged",
+       "formula": "=SUMPRODUCT(({rng:Scores.technology}={cell:technology})*({rng:Scores.gr_hit}=\"{L:yes}\"))",
+       "width": 11
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Deciding fact",
+       "field": "note",
+       "wrap": true,
+       "width": 70
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "sep": "; ",
+       "width": 50,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Risks",
+     "type": "table",
+     "dataset": "risks",
+     "table_name": "Risks",
+     "readme": "What would put the decision, the date or the budget at risk if this technology were chosen, with mitigation and basis",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "technology",
+       "id": "technology",
+       "width": 20
+      },
+      {
+       "header": "Risk",
+       "field": "risk",
+       "id": "risk",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Impact",
+       "field": "impact",
+       "id": "impact",
+       "label": true,
+       "width": 10,
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "standard"
+       }
+      },
+      {
+       "header": "Affects criterion",
+       "field": "affects_criterion",
+       "width": 12
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 26,
+       "wrap": true
+      },
+      {
+       "header": "Mitigation",
+       "field": "mitigation",
+       "wrap": true,
+       "width": 50
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "width": 50,
+       "evidence": true,
+       "sep": "; ",
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "all",
+     "readme": "Every statement of this workbook with its evidence and the two independent review scores"
+    }
+   ],
+   "sources_client": "Strategy, guardrails and requirement list of {engagement.client}; vendor documentation of the evaluated technologies"
+  }
+ }
+}

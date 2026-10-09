@@ -1,0 +1,461 @@
+{
+ "_readme": [
+  "Analysis kinds of the requirements method: `inventory` = the source inventory and the epic structure (D1), `epic` = the requirements of ONE epic (one analyst per epic), `requirements_set` = the consolidated, renumbered set (SET -> D2).",
+  "The marker CLAIMS embeds the engine claims table. Templates and schemas are generated per run with `dbcx md_to_json --generate`.",
+  "Enum references resolve against the merged configuration: $requirements.types, $requirements.priorities, $requirements.statuses."
+ ],
+ "kinds": {
+  "inventory": {
+   "title": "Source inventory and epic structure (D1)",
+   "file": "source-inventory.md",
+   "output_dir": "analysis/inventory",
+   "id_prefix": "C-D1-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "status = draft | final; round = gauntlet round this version answers (0 = first version)",
+   "sections": [
+    {
+     "heading": "Corpus notes",
+     "key": "corpus_notes",
+     "type": "text",
+     "req": true,
+     "help": "What the client handed over and what it is worth as a requirements base: which workshops/documents/boards are covered, which sources contradict each other, which yielded no text (corpus/unextractable.md), what is missing for a complete requirement set (name it - a missing source is a client question, not a gap you fill by inference). 4-8 sentences for the client."
+    },
+    {
+     "heading": "Sources",
+     "key": "sources",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "title": {
+       "t": "s",
+       "req": true
+      },
+      "type": {
+       "t": "s",
+       "req": true
+      },
+      "date": "s",
+      "origin": {
+       "t": "s",
+       "req": true
+      },
+      "quality": {
+       "t": "s",
+       "req": true
+      },
+      "covers": {
+       "t": "s",
+       "req": true
+      },
+      "notes": "s"
+     },
+     "help": "one row per source in corpus/index.json - EVERY id, none left out (a source you consider irrelevant gets a row saying why in `notes`). id = SRC-nnn; type = the shape of the source (workshop notes, protocol, presentation, document, spreadsheet, longlist, miro board, diagram, mail, handover); date = the date the source carries (not the indexing date); origin = who produced it (workshop, department, stakeholder, vendor); quality = the extraction quality from corpus/index.json verbatim (good | partial ... | none ... | unextractable); covers = 1-2 sentences on what requirements-relevant content it carries, with the anchor range you read (e.g. `#s4-#s18`)"
+    },
+    {
+     "heading": "Epics",
+     "key": "epics",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "name": {
+       "t": "s",
+       "req": true
+      },
+      "title": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": "$requirements.types",
+       "req": true
+      },
+      "description": {
+       "t": "s",
+       "req": true
+      },
+      "sources": {
+       "t": "l",
+       "req": true
+      },
+      "estimated_requirements": {
+       "t": "i",
+       "req": true
+      },
+      "depends_on": "l",
+      "activation": {
+       "t": "s",
+       "enum": [
+        "active",
+        "out-of-scope"
+       ],
+       "req": true
+      },
+      "notes": "s"
+     },
+     "help": "the epic structure this run analyses - ONE ROW PER EPIC and one analyst per row. name = short kebab-case id without spaces (`checkout`, `erp-integration`) - it becomes the scope name, the file name and the agent name; title = the client-facing name; kind = functional (what the business can do) | technical (interfaces, platform, data, migration) | nfr (measurable qualities); description = what the epic covers and on how many source passages that rests; sources = the SRC ids that carry it (at least one - an epic no source carries is invented); estimated_requirements = expected number of requirement rows (drives the wave plan; <= 5 means light pass); depends_on = epic names this one integrates with or builds on (a technical epic depends on the functional epics it serves, so the functional epics run first); activation = active | out-of-scope (out-of-scope epics are not analysed - back it with a claim and a locator saying the client excluded it)"
+    },
+    {
+     "heading": "Coverage",
+     "key": "coverage",
+     "type": "kv",
+     "req": true,
+     "fields": {
+      "sources_total": {
+       "t": "i",
+       "req": true
+      },
+      "sources_unextractable": {
+       "t": "i",
+       "req": true
+      },
+      "sources_not_requirements_relevant": "i",
+      "epics_functional": {
+       "t": "i",
+       "req": true
+      },
+      "epics_technical": {
+       "t": "i",
+       "req": true
+      },
+      "epics_nfr": {
+       "t": "i",
+       "req": true
+      },
+      "estimated_requirements_total": {
+       "t": "i",
+       "req": true
+      },
+      "counting_rule": {
+       "t": "s",
+       "req": true
+      },
+      "gaps": {
+       "t": "s",
+       "req": true
+      },
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "the numbers of this inventory with their rule. counting_rule = what you counted and how (which ids are in, which are out, whether a revised source counts once); gaps = the topics a complete requirement set for this system needs and no source covers (they become client questions, never inferred requirements); evidence = corpus/index.json plus the locators behind the counts"
+    },
+    "CLAIMS"
+   ]
+  },
+  "epic": {
+   "title": "Epic requirements: <epic>",
+   "file": "epic-requirements.md",
+   "output_dir": "analysis/scopes",
+   "id_prefix": "C-<epic>-",
+   "head": {
+    "epic": {
+     "t": "s",
+     "req": true
+    },
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "epic = the scope name from the CONTEXT (kebab-case id); status = draft | final (the orchestrator sets final); round = gauntlet round this version answers (0 = first version)",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "req": true,
+     "help": "3-6 plain-language sentences for the client: what this epic covers, which sources carry it, how solid the base is (which parts rest on one passing remark), what the biggest open point is."
+    },
+    {
+     "heading": "Requirements",
+     "key": "requirements",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "req_id": {
+       "t": "s",
+       "req": true
+      },
+      "type": {
+       "t": "s",
+       "enum": "$requirements.types",
+       "req": true
+      },
+      "title": {
+       "t": "s",
+       "req": true
+      },
+      "description": {
+       "t": "s",
+       "req": true
+      },
+      "source_locators": {
+       "t": "l",
+       "req": true
+      },
+      "priority": {
+       "t": "s",
+       "enum": "$requirements.priorities",
+       "req": true
+      },
+      "release": "s",
+      "acceptance_hint": "s",
+      "catalogue_ref": "n",
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      },
+      "open_question": "s"
+     },
+     "help": "one requirement per row. req_id = FR-<epic-abbr>-NNN | TR-... | NFR-... (the consolidation renumbers globally). title = the capability in <= 10 words; description = the capability in the present tense, testable, in the client's vocabulary, no solution design. source_locators = at least ONE locator (SRC-nnn#p12 / #s7 / #para12 / #Sheet!R12 / #item:<id> / #L120 / #frame:<name>) or the literal `inferred` - and then the description names what it is inferred from and a claim covers it. priority = must | should | could as the source states it | unknown (never guessed). release = the release token the sources give (MVP, Phase 2, later, unknown). acceptance_hint = one observable outcome that would settle acceptance. catalogue_ref = the CAT-... entry this corresponds to, or empty. confidence = high (a source states it plainly) | medium (paraphrased from one passage) | low (visual, unverified, or a single passing remark). open_question = the question whose answer would change this row (also add it to the Open questions table)."
+    },
+    {
+     "heading": "Contradictions",
+     "key": "contradictions",
+     "type": "table",
+     "help": "where two sources of this epic say different things - never silently resolved. topic = what they disagree about; source_a / source_b = the two locators; what_differs = the difference in one sentence; proposed_resolution = which one you would follow and why (a proposal, not a decision) - every row here also gets an Open questions row addressed to the client",
+     "fields": {
+      "topic": {
+       "t": "s",
+       "req": true
+      },
+      "source_a": {
+       "t": "s",
+       "req": true
+      },
+      "source_b": {
+       "t": "s",
+       "req": true
+      },
+      "what_differs": {
+       "t": "s",
+       "req": true
+      },
+      "proposed_resolution": {
+       "t": "s",
+       "req": true
+      }
+     }
+    },
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": "s",
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "unresolvable"
+       ],
+       "req": true
+      },
+      "answer": "n"
+     },
+     "help": "to = `client` for everything only the client can answer (they reach the client question list and the Open_Questions sheet of every workbook), or another epic name for a question the neighbouring epic owns - never answered by reading the neighbour's sources yourself. why_needed = which requirement row or priority the answer moves"
+    },
+    "CLAIMS"
+   ]
+  },
+  "requirements_set": {
+   "title": "Consolidated requirements set (SET)",
+   "file": "requirements-set.md",
+   "output_dir": "analysis/consolidated",
+   "id_prefix": "C-SET-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i",
+    "system_type": {
+     "t": "s",
+     "req": true
+    }
+   },
+   "head_help": "system_type = the SYSTEM TYPE from the CONTEXT (the system these requirements are for)",
+   "sections": [
+    {
+     "heading": "Requirements",
+     "key": "requirements",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "req_id": {
+       "t": "s",
+       "req": true
+      },
+      "epic": {
+       "t": "s",
+       "req": true
+      },
+      "type": {
+       "t": "s",
+       "enum": "$requirements.types",
+       "req": true
+      },
+      "title": {
+       "t": "s",
+       "req": true
+      },
+      "description": {
+       "t": "s",
+       "req": true
+      },
+      "source_locators": {
+       "t": "l",
+       "req": true
+      },
+      "priority": {
+       "t": "s",
+       "enum": "$requirements.priorities",
+       "req": true
+      },
+      "release": "s",
+      "acceptance_hint": "s",
+      "catalogue_ref": "n",
+      "duplicates_of": "n",
+      "status": {
+       "t": "s",
+       "enum": "$requirements.statuses",
+       "req": true
+      }
+     },
+     "help": "the final set, one row per requirement, globally renumbered FR-NNN / TR-NNN / NFR-NNN in epic order. epic = the epic id from the source inventory. source_locators = the UNION of the locators of every merged row, or the literal `inferred`. duplicates_of = the per-epic ids this row absorbed (so the epic analyses stay traceable). status = confirmed (a locator carries it) | inferred (no literal source - a claim states the inference) | question (it depends on an open client question; the question id belongs in the acceptance hint or the Open questions table)"
+    },
+    {
+     "heading": "Crosscheck",
+     "key": "crosscheck",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "functional_requirement": {
+       "t": "s",
+       "req": true
+      },
+      "technical_requirement": "n",
+      "relation": {
+       "t": "s",
+       "enum": [
+        "has-tr",
+        "missing-tr",
+        "orphan-tr"
+       ],
+       "req": true
+      },
+      "note": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "one row per functional requirement that crosses a system boundary and one row per technical requirement nothing needs. has-tr = the named technical requirement covers the interface; missing-tr = no technical requirement exists (technical_requirement empty; the note says which interface is missing and whether a client question or a new TR follows); orphan-tr = the technical requirement serves no functional requirement and no stated technical goal (functional_requirement = `none`; the note says whether it is an undocumented driver or an invented requirement)"
+    },
+    {
+     "heading": "Catalogue gaps",
+     "key": "catalogue_gaps",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "catalogue_id": {
+       "t": "s",
+       "req": true
+      },
+      "capability": {
+       "t": "s",
+       "req": true
+      },
+      "covered_by": "l",
+      "decision": {
+       "t": "s",
+       "enum": [
+        "in-scope",
+        "out-of-scope",
+        "question"
+       ],
+       "req": true
+      }
+     },
+     "help": "the gap check against the reference catalogue (CATALOGUE in the CONTEXT): one row per catalogue capability that no requirement covers. covered_by = the requirement ids that cover it (empty = nothing covers it). decision = in-scope (a requirement is added - name its id in covered_by), out-of-scope (the client's material excludes it - the note belongs in the capability text with the locator) or question (no source says anything - it becomes a client question). Without a configured catalogue this table holds ONE row stating that no reference catalogue was configured (catalogue_id `none`, decision `question`)"
+    },
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": "s",
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "unresolvable"
+       ],
+       "req": true
+      },
+      "answer": "n"
+     },
+     "help": "the client question list of the whole set: every open question of every epic that is still open, merged and de-duplicated, plus the questions the consolidation itself raises (contradictions across epics, catalogue decisions, missing interfaces). to = `client` for all of these. why_needed = which requirement ids or which priority the answer moves"
+    },
+    "CLAIMS"
+   ]
+  }
+ }
+}

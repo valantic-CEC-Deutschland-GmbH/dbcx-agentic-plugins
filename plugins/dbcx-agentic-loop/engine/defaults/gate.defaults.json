@@ -1,0 +1,19 @@
+{
+ "_readme": "Generic final-gate key questions (G4) for methods without their own `gate.key_questions`. Lookup per persona: run.json / engagement.json gate.key_questions.<persona> -> method.json gate.key_questions.<persona> -> method '*' -> this file <persona> -> this file '*'. deliverables: deliverable keys (D1, ...) or '*' for every enabled one. tags: the old dimension a question serves (understand | prove | act), kept for cross-run rollups only.",
+ "key_questions": {
+  "*": [
+   {"id": "K1", "deliverables": ["*"], "tags": ["understand", "act"],
+    "text": {"en": "What is the main result for my area, and which decision does it feed - visible on the management summary with a figure, its consequence and its basis?",
+             "de": "Was ist das Hauptergebnis für meinen Bereich, und welche Entscheidung stützt es – auf der Management Summary sichtbar mit Zahl, Konsequenz und Grundlage?"}},
+   {"id": "K2", "deliverables": ["*"], "tags": ["act"],
+    "text": {"en": "Can I find the rows that need action in my area - filterable, each with a verdict and a reason?",
+             "de": "Finde ich die Zeilen, bei denen in meinem Bereich etwas zu tun ist – filterbar, jede mit Urteil und Begründung?"}},
+   {"id": "K3", "deliverables": ["*"], "tags": ["prove"],
+    "text": {"en": "Can I trace every statement I would forward to its basis (code locator, vendor source or assumption) without asking the consultancy?",
+             "de": "Kann ich jede Aussage, die ich weitergeben würde, ohne Rückfrage bei der Beratung auf ihre Grundlage zurückführen (Code-Fundstelle, Herstellerquelle oder Annahme)?"}},
+   {"id": "K4", "deliverables": ["*"], "tags": ["prove", "act"],
+    "text": {"en": "Which assumptions carry the result, and what changes if one of them is wrong?",
+             "de": "Welche Annahmen tragen das Ergebnis, und was ändert sich, wenn eine davon nicht zutrifft?"}}
+  ]
+ }
+}

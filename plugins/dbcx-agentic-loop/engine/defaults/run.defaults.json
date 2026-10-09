@@ -1,0 +1,156 @@
+{
+ "_readme": "Engine defaults, method-neutral. Layered under: methods/<m>/method.json defaults <- knowledge packs <- <project>/engagement.json <- <run>/run.json. Do not put client data here.",
+ "engagement": {
+  "consultancy": "",
+  "client": "",
+  "client_context": "",
+  "title": "",
+  "run_title": ""
+ },
+ "languages": {
+  "deliverable": "de",
+  "chat": "en"
+ },
+ "models": {
+  "_readme": "Semantic model profiles. engine/defaults/model-profiles.json resolves each profile to a pinned provider model and reasoning effort when the brief is rendered. A run may override a role or profile under model_overrides without changing the workflow.",
+  "orchestrator": "orchestrator",
+  "analyst": "code_analysis",
+  "analyst_light": "light_analysis",
+  "consolidator": "deep_reasoning",
+  "critic_client": "code_analysis",
+  "gate": "balanced_review",
+  "researcher": "deep_reasoning",
+  "feature": "deep_reasoning",
+  "helper": "mechanical",
+  "critic_client_light": "balanced_review",
+  "progress": "light_analysis",
+  "critic_standard": "balanced_review",
+  "critic_standard_consolidation": "deep_reasoning",
+  "analyst_light_scopes": [],
+  "postpass": "light_analysis"
+ },
+ "model_overrides": {},
+ "activity": {
+  "_readme": "Live agent activity: the PreToolUse hook writes one line per sub-agent tool call to state/ACTIVITY.jsonl. An agent in flight without a sign of life (activity or output write) for stall_minutes shows as stalled on the dashboard and in `dbcx status verify` / `status inflight list`; A call still running (PreToolUse without its PostToolUse, e.g. a build) counts as busy, not stalled, up to max_call_minutes. The orchestrator decides what to do, nothing restarts on its own.",
+  "stall_minutes": 15,
+  "max_call_minutes": 60
+ },
+ "scoring": {
+  "pass_threshold": 8.0,
+  "max_gauntlet_rounds": 4,
+  "max_gate_rounds": 3,
+  "max_agents_per_wave": 3,
+  "critics": [
+   "client",
+   "standard"
+  ],
+  "gate_personas": [
+   "head_of_ecommerce",
+   "cto",
+   "head_of_it",
+   "head_of_marketing",
+   "product_owner"
+  ],
+  "max_claims": 40,
+  "max_claims_light": 10,
+  "max_missing_claims_per_round": 3,
+  "freeze_register_after_round": 2,
+  "_scoring_readme": "Incremental gauntlet: from round 2 the critics score only new/changed claims (hash of statement+evidence+target); unchanged claims that passed keep their score (score_aggregate carries it forward). Register frozen after freeze_register_after_round: later rounds fix, they do not add. Light pass: scopes the method's discover tool marks light (size < light_pass_size or method rule) or listed in light_pass_scopes; skip_scopes are not analysed at all. A verdict `false` (and `unsupported` with counter-evidence when block_unsupported_with_counter_evidence) blocks a pass regardless of score; a below-threshold share above max_below_threshold_share fails; a cross-critic spread >= critic_divergence_flag on one claim becomes an issue even on PASS; light-pass scopes run the light gauntlet (max_gauntlet_rounds_light rounds, critic_client_light); the client critic opens carried_evidence_sample evidence cells of carried claims per round. Atomic claims: md_to_json warns when a statement exceeds claim_max_statement_chars, carries more than claim_max_figures figures or names more than one target - one proposition, one figure with its basis, one sheet per claim; the incremental gauntlet then re-scores one atom instead of a paragraph.",
+  "max_gauntlet_rounds_light": 2,
+  "max_below_threshold_share": 0.2,
+  "block_unsupported_with_counter_evidence": true,
+  "critic_divergence_flag": 3,
+  "carried_evidence_sample": 5,
+  "light_pass_scopes": [],
+  "skip_scopes": [],
+  "light_pass_size": 1000,
+  "claim_max_statement_chars": 350,
+  "claim_max_figures": 2
+ },
+ "retrieval": {
+  "_readme": "corpus retrieval, chosen by the engine and the agents and never shown to the user. A unit whose mapped share of the corpus (state/RETRIEVAL.json) fits read_budget_tokens is read in full (strategy read), a larger one is worked search-first (strategy search). PROVISIONAL: 60000 is a first guess until the retrieval spike calibrates it on real corpora. Optional: topics (words added to every unit's map query), boost {\"<scope>|*\": [SRC id | input path prefix]} (sources always mapped to that unit).",
+  "read_budget_tokens": 60000
+ },
+ "human_input": {
+  "_readme": "Rulings intake and batched questions. release = live | batched: batched stores every question `dbcx questions add|import` registers with released false - the dashboard and the workbooks show released questions only, `dbcx questions release` releases a batch at a wave gate or phase end (`dbcx status next` prints it), and a final build refuses while one is unreleased. rulings = optional | required: required holds the first wave in `dbcx status next` until `dbcx rulings done|skip`; optional prints a recommendation line only.",
+  "release": "live",
+  "rulings": "optional"
+ },
+ "claims": {
+  "_readme": "Quote gate: quotes = off | warn | required. warn: `dbcx evidence quotes` checks every filled `quote` column against its locators and extract_claims shows the result in the critic pack (only when a claim carries a quote); required: every claim is checked, a fact claim whose quote is not found is a blocking defect and a claim without a quote counts toward scoring.max_imprecise_share (score_aggregate).",
+  "quotes": "warn"
+ },
+ "lint": {
+  "forbidden_terms": [
+   "round \\d",
+   "round-\\d",
+   "\\brounds?\\b",
+   "\\bcorrect(ed|ion|ions)\\b",
+   "post-pass",
+   "\\bcritics?\\b",
+   "gauntlet",
+   "orchestrator",
+   "\\banalysts?\\b",
+   "\\bsession \\d",
+   "re-scored",
+   "carried forward",
+   "\\bsupersedes\\b",
+   "\\bfix hint",
+   "STATUS\\.json",
+   "\\b(corrected|revised|amended|updated) (on |at )?20\\d\\d-\\d\\d-\\d\\d",
+   "\\b(previous|earlier|older|updated|revised|new) version of (this|the) (workbook|document|deliverable|analysis|report|sheet)",
+   "\\bversion history\\b",
+   "\\brevision \\d",
+   "\\bchanged since (the )?(last|previous)\\b",
+   "\\bv\\d+(\\.\\d+)* of (this|the) (workbook|document|deliverable)"
+  ],
+  "allow_terms": [
+   "sales status",
+   "order status",
+   "consignment status",
+   "approval status",
+   "superseded by",
+   "status table",
+   "deprecation status",
+   "status data",
+   "statuses",
+   "round trip",
+   "round-trip",
+   "roundtrip",
+   "rounds the",
+   "rounded",
+   "rounding",
+   "round robin",
+   "round-robin",
+   "year-round",
+   "all-round",
+   "platform version",
+   "target version",
+   "source version",
+   "version pair",
+   "version floor",
+   "api version",
+   "release version",
+   "versioned",
+   "version number",
+   "software version"
+  ],
+  "_readme": "dbcx lint_deliverable: process and versioning vocabulary that must not reach a client workbook (regex, case-insensitive) - a client sees one version-free deliverable that speaks about their landscape, requirements or technology, never about rounds, corrections, reviewers or earlier versions; allow_terms are domain phrases that are fine. Judgement columns are labelled '(assessed)' vs '(formula)' - never '(analyst)'."
+ },
+ "rules": {
+  "read_only_evidence": true,
+  "no_client_data_to_external_services": true,
+  "web_lookups": "only external standard documentation with generic queries (no client name, no scope names, no locators of internal evidence bases)",
+  "no_questions_to_user_during_run": true,
+  "do_not_run": []
+ },
+ "deliverables": {},
+ "handover": {
+  "import_dir": "input/handover",
+  "export_dir": "@project/handover"
+ },
+ "corpus": {
+  "dir": "@project/corpus",
+  "input_dir": "@project/input"
+ }
+}

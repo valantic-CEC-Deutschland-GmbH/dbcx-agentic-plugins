@@ -1,0 +1,8 @@
+{
+  "_readme": "SAP Customer Data Cloud wording for the tech-fit-estimation mechanism tokens (merged over the method labels when this pack is the run's platform pack).",
+  "module": "Product / package (Customer Identity, Customer Consent, CIAM for B2B)",
+  "app": "Pre-built integration / connector",
+  "setting": "Console configuration / policy",
+  "extension-point": "Extension / webhook / dataflow",
+  "custom-code": "Custom code (screen-set JavaScript, extension or webhook endpoint, integration)"
+}

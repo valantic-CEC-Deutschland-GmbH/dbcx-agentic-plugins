@@ -1,0 +1,59 @@
+{
+  "name": "_generic",
+  "display": "Generic (manifest folders)",
+  "roles": [
+    "source",
+    "target"
+  ],
+  "_readme": "Fallback pack: units = folders with a manifest file; no schema/DI/workflow signals; no standard knowledge. Use for smoke tests and as scaffold for new packs (dbcx pack new).",
+  "as_source": {
+    "platform": "Generic source platform",
+    "unit": {
+      "noun": "Module",
+      "noun_plural": "Modules",
+      "manifest_file": "composer.json",
+      "repo_roots": [
+        "src"
+      ],
+      "standard_dirs": [
+        "vendor"
+      ]
+    },
+    "do_not_run": [],
+    "snippets": {
+      "version_markers": "composer.lock / package.json / build files",
+      "active_units_config": "framework bundle/plugin registration files",
+      "package_sources": "composer.json require, package.json dependencies",
+      "override_mechanisms": "overridden = the standard implementation is replaced (DI override, preference, decorating service that replaces behaviour); extended = subclass/decorator without replacing; shadowed = same class name/namespace overlays vendor code",
+      "schema_sources": "entity/schema definition files and migrations of the unit",
+      "workflow_sources": "process/state-machine/flow definitions",
+      "data_script_sources": "fixtures, seeds, migrations, import scripts",
+      "read_order": "manifest, DI config, schema, routing, templates, data scripts, process definitions, admin config, src, tests (intent only)",
+      "hosting_constraints": "state assumptions that break on the target hosting model (file system, cron nodes, SMTP, server config)"
+    }
+  },
+  "as_target": {
+    "platform": "Generic target platform",
+    "api_name": "target API",
+    "content_model_name": {
+      "en": "content component",
+      "de": "Content-Komponente"
+    },
+    "default_frontend": "target storefront",
+    "snippets": {
+      "critic2_persona": "senior solution architect who has delivered many shops on the source platform and is certified on the target platform",
+      "docs_domains": "vendor documentation sites of source and target",
+      "best_practice": "extend via DI/plugins, never patch vendor code; business logic in services not controllers/templates; thin API controllers; no session state for UI features on an API-first target",
+      "critic2_focus": "D1 deprecation statuses and version facts; D2 real standard counterparts; D3 does the target standard really cover it (package/version); D4 endpoint names and content component support",
+      "expected_hotspots_d3": "requirements that today rely on heavily customized code",
+      "expected_blockers_d4": "auth model, live pricing/availability, custom content components, session-state features, hosting constraints, data migration of custom entities",
+      "content_model_notes": "which content component types the target frontend renders out of the box",
+      "api_families_hint": "see knowledge target_api_endpoint_families"
+    }
+  },
+  "knowledge": "knowledge.json",
+  "adapter": "adapter.py",
+  "research_seed": "research-seed.md",
+  "reference_cache": "reference-cache.md",
+  "kind": "platform"
+}

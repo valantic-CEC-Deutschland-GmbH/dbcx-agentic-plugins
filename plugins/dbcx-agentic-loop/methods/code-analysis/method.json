@@ -1,0 +1,906 @@
+{
+ "name": "code-analysis",
+ "display": "Code analysis ahead of a platform move",
+ "version": "0.8.0",
+ "description": "Evidence-first analysis of a shop code base before a platform move: inventory (D1), customization depth per unit (D2), requirements coverage (D3), target readiness (D4), optional client-attention findings (D0). Unit of analysis = the client's deployable module (extension / module / plugin). Since 0.6: per requirement the two-dimensional view (how the current shop meets it / whether the target standard meets it) with a recommendation and a business effect, description gaps and proposed new requirements (NR-nnn) for behaviour no requirement describes, a disposition per unit, a data-migration class per data type and an interface inventory; released artefacts additionally carry the unit analyses (customization-depth) and the joint requirement list (requirements-set). Since 0.7: atomic claims (one proposition, one figure with its basis, one target sheet; cap 60), every target-API feature keyed by its primary requirement so the requirement list carries the frontend readiness, D4 migration concerns and blockers merged into one table of overarching migration tasks (topic, affected requirements, impact, sequence - no rank), topic `hosting` replaced by `deployment-config` (repository artefacts only), D3 reduced to the requirement list (client columns verbatim + assessment + frontend roll-up), the new requirements and a compact feature detail sheet. Since 0.8: customer edition (result sheets without process), at most two decision columns per sheet in the valantic palette, result-first column order with collapsed detail groups, a Grundlage (basis) column on every verdict sheet, Kernaussage (key_statement) on D2/D3/D4 verdict rows, the D2 sheet Sicherheit_und_Betrieb (security_relevant + consequence on patched standard behaviour, client-attention risks; on without D0), D4 interface operator and migration-task rank, cleaned LOC and customer-facing share in D1, method charts and summary tiles.",
+ "knowledge_slots": {
+  "source": {
+   "kind": "platform",
+   "role": "source",
+   "required": true,
+   "default": "_generic"
+  },
+  "target": {
+   "kind": "platform",
+   "role": "target",
+   "required": true,
+   "default": "_generic"
+  }
+ },
+ "defaults": {
+  "source": {
+   "pack": "_generic",
+   "platform": "",
+   "version": "",
+   "frontend": "",
+   "language_stack": ""
+  },
+  "target": {
+   "pack": "_generic",
+   "platform": "",
+   "version": "",
+   "frontend": "",
+   "api_name": "target API",
+   "content_model_name": "content component"
+  },
+  "unit": {
+   "noun": "Unit",
+   "noun_plural": "Units",
+   "manifest_file": "",
+   "repo_roots": [],
+   "standard_dirs": [],
+   "categories": [
+    "frontend",
+    "api",
+    "plugin",
+    "admin",
+    "integration",
+    "facade",
+    "core",
+    "data",
+    "test",
+    "other"
+   ],
+   "customer_facing_categories": [
+    "frontend",
+    "api"
+   ]
+  },
+  "repo": {
+   "path": ""
+  },
+  "requirements": {
+   "input_glob": "input/requirements/*.xlsx",
+   "mapping": "requirements_mapping.json"
+  },
+  "deliverables": {
+   "D0": {
+    "enabled": false,
+    "file": "D0_Immediate_Attention.xlsx",
+    "_readme": "optional: findings about today's shop worth acting on independent of the platform decision, collected from rows flagged client_attention and from critics' estate observations (ecom d0 collect). Off by default - offer it at init."
+   },
+   "D1": {
+    "enabled": true,
+    "file": "D1_Inventory.xlsx",
+    "diagram": "D1_Dependencies.drawio"
+   },
+   "D2": {
+    "enabled": true,
+    "file": "D2_Customization_Depth.xlsx"
+   },
+   "D3": {
+    "enabled": true,
+    "file": "D3_Requirements_Coverage.xlsx"
+   },
+   "D4": {
+    "enabled": true,
+    "file": "D4_Target_Readiness.xlsx"
+   },
+   "D5": {
+    "enabled": false,
+    "file": "D5_Feature_Flows.xlsx"
+   }
+  },
+  "rules": {
+   "do_not_run": [],
+   "repository_read_only": true
+  },
+  "scoring": {
+   "max_claims": 60
+  }
+ },
+ "evidence_bases": [
+  {
+   "id": "repository",
+   "kind": "repository",
+   "roots": [
+    "{repo.path}"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "orchestrator",
+    "analyst",
+    "inventory",
+    "critic-client"
+   ],
+   "note": "the client's code, read-only; the platform is never built or started (rules.do_not_run)"
+  },
+  {
+   "id": "requirements",
+   "kind": "workbook",
+   "roots": [
+    "input/requirements",
+    "state/requirements.json"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ]
+  },
+  {
+   "id": "analyses",
+   "kind": "derived",
+   "roots": [
+    "analysis"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "the run's own analysis files; unit analysts read only their own unit's file plus finalized dependencies (judgement rule, critic-client checks it)"
+  },
+  {
+   "id": "vendor-docs",
+   "kind": "web",
+   "domains": [],
+   "roles": [
+    "orchestrator",
+    "analyst",
+    "inventory",
+    "consolidator",
+    "critic-standard",
+    "researcher"
+   ],
+   "note": "vendor documentation with generic queries only"
+  },
+  {
+   "id": "reference",
+   "kind": "reference",
+   "roots": [
+    "@project/reference"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ]
+  }
+ ],
+ "artefacts": {
+  "consumes": [
+   {
+    "type": "requirements-set",
+    "required": false,
+    "target": "state/requirements.json",
+    "import_tool": "requirements_to_json",
+    "note": "the client's requirements workbook (mapping in requirements_mapping.json) or a released requirements-set of a `requirements` run; without one the requirements are AS-IS from the unit analyses"
+   }
+  ],
+  "produces": [
+   {
+    "type": "requirements-coverage",
+    "source": "analysis/consolidated/D3.json",
+    "scope": "D3"
+   },
+   {
+    "type": "target-readiness",
+    "source": "analysis/consolidated/D4.json",
+    "scope": "D4"
+   },
+   {
+    "type": "code-inventory",
+    "source": "analysis/inventory/inventory_analysis.json",
+    "scope": "D1"
+   },
+   {
+    "type": "customization-depth",
+    "source": "analysis/consolidated/D2.json",
+    "note": "all final unit analyses merged (dbcx export_artefacts writes it after the waves): classification incl. disposition, code units, data model incl. data_class, patched standard behaviour, integrations, undocumented behaviour - the migration facts an estimation run imports"
+   },
+   {
+    "type": "requirements-set",
+    "source": "analysis/consolidated/requirements_set.json",
+    "scope": "D3",
+    "note": "the joint requirement list in the engine's requirements shape: the client's rows unchanged (extra.coverage_* carries today / target_standard / recommendation / description_gap) plus the NR-nnn rows proposed from the code (extra.origin = code-analysis, extra.proposed_handling, extra.client_decision empty until the client decided) - dbcx export_artefacts writes it from analysis/consolidated/D3.json"
+   }
+  ]
+ },
+ "scopes": {
+  "kind": "unit",
+  "noun_key": "unit.noun",
+  "output_dir": "analysis/units",
+  "agent_prefix": "unit-",
+  "discover": "discover",
+  "wave_rule": "dependency",
+  "state_key": "units",
+  "size_field": "size",
+  "id_prefix": "C-"
+ },
+ "inventory": {
+  "scope": "D1",
+  "kind": "inventory",
+  "output": "analysis/inventory/inventory_analysis.md",
+  "agent": "inventory",
+  "scopes_table": "units",
+  "scopes_key": "name",
+  "handover": "analysis/inventory/D1_HANDOVER.md",
+  "brief": "inventory"
+ },
+ "consolidations": {
+  "D3": {
+   "kind": "D3",
+   "output": "analysis/consolidated/D3.md",
+   "digest_tables": [
+    "requirements",
+    "undocumented_behaviour",
+    "open_questions"
+   ],
+   "deliverable": "D3"
+  },
+  "D4": {
+   "kind": "D4",
+   "output": "analysis/consolidated/D4.md",
+   "digest_tables": [
+    "api_features",
+    "migration_concerns",
+    "integrations",
+    "deprecations"
+   ],
+   "deliverable": "D4"
+  }
+ },
+ "phases": [
+  {
+   "id": "preflight",
+   "type": "simple",
+   "hint": "dbcx check_fill; dbcx smoke; dbcx md_to_json --generate; dbcx requirements_to_json (or AS-IS); dbcx status init; researcher (dbcx render research); mock customer edition from the fixture + run overrides -> lead + one persona review -> freeze the deliverable spec (run patches)"
+  },
+  {
+   "id": "inventory",
+   "type": "gauntlet",
+   "scope": "D1",
+   "deliverable": "D1",
+   "before": "dbcx scan_inventory <repo>; dbcx discover",
+   "after": "dbcx render handover; dbcx plan_waves; dbcx build_excel D1; dbcx build_dependency_diagram --png; early gate read"
+  },
+  {
+   "id": "waves",
+   "type": "scopes",
+   "deliverable": "D2"
+  },
+  {
+   "id": "consolidation_d3",
+   "type": "gauntlet",
+   "scope": "D3",
+   "deliverable": "D3",
+   "enabled_if": "deliverables.D3.enabled"
+  },
+  {
+   "id": "consolidation_d4",
+   "type": "gauntlet",
+   "scope": "D4",
+   "deliverable": "D4",
+   "enabled_if": "deliverables.D4.enabled"
+  },
+  {
+   "id": "excel_build",
+   "type": "build",
+   "hint": "dbcx export_artefacts (analysis/consolidated/D2.json + requirements_set.json); dbcx build_excel --all; dbcx build_dependency_diagram --png"
+  },
+  {
+   "id": "final_gate",
+   "type": "gate"
+  }
+ ],
+ "deliverable_sources": {
+  "D1": [
+   "analysis/inventory/inventory_analysis.json",
+   "analysis/summaries/D1.md"
+  ],
+  "D2": [
+   "analysis/units/*.json",
+   "analysis/summaries/D2.md"
+  ],
+  "D3": [
+   "analysis/consolidated/D3.json",
+   "analysis/summaries/D3.md"
+  ],
+  "D4": [
+   "analysis/consolidated/D4.json",
+   "analysis/summaries/D4.md"
+  ],
+  "D0": [
+   "analysis/consolidated/D0.json"
+  ]
+ },
+ "gauntlet": {
+  "pack_sections": {
+   "unit": [
+    "Summary",
+    "Classification"
+   ],
+   "inventory": [
+    "Repo notes",
+    "Platform"
+   ],
+   "D3": [
+    "Coverage",
+    "New requirements"
+   ],
+   "D4": [
+    "Migration tasks"
+   ]
+  },
+  "row_tables": {
+   "unit": [
+    [
+     "code_units",
+     "fqn"
+    ],
+    [
+     "data_model",
+     "type"
+    ],
+    [
+     "patched_standard",
+     "what"
+    ],
+    [
+     "requirements",
+     "req_id"
+    ],
+    [
+     "api_features",
+     "feature_id"
+    ],
+    [
+     "migration_concerns",
+     "finding"
+    ],
+    [
+     "deprecations",
+     "what"
+    ],
+    [
+     "undocumented_behaviour",
+     "id"
+    ],
+    [
+     "integrations",
+     "system"
+    ]
+   ],
+   "inventory": [
+    [
+     "units",
+     "name"
+    ],
+    [
+     "packages",
+     "name"
+    ],
+    [
+     "deprecations",
+     "id"
+    ]
+   ],
+   "D3": [
+    [
+     "coverage",
+     "req_id"
+    ],
+    [
+     "new_requirements",
+     "id"
+    ]
+   ],
+   "D4": [
+    [
+     "features",
+     "feature_id"
+    ],
+    [
+     "content_components",
+     "component_type"
+    ],
+    [
+     "migration_tasks",
+     "id"
+    ],
+    [
+     "integrations",
+     "system"
+    ]
+   ]
+  }
+ },
+ "gate": {
+  "_readme": "Final-gate key questions: 3-5 per persona, each tied to the deliverables that should answer it; a persona scores only these. Tailored per engagement at `prepare` (run.json / engagement.json gate.key_questions.<persona> replaces a persona's list) and signed off by the lead. The Annahmen sheet travels in every workbook.",
+  "key_questions": {
+   "cto": [
+    {
+     "id": "C1",
+     "deliverables": [
+      "D1",
+      "D2",
+      "D4"
+     ],
+     "tags": [
+      "act",
+      "prove"
+     ],
+     "text": {
+      "de": "Welche Custom-Extensions blockieren den Zielstand oder verteuern ihn – und warum, mit Fundstelle?",
+      "en": "Which custom extensions block the target or raise its cost - and why, with a locator?"
+     }
+    },
+    {
+     "id": "C2",
+     "deliverables": [
+      "D2"
+     ],
+     "tags": [
+      "understand",
+      "act"
+     ],
+     "text": {
+      "de": "Wie sauber ist der Kern: welcher Anteil greift in Standardverhalten ein, und wo konzentriert sich das Upgrade-Risiko?",
+      "en": "How clean is the core: what share intervenes in standard behaviour, and where does upgrade risk concentrate?"
+     }
+    },
+    {
+     "id": "C3",
+     "deliverables": [
+      "D2",
+      "D4"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "Welche Sicherheits- und Betriebsrisiken bestehen heute, und wie schwer wiegen sie?",
+      "en": "Which security and operations risks exist today, and how severe are they?"
+     }
+    },
+    {
+     "id": "C4",
+     "deliverables": [
+      "D1",
+      "D2",
+      "D4"
+     ],
+     "tags": [
+      "prove"
+     ],
+     "text": {
+      "de": "Kann mein Team jede technische Aussage anhand ihrer Fundstelle in unter 5 Minuten nachvollziehen?",
+      "en": "Can my team reproduce any technical statement from its locator in under 5 minutes?"
+     }
+    },
+    {
+     "id": "C5",
+     "deliverables": [
+      "D1",
+      "D2",
+      "D4"
+     ],
+     "tags": [
+      "prove"
+     ],
+     "text": {
+      "de": "Welche Annahmen tragen das Ergebnis (Blatt Annahmen), und was kippt, wenn eine davon nicht zutrifft?",
+      "en": "Which assumptions carry the result (Assumptions sheet), and what flips if one is wrong?"
+     }
+    }
+   ],
+   "head_of_it": [
+    {
+     "id": "I1",
+     "deliverables": [
+      "D4"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "Welche Schnittstellen ändern sich im Zielstand, und wer betreibt und überwacht sie?",
+      "en": "Which interfaces change in the target, and who operates and monitors them?"
+     }
+    },
+    {
+     "id": "I2",
+     "deliverables": [
+      "D4"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "In welcher Reihenfolge und mit welchen Abhängigkeiten müssen die Migrationsaufgaben laufen?",
+      "en": "In what order, with what dependencies, must the migration tasks run?"
+     }
+    },
+    {
+     "id": "I3",
+     "deliverables": [
+      "D1",
+      "D2"
+     ],
+     "tags": [
+      "understand",
+      "act"
+     ],
+     "text": {
+      "de": "Was ist heute im Betrieb riskant (Importe, Jobs, Sicherheit)?",
+      "en": "What is risky in operation today (imports, jobs, security)?"
+     }
+    },
+    {
+     "id": "I4",
+     "deliverables": [
+      "D1",
+      "D4"
+     ],
+     "tags": [
+      "prove"
+     ],
+     "text": {
+      "de": "Welche Plattform- und Hosting-Voraussetzungen gelten (Betriebsmodell, Version), und sind sie bestätigt?",
+      "en": "Which platform and hosting premises apply (operating model, version), and are they confirmed?"
+     }
+    }
+   ],
+   "head_of_ecommerce": [
+    {
+     "id": "E1",
+     "deliverables": [
+      "D3"
+     ],
+     "tags": [
+      "understand",
+      "act"
+     ],
+     "text": {
+      "de": "Welche Anforderungen deckt der Zielstandard ab, welche brauchen einen Umbau, welche einen Neubau?",
+      "en": "Which requirements does the target standard cover, which need rework, which a rebuild?"
+     }
+    },
+    {
+     "id": "E2",
+     "deliverables": [
+      "D4",
+      "D3"
+     ],
+     "tags": [
+      "understand"
+     ],
+     "text": {
+      "de": "Was ändert sich für unsere Kunden im Shop mit dem neuen Frontend?",
+      "en": "What changes for our customers in the shop with the new frontend?"
+     }
+    },
+    {
+     "id": "E3",
+     "deliverables": [
+      "D3",
+      "D4"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "Wo liegen die größten geschäftlichen Risiken des Umstiegs?",
+      "en": "Where are the biggest business risks of the move?"
+     }
+    },
+    {
+     "id": "E4",
+     "deliverables": [
+      "D3",
+      "D4"
+     ],
+     "tags": [
+      "act",
+      "prove"
+     ],
+     "text": {
+      "de": "Was müssen wir als Kunde bestätigen (Blatt Annahmen), bevor eine Schätzung möglich ist?",
+      "en": "What must we as the client confirm (Assumptions sheet) before an estimate is possible?"
+     }
+    }
+   ],
+   "head_of_marketing": [
+    {
+     "id": "M1",
+     "deliverables": [
+      "D4",
+      "D3"
+     ],
+     "tags": [
+      "understand"
+     ],
+     "text": {
+      "de": "Welche Content-Komponenten und kundensichtbaren Funktionen gehen mit, welche nicht?",
+      "en": "Which content components and customer-visible functions carry over, and which do not?"
+     }
+    },
+    {
+     "id": "M2",
+     "deliverables": [
+      "D4",
+      "D3"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "Was ändert sich für Redaktion und Kampagnen (CMS, Tracking, Consent)?",
+      "en": "What changes for editors and campaigns (CMS, tracking, consent)?"
+     }
+    },
+    {
+     "id": "M3",
+     "deliverables": [
+      "D2",
+      "D4"
+     ],
+     "tags": [
+      "understand",
+      "act"
+     ],
+     "text": {
+      "de": "Welche Befunde betreffen Marke und Kundenvertrauen?",
+      "en": "Which findings affect the brand and customer trust?"
+     }
+    }
+   ],
+   "product_owner": [
+    {
+     "id": "P1",
+     "deliverables": [
+      "D3"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "Steht je Anforderung Standard / Umbau / Neubau – filterbar und mit Begründung?",
+      "en": "Per requirement, standard / rework / rebuild - filterable, with a reason?"
+     }
+    },
+    {
+     "id": "P2",
+     "deliverables": [
+      "D3"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "Welche MVP-Lücken und neuen Anforderungen kommen ins Backlog, und in welcher Reihenfolge?",
+      "en": "Which MVP gaps and new requirements go into the backlog, and in what order?"
+     }
+    },
+    {
+     "id": "P3",
+     "deliverables": [
+      "D4"
+     ],
+     "tags": [
+      "act"
+     ],
+     "text": {
+      "de": "Welche Migrationsaufgaben hängen voneinander ab (zum Schneiden von Epics)?",
+      "en": "Which migration tasks depend on each other (to cut epics)?"
+     }
+    },
+    {
+     "id": "P4",
+     "deliverables": [
+      "D3"
+     ],
+     "tags": [
+      "prove"
+     ],
+     "text": {
+      "de": "Welche Anforderungen hängen an unbestätigten Annahmen?",
+      "en": "Which requirements hang on unconfirmed assumptions?"
+     }
+    }
+   ]
+  }
+ },
+ "briefs": {
+  "rows": [
+   [
+    "CURRENT",
+    "{source.platform} {source.version} / {source.frontend}"
+   ],
+   [
+    "TARGET",
+    "{target.platform} {target.version} / {target.frontend} (API: {target.api_name}; content: {target.content_model_name})"
+   ],
+   [
+    "UNIT NOUN",
+    "{unit.noun} (plural {unit.noun_plural}; manifest {unit.manifest_file})"
+   ],
+   [
+    "REPO ROOT",
+    "{repo.path}"
+   ],
+   [
+    "STANDARD CODE",
+    "{list:unit.standard_dirs}"
+   ]
+  ],
+  "notes_title": "PLATFORM NOTES (from the platform packs)",
+  "notes_keys": {
+   "inventory": [
+    "version_markers",
+    "active_units_config",
+    "package_sources",
+    "hosting_constraints"
+   ],
+   "analyst": [
+    "override_mechanisms",
+    "schema_sources",
+    "workflow_sources",
+    "data_script_sources",
+    "read_order",
+    "api_families_hint",
+    "property_resolution_order",
+    "content_model_notes",
+    "frontend_rebuild_notes"
+   ],
+   "consolidate:D3": [
+    "expected_hotspots_d3"
+   ],
+   "consolidate:D4": [
+    "expected_blockers_d4",
+    "content_model_notes",
+    "frontend_rebuild_notes"
+   ],
+   "critic-client": [
+    "active_units_config"
+   ],
+   "critic-standard": [
+    "critic2_persona",
+    "docs_domains",
+    "best_practice",
+    "critic2_focus"
+   ],
+   "researcher": [
+    "docs_domains"
+   ]
+  },
+  "analyst_inputs": {
+   "SCANNER FACTS": "analysis/inventory/inventory.json (only entries of this unit are yours)",
+   "REQUIREMENTS": "state/requirements.json",
+   "KNOWLEDGE": "dbcx knowledge show"
+  },
+  "consolidator_inputs": "analysis/units/*.md (open only for rows the digest points to), analysis/inventory/inventory_analysis.md, analysis/inventory/D1_HANDOVER.md, analysis/inventory/deprecation_hits_per_unit.md, analysis/consolidated/estate_observations.json, reference/platform-standard.md, state/requirements.json (the client's list - never rewrite a row)",
+  "critic_client_persona": "the client's own solution architect who knows this code base inside out and is sceptical of consultants; evidence base = the repository (incl. vendor code) and the analysis; never vendor documentation",
+  "critic_standard_persona_key": "critic2_persona"
+ },
+ "snippets": {
+  "rulings_topics": "target-version: the target platform version and the upgrade path; customisation-policy: which customisations are kept, refactored to the standard or dropped; scope-boundaries: which units, storefronts and integrations are in or out of scope"
+ },
+ "lint": {
+  "allow_terms": [
+   "sales status",
+   "order status",
+   "consignment status",
+   "approval status",
+   "deprecation status",
+   "neue anforderung",
+   "neue anforderungen",
+   "new requirement",
+   "new requirements",
+   "kundenentscheidung",
+   "client decision"
+  ]
+ },
+ "progress": {
+  "size_weighted": true
+ },
+ "init_fields": {
+  "repo.path": "path to the read-only repository checkout, absolute or relative to the run folder",
+  "source.version": "current platform version incl. hosting (e.g. 2205 on-premise)",
+  "source.frontend": "current storefront technology",
+  "target.version": "target platform version or 'latest GA as of <date>'",
+  "target.frontend": "target storefront technology"
+ },
+ "claims": {
+  "_readme": "allowed claim target sheets (deliverable/sheet, before an optional :row id); md_to_json warns on a target outside this list - a claim that feeds no sheet is dropped or re-homed",
+  "targets": [
+   "D0/Findings",
+   "D1/Units",
+   "D1/Dependencies",
+   "D1/Packages",
+   "D1/Platform",
+   "D1/Deprecations",
+   "D1/Repo_notes",
+   "D2/Depth",
+   "D2/Code_units",
+   "D2/Data_model",
+   "D2/Workflows",
+   "D2/Patched",
+   "D3/Coverage",
+   "D3/New_requirements",
+   "D4/Features",
+   "D4/Content",
+   "D4/Integrations",
+   "D4/Tasks"
+  ],
+  "must_claim": {
+   "_readme": "A5: verdict cells a client reads that need a claim. A row whose listed field is filled (booleans only when true) is a must-claim row. extract_claims reports uncovered must-claim cells and derives the claim cap as must-claim rows + scoring.claim_cap_reserve (default 5), bounded by the old max_claims / max_claims_light / max_claims_consolidated. Key = <kind>.<section key>.",
+   "unit.classification": [
+    "depth",
+    "disposition"
+   ],
+   "unit.patched_standard": [
+    "risk_for_upgrade",
+    "security_relevant"
+   ],
+   "unit.requirements": [
+    "contribution"
+   ],
+   "unit.api_features": [
+    "verdict"
+   ],
+   "unit.migration_concerns": [
+    "impact"
+   ],
+   "inventory.units": [
+    "activation"
+   ],
+   "D3.coverage": [
+    "verdict",
+    "recommendation"
+   ],
+   "D4.features": [
+    "verdict"
+   ],
+   "D4.migration_tasks": [
+    "impact"
+   ]
+  },
+  "sheet_tables": {
+   "_readme": "A5: which analysis section a claim target sheet addresses, so a target D2/Patched#<rid> is matched exactly within that section. A sheet that maps to a kv section (one row) is covered by a sheet-level target without a row id.",
+   "D2/Depth": "unit.classification",
+   "D2/Patched": "unit.patched_standard",
+   "D2/Code_units": "unit.code_units",
+   "D2/Data_model": "unit.data_model",
+   "D2/Workflows": "unit.workflows",
+   "D3/Coverage": [
+    "unit.requirements",
+    "D3.coverage"
+   ],
+   "D3/New_requirements": [
+    "unit.undocumented_behaviour",
+    "D3.new_requirements"
+   ],
+   "D4/Features": [
+    "unit.api_features",
+    "D4.features"
+   ],
+   "D4/Tasks": [
+    "unit.migration_concerns",
+    "D4.migration_tasks"
+   ],
+   "D4/Integrations": [
+    "unit.integrations",
+    "D4.integrations"
+   ],
+   "D4/Content": "D4.content_components",
+   "D1/Units": "inventory.units",
+   "D1/Packages": "inventory.packages",
+   "D1/Platform": "inventory.platform",
+   "D1/Deprecations": [
+    "unit.deprecations",
+    "inventory.deprecations"
+   ],
+   "D1/Dependencies": "inventory.dependency_notes"
+  }
+ }
+}

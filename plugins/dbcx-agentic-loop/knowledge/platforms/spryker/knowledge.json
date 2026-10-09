@@ -1,0 +1,116 @@
+{
+  "_readme": "Spryker pack knowledge. STABLE: standard_unit_prefixes, standard_dirs, entry_point_patterns and override_patterns come from the platform's module conventions and change only with a Spryker major line. SEED: deprecation_patterns are portability blockers rather than a vendor deprecation list (Spryker publishes migration guides per module, not one platform deprecation table), and the two target_* lists were derived from general platform knowledge - re-verify every Glue resource and content type against the MODULE versions the project pins. `standard_units` stays empty: it is generated per project from vendor/spryker*/*/composer.json package names.",
+  "standard_units": [],
+  "standard_unit_prefixes": [
+    "Spryker\\",
+    "SprykerShop\\",
+    "SprykerEco\\"
+  ],
+  "standard_dirs": [
+    "vendor/spryker",
+    "vendor/spryker-shop",
+    "vendor/spryker-eco",
+    "src/Orm"
+  ],
+  "third_party_packages": [
+    "symfony/*",
+    "propel/propel",
+    "elasticsearch/elasticsearch",
+    "predis/predis",
+    "php-amqplib/php-amqplib",
+    "twig/twig",
+    "guzzlehttp/guzzle",
+    "league/flysystem",
+    "monolog/monolog"
+  ],
+  "entry_point_patterns": {
+    "frontend": "Yves controller: class extending AbstractController (Spryker\\Yves\\Kernel\\Controller\\AbstractController / SprykerShop\\Yves\\...\\Controller) plus its route in the module's RouteProviderPlugin",
+    "api": "Glue: class extending AbstractGlueResource, implementing GlueResourceInterface, or extending AbstractResourceRoutePlugin (resource route registration); in the newer Glue Backend/Storefront API application: an ApiResource with its *ResourcePlugin registered in GlueApplicationDependencyProvider",
+    "admin": "Zed controller extending AbstractController with an entry in navigation.xml, and Zed GUI table/form classes",
+    "facade": "*Facade / *FacadeInterface in <Module>/Business (Zed) or <Module> (Client/Service) - the only sanctioned cross-module entry point",
+    "console": "console command registered in src/Pyz/Zed/Console/ConsoleDependencyProvider.php",
+    "queue": "queue consumer plugin registered in QueueDependencyProvider (RabbitMQ queue name in the plugin)",
+    "widget": "Twig widget: class extending AbstractWidget registered in ShopApplicationDependencyProvider::getGlobalWidgets or a module widget plugin list",
+    "oms": "OMS command/condition plugin registered in OmsDependencyProvider and referenced by name in config/Zed/oms/*.xml"
+  },
+  "override_patterns": {
+    "class_shadowing_namespace_prefixes": "A `Pyz\\...` class extending or overriding a Spryker class with the same short name is the NORMAL extension pattern in Spryker - classify as `extended` and weight it low. It becomes `overridden` only when it replaces the vendor class in the wiring: a *DependencyProvider returning the Pyz plugin/factory instead of the Spryker one, or a plugin removed/reordered in a plugin stack. A patched file under vendor/ (or a project class declared in a `Spryker\\` namespace) is `core-patch`.",
+    "dependency_provider_stack": "a *DependencyProvider method whose returned plugin stack differs from the vendor default (added, removed, reordered or replaced plugins) - the single most important override signal in a Spryker project",
+    "transfer_extension": "*.transfer.xml adding properties to a core transfer object; `strict` mode changes validation semantics - note which",
+    "twig_theme_override": "a template at the same path under src/Pyz/Yves/ShopUi/Theme/<theme>/ replacing the vendor template (theme inheritance)",
+    "config_switch": "config/Shared/config_default*.php (or store/environment config) setting a constant that switches a strategy or feature flag",
+    "core_patch": "modified file under vendor/spryker, vendor/spryker-shop or vendor/spryker-eco - highest risk, name the file"
+  },
+  "deprecation_patterns": [
+    "Propel queries executed in a Yves controller or template (storefront reads must come from the Redis/Elasticsearch read model via Publish & Synchronize)",
+    "getRepository() / direct persistence access from Yves",
+    "SessionClient usage for state that a headless frontend or a separate application cannot see",
+    "business logic in Zed that is never exposed through a Glue resource (blocks any headless or partner frontend)",
+    "cross-module access that bypasses a Facade (direct use of another module's Business/Persistence classes)",
+    "logic in Twig templates instead of widgets or view models",
+    "one-shot, non-idempotent data import scripts",
+    "patched files under vendor/spryker* (core-patch)",
+    "long-running or external calls inside a request instead of a queue consumer"
+  ],
+  "integration_signals": [
+    "*Connector / *Api modules containing an HTTP client (ERP, PIM, CRM, tax, payment, carrier)",
+    "App Composition Platform (ACP) app registrations",
+    "queue adapters and RabbitMQ queue names used as an integration buffer",
+    "DataImport plugins reading files delivered by an external system",
+    "OMS commands calling an external service (fulfilment, payment capture)",
+    "Publish & Synchronize pipelines feeding an external search or storage service"
+  ],
+  "source_content_component_pattern": "CMS block and slot templates (`@CmsBlock/...` Twig includes, slot provider declarations in the theme templates) plus the `cms_block` / `cms_page` / `cms_slot` data-import CSV names under data/import/**; content items (banner, abstract product list, product set, file list, navigation) referenced through content-item widgets",
+  "target_api_endpoint_families": [
+    "/concrete-products and /concrete-products/{sku} (+ relationships: concrete-product-prices, concrete-product-availabilities, concrete-product-image-sets)",
+    "/abstract-products and /abstract-products/{sku} (+ abstract-product-prices, abstract-product-availabilities, abstract-product-image-sets, related-products)",
+    "/catalog-search and /catalog-search-suggestions (Elasticsearch-backed search, facets and sorting)",
+    "/category-trees and /category-nodes/{id} (navigation)",
+    "/carts, /carts/{cartUuid}/items, /carts/{cartUuid}/vouchers, /carts/{cartUuid}/cart-permission-groups (registered-customer carts, incl. shared carts)",
+    "/guest-carts and /guest-cart-items (anonymous carts, X-Anonymous-Customer-Unique-Id header)",
+    "/checkout-data and /checkout (checkout data collection and order placement)",
+    "/customers, /customers/{reference}/addresses, /customer-password, /customer-forgotten-password, /customer-restore-password",
+    "/access-tokens and /refresh-tokens (OAuth2 authentication for the Storefront API)",
+    "/orders and /orders/{orderReference} (order history and detail)",
+    "/company-business-units, /company-business-unit-addresses, /company-roles, /company-users (B2B organisational structure)",
+    "/shopping-lists, /shopping-list-items, /shopping-lists/{id}/shopping-list-share (B2B lists and sharing)",
+    "/quote-requests and /quote-request-versions (RFQ / negotiated pricing)",
+    "/wishlists and /wishlist-items",
+    "/product-offers and /merchants / /merchant-openin-hours (Marketplace: merchant offers)",
+    "/merchant-product-offer-prices and /merchant-product-offer-availabilities (Marketplace pricing/availability)",
+    "/product-measurement-units and /sales-units (measurement units) plus /product-packaging-units (packaging units)",
+    "/product-configurations and /configurable-bundle-templates (configurable products/bundles)",
+    "/order-payments and /payment-methods (payment)",
+    "/shipments and /shipment-methods (delivery)",
+    "/content-banners, /content-product-abstract-lists, /content-product-sets (content items via Glue)",
+    "/cms-pages and /navigations (content and navigation via Glue)",
+    "/stores and /store (multi-store context)",
+    "Glue Backend API (backend gateway) resources for back-office and integration use - separate application, separate authentication (/token, /dynamic-entity/* for the Dynamic Data API)",
+    "/product-lists, /product-labels, /return-reasons, /returns (returns and merchandising)"
+  ],
+  "target_content_component_types": [
+    "CMS page (with page templates and localised versions)",
+    "CMS block (reusable content record placed through slots or Twig)",
+    "CMS slot + slot provider (declared in the Twig template, defines where blocks may appear)",
+    "CMS block category / product / template relations (contextual placement)",
+    "content item: banner",
+    "content item: abstract product list",
+    "content item: product set",
+    "content item: file list",
+    "content item: navigation",
+    "navigation node (multi-level navigation trees)",
+    "product set (curated set with its own landing page)",
+    "product label (merchandising badge)",
+    "product relation (up-/cross-selling lists)",
+    "glossary key / translation record (all storefront copy)",
+    "mail template (transactional content, Twig)",
+    "Yves theme component: atom / molecule / organism / template / view (ShopUi, project code)",
+    "Twig widget (AbstractWidget, project code) as the dynamic-content mechanism",
+    "URL / redirect record (SEO)",
+    "file and file-manager asset (media library)"
+  ],
+  "_stamp": {
+    "date": "2026-09-08",
+    "source": "seed from general platform knowledge, to be verified"
+  }
+}

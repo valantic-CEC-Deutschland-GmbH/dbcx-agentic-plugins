@@ -1,0 +1,955 @@
+{
+ "_readme": [
+  "Excel deliverables of the `requirements` method (English). D1 = source inventory and epic structure, D2 = the requirement set with traceability.",
+  "Every aggregate is a formula over the detail sheets. The engine adds an Open_Questions sheet whenever client questions exist.",
+  "Formula placeholders: {r} {MAXR} {rng:Sheet.col_id} {col:id} {cell:id} {L:token} {p:param} {row} {x:key}."
+ ],
+ "deliverables": {
+  "D1": {
+   "title": "D1 Source inventory and epic structure",
+   "requires": [
+    "inventory"
+   ],
+   "purpose": "Which of the client's documents, board exports and workshop results this requirement set is built on, what each of them is worth as a base (extraction quality, citable anchors), and the epic structure the requirements are organised in - with the expected number of requirements per epic.",
+   "sources": "corpus/index.json (indexed client material with stable locators), corpus/unextractable.md, analysis/inventory/source_inventory.md",
+   "extra": "Every source carries the id it is cited by (SRC-nnn). A requirement in D2 points at an anchor of one of these sources; a source listed as `unextractable` can only ever be cited as `visual, unverified`, which is why its topics appear as questions to the client rather than as requirements.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "KPIs (formulas over the detail sheets) and the assessment of the source base",
+     "kpis": [
+      {
+       "label": "Sources indexed",
+       "formula": "=COUNTA({rng:Sources.id})",
+       "note": "documents, presentations, spreadsheets and board exports the requirement set is built on (sheet Sources)"
+      },
+      {
+       "label": "of which fully readable",
+       "formula": "=COUNTIF({rng:Sources.index_quality},\"good\")",
+       "note": "text could be extracted completely, so every statement about them is checkable at an anchor"
+      },
+      {
+       "label": "of which partially readable",
+       "formula": "=COUNTIF({rng:Sources.index_quality},\"partial*\")+COUNTIF({rng:Sources.index_quality},\"none*\")",
+       "note": "image-heavy slides or scans without a text layer - statements about them stay `visual, unverified`"
+      },
+      {
+       "label": "of which not readable at all",
+       "formula": "=COUNTIF({rng:Sources.index_quality},\"unextractable\")",
+       "note": "images and diagrams without text: their topics become questions to the client, never inferred requirements"
+      },
+      {
+       "label": "Citable anchors",
+       "formula": "=SUM({rng:Sources.anchors})",
+       "note": "pages, slides, paragraph blocks, spreadsheet rows and board items a requirement can point at"
+      },
+      {
+       "label": "{unit.noun_plural}",
+       "formula": "=COUNTA({rng:Epics.name})",
+       "note": "the structure the requirements are organised in (sheet {unit.noun_plural})"
+      },
+      {
+       "label": "of which functional",
+       "formula": "=COUNTIF({rng:Epics.kind},\"{L:functional}\")",
+       "note": "what the business can do with the {system.type}"
+      },
+      {
+       "label": "of which technical",
+       "formula": "=COUNTIF({rng:Epics.kind},\"{L:technical}\")",
+       "note": "interfaces to other systems, platform, data, migration"
+      },
+      {
+       "label": "of which non-functional",
+       "formula": "=COUNTIF({rng:Epics.kind},\"{L:nfr}\")",
+       "note": "measurable qualities: performance, availability, security, accessibility, operability"
+      },
+      {
+       "label": "Requirements expected",
+       "formula": "=SUM({rng:Epics.estimated_requirements})",
+       "note": "estimate per epic from the source passages that carry it - the figure D2 is measured against"
+      },
+      {
+       "label": "{unit.noun_plural} out of scope",
+       "formula": "=COUNTIF({rng:Epics.activation},\"{L:out-of-scope}\")",
+       "note": "topics the client's material explicitly excludes - listed so nobody has to ask twice"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Sources",
+     "type": "table",
+     "dataset": "sources",
+     "row_key": "id",
+     "readme": "One row per indexed source: what it is, what it covers, how well it can be cited",
+     "columns": [
+      {
+       "header": "Source",
+       "field": "id",
+       "width": 11
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "Text extraction",
+       "field": "index_quality",
+       "emphasis": "decision",
+       "status": {
+        "good": "standard",
+        "partial*": "rework",
+        "none*": "rebuild",
+        "unextractable": "rebuild"
+       },
+       "width": 18
+      },
+      {
+       "header": "Covers",
+       "field": "covers",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Cite as",
+       "field": "cite_as",
+       "width": 18
+      },
+      {
+       "header": "Type",
+       "field": "type",
+       "width": 16,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Date",
+       "field": "date",
+       "width": 12,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Origin",
+       "field": "origin",
+       "width": 26,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Citable anchors",
+       "field": "anchors",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Assessed quality",
+       "field": "quality",
+       "width": 16,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "File",
+       "field": "path",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Revision",
+       "field": "revision",
+       "width": 9,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Notes",
+       "field": "notes",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ]
+    },
+    {
+     "name": "Epics",
+     "type": "table",
+     "dataset": "epics",
+     "row_key": "name",
+     "readme": "One row per {unit.noun}: kind, what it covers, which sources carry it, expected number of requirements",
+     "columns": [
+      {
+       "header": "{unit.noun} id",
+       "field": "name",
+       "width": 20
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "title",
+       "width": 28
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "validation": "$requirements.types",
+       "emphasis": "decision",
+       "status": {
+        "functional": "standard",
+        "technical": "rework",
+        "nfr": "neutral"
+       },
+       "width": 15
+      },
+      {
+       "header": "In scope",
+       "field": "activation",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "active": "standard",
+        "out-of-scope": "neutral"
+       },
+       "width": 14
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Description",
+       "field": "description",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Requirements expected",
+       "field": "estimated_requirements",
+       "numeric": true,
+       "width": 12
+      },
+      {
+       "header": "Sources",
+       "field": "sources",
+       "evidence": true,
+       "sep": ", ",
+       "width": 24,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Sources (count)",
+       "field": "n_sources",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Depends on",
+       "field": "depends_on",
+       "sep": ", ",
+       "width": 24,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Notes",
+       "field": "notes",
+       "width": 36,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ]
+    },
+    {
+     "name": "Overview",
+     "type": "overview",
+     "title": "Source base and {unit.noun} structure (formulas over the sheets Sources and {unit.noun_plural})",
+     "readme": "Formula-based counts per {unit.noun} kind and per extraction quality",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "{unit.noun_plural} by kind",
+       "row_header": "Kind",
+       "row_tokens": "$requirements.types",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{unit.noun_plural}",
+         "formula": "=COUNTIF({rng:Epics.kind},{row})"
+        },
+        {
+         "header": "In scope",
+         "formula": "=COUNTIFS({rng:Epics.kind},{row},{rng:Epics.activation},\"{L:active}\")"
+        },
+        {
+         "header": "Out of scope",
+         "formula": "=COUNTIFS({rng:Epics.kind},{row},{rng:Epics.activation},\"{L:out-of-scope}\")"
+        },
+        {
+         "header": "Requirements expected",
+         "formula": "=SUMIF({rng:Epics.kind},{row},{rng:Epics.estimated_requirements})"
+        },
+        {
+         "header": "Source references",
+         "formula": "=SUMIF({rng:Epics.kind},{row},{rng:Epics.n_sources})"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "{unit.noun_plural} by kind"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Source base",
+       "rows": [
+        {
+         "label": "Sources indexed",
+         "formula": "=COUNTA({rng:Sources.id})"
+        },
+        {
+         "label": "Text extraction good",
+         "formula": "=COUNTIF({rng:Sources.index_quality},\"good\")"
+        },
+        {
+         "label": "Text extraction partial",
+         "formula": "=COUNTIF({rng:Sources.index_quality},\"partial*\")"
+        },
+        {
+         "label": "No text layer",
+         "formula": "=COUNTIF({rng:Sources.index_quality},\"none*\")"
+        },
+        {
+         "label": "Not extractable at all",
+         "formula": "=COUNTIF({rng:Sources.index_quality},\"unextractable\")"
+        },
+        {
+         "label": "Citable anchors in total",
+         "formula": "=SUM({rng:Sources.anchors})"
+        },
+        {
+         "label": "Indexed but not inventoried",
+         "formula": "=COUNTIF({rng:Sources.notes},\"indexed in the corpus*\")"
+        },
+        {
+         "label": "{unit.noun_plural} resting on a single source",
+         "formula": "=COUNTIF({rng:Epics.n_sources},1)"
+        },
+        {
+         "label": "{unit.noun_plural} that depend on another {unit.noun}",
+         "formula": "=COUNTA({rng:Epics.depends_on})"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "D1",
+     "readme": "Every statement of this workbook with its evidence and the two reviewer scores"
+    }
+   ]
+  },
+  "D2": {
+   "title": "D2 Requirements for the {system.type}",
+   "requires": [
+    "SET"
+   ],
+   "purpose": "The requirements for the {system.type}, one row per requirement, each with the passage of the client's own material that carries it: functional, technical and non-functional requirements per {unit.noun}, with priority, release, acceptance hint, the FR/TR cross-check, the gap check against the reference catalogue, the contradictions found between sources and the open points for the client.",
+   "sources": "analysis/consolidated/SET.md (the consolidated set), analysis/scopes/*.md (one requirement set per {unit.noun}), analysis/inventory/source_inventory.md, corpus/index.json",
+   "extra": "Traceability is the point of this workbook: the sheet Traceability holds one row per requirement AND locator, so every requirement can be followed to the page, slide, paragraph, spreadsheet row or board item that carries it. A requirement whose locator column reads `inferred` was not stated by any source - it is an inference and is marked as one on the sheet Requirements (status).",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "KPIs (formulas over the detail sheets) and the assessment of the requirement set",
+     "kpis": [
+      {
+       "id": "requirements",
+       "label": "Requirements",
+       "formula": "=COUNTA({rng:Requirements.req_id})",
+       "note": "the complete set for the {system.type} (sheet Requirements)"
+      },
+      {
+       "id": "functional",
+       "label": "of which functional",
+       "formula": "=COUNTIF({rng:Requirements.type},\"{L:functional}\")",
+       "note": "what the business can do with the system"
+      },
+      {
+       "id": "technical",
+       "label": "of which technical",
+       "formula": "=COUNTIF({rng:Requirements.type},\"{L:technical}\")",
+       "note": "interfaces to other systems, platform, data, migration"
+      },
+      {
+       "label": "of which non-functional",
+       "formula": "=COUNTIF({rng:Requirements.type},\"{L:nfr}\")",
+       "note": "measurable qualities: performance, availability, security, accessibility, operability"
+      },
+      {
+       "label": "Must-have requirements",
+       "formula": "=COUNTIF({rng:Requirements.priority},\"{L:must}\")",
+       "note": "priority as the sources state it - never assigned by us"
+      },
+      {
+       "label": "Requirements for {x:phase_in_scope}",
+       "formula": "=COUNTIF({rng:Requirements.release},\"{x:phase_in_scope}\")",
+       "note": "release assignment as far as the sources give one"
+      },
+      {
+       "label": "Traceable to a source",
+       "formula": "=IFERROR(TEXT(COUNTIF({rng:Requirements.traced},\"{L:yes}\")/COUNTA({rng:Requirements.req_id}),\"0%\"),\"\")",
+       "note": "share of requirements with at least one locator into the client's own material (sheet Traceability)"
+      },
+      {
+       "label": "Resting on inference",
+       "formula": "=COUNTIF({rng:Requirements.status},\"{L:inferred}\")",
+       "note": "no source states them literally; each one is marked as inferred on the sheet Requirements"
+      },
+      {
+       "label": "Interfaces without a technical requirement",
+       "formula": "=COUNTIF({rng:Crosscheck.relation},\"{L:missing-tr}\")",
+       "note": "functional requirements that move data across a system boundary with no technical counterpart (sheet Crosscheck)"
+      },
+      {
+       "label": "Catalogue capabilities without a requirement",
+       "formula": "=COUNTIF({rng:Catalogue_Gaps.n_covered},0)",
+       "note": "entries of the reference catalogue nothing covers yet (sheet Catalogue_Gaps)"
+      },
+      {
+       "label": "Points to settle with the client",
+       "formula": "=COUNTIF({rng:Requirements.status},\"{L:question}\")+COUNTA({rng:Contradictions.topic})",
+       "note": "requirements that depend on an answer, plus contradictions between two sources (sheet Contradictions)"
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Requirements",
+     "type": "table",
+     "dataset": "requirements",
+     "row_key": "req_id",
+     "readme": "The final set: one row per requirement with its source locators, priority, release and acceptance hint",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "epic",
+       "width": 20
+      },
+      {
+       "header": "Type",
+       "field": "type",
+       "label": true,
+       "validation": "$requirements.types",
+       "width": 14
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "Priority",
+       "field": "priority",
+       "label": true,
+       "validation": "$requirements.priorities",
+       "width": 12
+      },
+      {
+       "header": "Status",
+       "field": "status",
+       "label": true,
+       "validation": "$requirements.statuses",
+       "emphasis": "decision",
+       "status": {
+        "confirmed": "standard",
+        "inferred": "assumption",
+        "question": "rework"
+       },
+       "width": 22
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "Requirement",
+       "field": "description",
+       "width": 78,
+       "wrap": true
+      },
+      {
+       "header": "Release",
+       "field": "release",
+       "width": 12
+      },
+      {
+       "header": "Source",
+       "field": "source_locators",
+       "evidence": true,
+       "sep": ", ",
+       "width": 30,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Traceable",
+       "id": "traced",
+       "formula": "=IF(EXACT(LOWER({cell:source_locators}),\"inferred\"),\"{L:no}\",\"{L:yes}\")",
+       "width": 11,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Locators",
+       "field": "n_locators",
+       "numeric": true,
+       "width": 9,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Acceptance hint",
+       "field": "acceptance_hint",
+       "width": 52,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Merged from",
+       "field": "duplicates_of",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ]
+    },
+    {
+     "name": "Traceability",
+     "type": "table",
+     "dataset": "traceability",
+     "row_key": "req_id",
+     "readme": "One row per requirement AND source locator: which passage of which document carries this requirement",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "{unit.noun}",
+       "field": "epic",
+       "width": 20
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "Locator kind",
+       "field": "locator_kind",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "corpus": "standard",
+        "handover": "standard",
+        "reference": "standard",
+        "url": "rework",
+        "visual": "rework",
+        "inferred": "rework",
+        "other": "neutral",
+        "empty": "rebuild"
+       },
+       "width": 14
+      },
+      {
+       "header": "Locator",
+       "field": "locator",
+       "width": 26
+      },
+      {
+       "header": "Type",
+       "field": "type",
+       "label": true,
+       "width": 14,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Priority",
+       "field": "priority",
+       "label": true,
+       "width": 12,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Status",
+       "field": "status",
+       "label": true,
+       "width": 13,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Source",
+       "field": "source_id",
+       "width": 11,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Anchor",
+       "field": "anchor",
+       "width": 18,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Source title",
+       "field": "source_title",
+       "width": 34,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "File",
+       "field": "source_path",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Crosscheck",
+     "type": "table",
+     "dataset": "crosscheck",
+     "row_key": "functional_requirement",
+     "readme": "Functional requirement against technical requirement: has-tr, missing-tr, orphan-tr",
+     "columns": [
+      {
+       "header": "Functional requirement",
+       "field": "functional_requirement",
+       "width": 18
+      },
+      {
+       "header": "Technical requirement",
+       "field": "technical_requirement",
+       "width": 18
+      },
+      {
+       "header": "Relation",
+       "field": "relation",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "has-tr": "standard",
+        "missing-tr": "rebuild",
+        "orphan-tr": "rework"
+       },
+       "width": 16
+      },
+      {
+       "header": "Note",
+       "field": "note",
+       "width": 90,
+       "wrap": true
+      }
+     ]
+    },
+    {
+     "name": "Catalogue_Gaps",
+     "type": "table",
+     "dataset": "catalogue_gaps",
+     "row_key": "catalogue_id",
+     "readme": "Capabilities of the reference catalogue no requirement covers, with the decision",
+     "columns": [
+      {
+       "header": "Catalogue entry",
+       "field": "catalogue_id",
+       "width": 16
+      },
+      {
+       "header": "Capability",
+       "field": "capability",
+       "width": 70,
+       "wrap": true
+      },
+      {
+       "header": "Decision",
+       "field": "decision",
+       "label": true,
+       "emphasis": "decision",
+       "status": {
+        "in-scope": "standard",
+        "out-of-scope": "neutral",
+        "question": "rework"
+       },
+       "width": 16
+      },
+      {
+       "header": "Covered by (count)",
+       "field": "n_covered",
+       "numeric": true,
+       "width": 10,
+       "emphasis": "support",
+       "group": "detail"
+      }
+     ]
+    },
+    {
+     "name": "Contradictions",
+     "type": "table",
+     "dataset": "contradictions",
+     "row_key": "epic",
+     "readme": "Where two sources say different things - with the proposed resolution, never silently decided",
+     "columns": [
+      {
+       "header": "{unit.noun}",
+       "field": "epic",
+       "width": 20
+      },
+      {
+       "header": "Topic",
+       "field": "topic",
+       "width": 30,
+       "wrap": true
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 27
+      },
+      {
+       "header": "What differs",
+       "field": "what_differs",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Proposed resolution",
+       "field": "proposed_resolution",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Source A",
+       "field": "source_a",
+       "evidence": true,
+       "width": 20,
+       "emphasis": "support",
+       "group": "loc"
+      },
+      {
+       "header": "Source B",
+       "field": "source_b",
+       "evidence": true,
+       "width": 20,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Overview",
+     "type": "overview",
+     "title": "Requirement set at a glance (formulas over the sheets Requirements, Crosscheck, Catalogue_Gaps, Contradictions)",
+     "readme": "Matrices by type x priority and by {unit.noun}, plus the traceability share",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Requirements by type and priority",
+       "row_header": "Type",
+       "row_tokens": "$requirements.types",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "{L:must}",
+         "formula": "=COUNTIFS({rng:Requirements.type},{row},{rng:Requirements.priority},\"{L:must}\")"
+        },
+        {
+         "header": "{L:should}",
+         "formula": "=COUNTIFS({rng:Requirements.type},{row},{rng:Requirements.priority},\"{L:should}\")"
+        },
+        {
+         "header": "{L:could}",
+         "formula": "=COUNTIFS({rng:Requirements.type},{row},{rng:Requirements.priority},\"{L:could}\")"
+        },
+        {
+         "header": "{L:unknown}",
+         "formula": "=COUNTIFS({rng:Requirements.type},{row},{rng:Requirements.priority},\"{L:unknown}\")"
+        },
+        {
+         "header": "Requirements",
+         "formula": "=COUNTIF({rng:Requirements.type},{row})"
+        },
+        {
+         "header": "Traceable to a source",
+         "formula": "=COUNTIFS({rng:Requirements.type},{row},{rng:Requirements.traced},\"{L:yes}\")"
+        },
+        {
+         "header": "Resting on inference",
+         "formula": "=COUNTIFS({rng:Requirements.type},{row},{rng:Requirements.status},\"{L:inferred}\")"
+        }
+       ],
+       "chart": {
+        "column": 5,
+        "title": "Requirements by type"
+       }
+      },
+      {
+       "type": "matrix",
+       "title": "Requirements by {unit.noun}",
+       "row_header": "{unit.noun}",
+       "row_values_from": "requirements.epic",
+       "total_label": "Total",
+       "columns": [
+        {
+         "header": "Requirements",
+         "formula": "=COUNTIF({rng:Requirements.epic},{row})"
+        },
+        {
+         "header": "{L:functional}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.type},\"{L:functional}\")"
+        },
+        {
+         "header": "{L:technical}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.type},\"{L:technical}\")"
+        },
+        {
+         "header": "{L:nfr}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.type},\"{L:nfr}\")"
+        },
+        {
+         "header": "{L:must}",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.priority},\"{L:must}\")"
+        },
+        {
+         "header": "Traceable to a source",
+         "formula": "=COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.traced},\"{L:yes}\")"
+        },
+        {
+         "header": "Traceability share",
+         "formula": "=IFERROR(COUNTIFS({rng:Requirements.epic},{row},{rng:Requirements.traced},\"{L:yes}\")/COUNTIF({rng:Requirements.epic},{row}),\"\")"
+        }
+       ],
+       "chart": {
+        "column": 1,
+        "title": "Requirements by {unit.noun}"
+       }
+      },
+      {
+       "type": "kv",
+       "title": "Traceability, cross-check and open points",
+       "rows": [
+        {
+         "label": "Requirements in total",
+         "formula": "=COUNTA({rng:Requirements.req_id})"
+        },
+        {
+         "label": "Traceability share (rows with at least one source locator)",
+         "formula": "=IFERROR(COUNTIF({rng:Requirements.traced},\"{L:yes}\")/COUNTA({rng:Requirements.req_id}),\"\")"
+        },
+        {
+         "label": "Traceability share (cross-check, computed on the source column)",
+         "formula": "=IFERROR((COUNTA({rng:Requirements.req_id})-COUNTIF({rng:Requirements.source_locators},\"inferred\"))/COUNTA({rng:Requirements.req_id}),\"\")"
+        },
+        {
+         "label": "Locators in total",
+         "formula": "=COUNTA({rng:Traceability.locator})"
+        },
+        {
+         "label": "Requirements confirmed by a source",
+         "formula": "=COUNTIF({rng:Requirements.status},\"{L:confirmed}\")"
+        },
+        {
+         "label": "Requirements resting on inference",
+         "formula": "=COUNTIF({rng:Requirements.status},\"{L:inferred}\")"
+        },
+        {
+         "label": "Requirements depending on an open answer",
+         "formula": "=COUNTIF({rng:Requirements.status},\"{L:question}\")"
+        },
+        {
+         "label": "Requirements merged from duplicates",
+         "formula": "=COUNTA({rng:Requirements.duplicates_of})"
+        },
+        {
+         "label": "Interfaces with a technical requirement",
+         "formula": "=COUNTIF({rng:Crosscheck.relation},\"{L:has-tr}\")"
+        },
+        {
+         "label": "Interfaces without a technical requirement",
+         "formula": "=COUNTIF({rng:Crosscheck.relation},\"{L:missing-tr}\")"
+        },
+        {
+         "label": "Technical requirements nothing asks for",
+         "formula": "=COUNTIF({rng:Crosscheck.relation},\"{L:orphan-tr}\")"
+        },
+        {
+         "label": "Catalogue capabilities without a requirement",
+         "formula": "=COUNTIF({rng:Catalogue_Gaps.n_covered},0)"
+        },
+        {
+         "label": "Catalogue gaps to be decided",
+         "formula": "=COUNTIF({rng:Catalogue_Gaps.decision},\"{L:question}\")"
+        },
+        {
+         "label": "Catalogue gaps declared out of scope",
+         "formula": "=COUNTIF({rng:Catalogue_Gaps.decision},\"{L:out-of-scope}\")"
+        },
+        {
+         "label": "Contradictions between sources",
+         "formula": "=COUNTA({rng:Contradictions.topic})"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "scopes_and_set",
+     "readme": "Every statement of this workbook with its evidence and the two reviewer scores"
+    }
+   ]
+  }
+ }
+}

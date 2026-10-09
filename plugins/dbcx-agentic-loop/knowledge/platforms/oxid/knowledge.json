@@ -1,0 +1,59 @@
+{
+  "_readme": [
+    "OXID eShop pack knowledge. Structural conventions (metadata.php, source/modules, vendor/oxid-esales, the class chain) are STABLE and live in pack.json as_source.",
+    "The two lists below are SEED, not verified facts: they were assembled from general OXID knowledge and must be re-verified per engagement against docs.oxid-esales.com and the CHANGELOG of the graphql-base / graphql-storefront module versions actually in scope.",
+    "target_api_endpoint_families lists GraphQL operations from the OPTIONAL graphql-base + graphql-storefront modules - the core metapackage ships no storefront REST or GraphQL API. Treat every entry as 'check whether this operation exists in the module release in scope', never as a coverage promise.",
+    "target_content_component_types mixes core oxcontent CMS records, theme-level Twig block regions and Visual CMS module widgets - these are three different mechanisms with different licences and different editability, see pack.json as_target.snippets.content_model_notes."
+  ],
+  "target_api_endpoint_families": [
+    "graphql mutation: token (login) and tokenCustomerDelete / refresh - graphql-base authentication",
+    "graphql query: product / products (filter, sort, pagination)",
+    "graphql query: category / categories (tree, seo slug)",
+    "graphql query: manufacturer / manufacturers",
+    "graphql query: vendor / vendors",
+    "graphql query: attribute / attributes and selectionList (variant selection)",
+    "graphql query: basket / baskets and mutations basketCreate, basketAddItem, basketRemoveItem, basketAddVoucher",
+    "graphql mutation: placeOrder (checkout completion - verify existence and scope per module release)",
+    "graphql query: order / orders (customer order history)",
+    "graphql query: customer and mutations customerRegister, customerEmailUpdate, customerPasswordChange, customerInvoiceAddressSet, customerDeliveryAddressAdd",
+    "graphql query: review / reviews and mutations reviewSet, reviewDelete",
+    "graphql query: content / contents (oxcontent CMS records returned as HTML strings)",
+    "graphql query: link / links",
+    "graphql query: country / countries, currency, language",
+    "graphql query: deliveryMethod / deliveryMethods and paymentMethod / paymentMethods (verify checkout-relevant coverage)",
+    "graphql query: wishedPrice / wishedPrices and mutation wishedPriceSet",
+    "graphql query: banner / banners and promotion / promotions",
+    "graphql query: newsletterStatus and mutations newsletterOptIn / newsletterUnsubscribe",
+    "graphql query: seoUrl / seo slug resolution",
+    "graphql query: wishlist and noticeList (basket-type lists)",
+    "graphql query: basket costs (delivery, payment, voucher, VAT breakdown - verify field names)",
+    "REST: no first-party storefront REST API in the metapackage - REST endpoints in a project are partner or custom modules (verify what exists before scoping)",
+    "REST/admin: no documented public admin REST API - back-office automation goes through CLI commands, direct DB or a custom module (verify)"
+  ],
+  "target_content_component_types": [
+    "CMS page (oxcontent, type page - editable rich text with per-language columns)",
+    "CMS snippet / include (oxcontent referenced by ident from a template or email)",
+    "Category description and category long description",
+    "Product short and long description (rich text on the product)",
+    "Manufacturer / vendor description page",
+    "Promotion or action banner (oxactions record with banner presentation)",
+    "Newsletter template (oxnewsletter, plain and HTML body)",
+    "Transactional email template (theme or module Twig template plus CMS snippet)",
+    "Theme template block region (metadata.php blocks target - developer artefact, not business-editable)",
+    "Widget controller output (e.g. product list, cross-selling, review widget embedded into a template)",
+    "SEO metadata and URL slug entry (title, description, seo url per object and language)",
+    "Visual CMS content block / row-and-column grid (module, licensed - verify edition)",
+    "Visual CMS text / HTML widget",
+    "Visual CMS image widget",
+    "Visual CMS product and product-list widget",
+    "Visual CMS slider / banner widget",
+    "Visual CMS video widget",
+    "Visual CMS accordion / tab widget",
+    "Landing page (CMS page plus a dedicated theme template)",
+    "Legal / info page (CMS page used for imprint, terms, privacy - DACH compliance content)"
+  ],
+  "_stamp": {
+    "date": "2026-09-08",
+    "source": "seed from general platform knowledge, to be verified"
+  }
+}

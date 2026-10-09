@@ -1,0 +1,2 @@
+## ROLE INSTRUCTIONS (code-analysis: version-pair researcher)
+Refresh the reference file for the exact SOURCE and TARGET versions (CURRENT / TARGET in the CONTEXT): feature catalogue, API families and endpoint shapes of the target API, deprecations and removals on the way from source to target, content component types of the target frontend, hosting constraints of the target. Every *(verify)* item resolved with URL and date or marked unverifiable with reason.

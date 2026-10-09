@@ -1,0 +1,19 @@
+{
+  "name": "dbcx-agentic-loop",
+  "version": "0.13.116",
+  "displayName": "dbcx agentic loop",
+  "description": "Evidence-first agentic loop for consulting deliverables: agents analyse a client's material, critics from the client side and the standard side, with separate evidence, check every statement, and a final gate reads the result as the client's stakeholders would. Methods: code analysis, enterprise architecture landscape, requirements, technology scoring, technology-fit estimation. Formula-driven Excel deliverables, a live run dashboard and a guided onboarding.",
+  "author": {
+    "name": "valantic CEC"
+  },
+  "keywords": [
+    "consulting",
+    "agentic-loop",
+    "code-analysis",
+    "enterprise-architecture",
+    "requirements",
+    "technology-scoring",
+    "estimation",
+    "e-commerce"
+  ]
+}

@@ -1,0 +1,10 @@
+# valantic-cx-target pack notes
+
+This pack is valantic's house standard, not converted from a product document; there is no vendor source. The SSOT table (section 6) condenses the `cx-reference` pack's table to the domains that recur in valantic's CX projects.
+
+- **Best practice, not guardrails.** The patterns apply where the client's landscape has the element. The file says so twice on purpose (opening paragraph, section 5): a critic must not fail a diagram for a missing hub or a missing enablement lane.
+- **Decisions encoded**: palette proposal in section 2 (double-encoded by border style, colour-blind safe); hub = per-client decision (section 5); interface table typically Excel, sometimes Miro (section 4); analytics flows aggregated on the landscape sheet, detailed in table and zoom (section 4); ownership and operating model in tables only (section 10); undecided systems carry the overarching term, decision after the project (section 3.3); manual steps visible with a human icon (section 3.5); zoom views per critical data flow across systems (section 7); logos and client names in exports allowed; enablement lane optional (section 1).
+- **Kind and roles**: `kind: "reference-architecture"` in `knowledge/reference-architectures/`, `roles: ["reference_architecture"]`, snippets at top level. `docs_domains` is empty: this is a house standard, not a product.
+- **Relationship to `cx-reference` and `mach-composable`**: those packs carry the generic landscape and platform questions; this one carries valantic's drawing and assessment standard. Set this pack on a run when the deliverable pictures must follow the house standard; the SSOT semantics are compatible.
+- **Palette**: colour-blind safe, also legible in greyscale. The ea-landscape method's `build_landscape_diagram` tool draws in this legend: three lanes, status fills and borders, arrow styles per integration style, SSOT and conflict markers, legend block top right.
+- **How to extend**: add rows, not columns. New anti-patterns follow symptom / why / cost / way out. New option patterns need "fits when", prerequisites and a sequence, or they are marketing.

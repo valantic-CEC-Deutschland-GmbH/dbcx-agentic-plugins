@@ -1,0 +1,132 @@
+{
+  "_readme": "Neutral skeleton (file-type buckets, skip dirs, generic integration signals). Platform lists come from the packs; client lists from <project>/overrides/knowledge.json; derived lists from the scan (state/derived_knowledge.json).",
+  "loc_buckets": {
+    ".java": "code",
+    ".kt": "code",
+    ".groovy": "code",
+    ".php": "code",
+    ".py": "code",
+    ".cs": "code",
+    ".rb": "code",
+    ".go": "code",
+    ".ts": "ts",
+    ".tsx": "ts",
+    ".js": "js",
+    ".jsx": "js",
+    ".vue": "js",
+    ".svelte": "js",
+    ".jsp": "templates",
+    ".tag": "templates",
+    ".tagx": "templates",
+    ".jspf": "templates",
+    ".inc": "templates",
+    ".twig": "templates",
+    ".phtml": "templates",
+    ".html": "templates",
+    ".liquid": "templates",
+    ".vm": "templates",
+    ".ftl": "templates",
+    ".isml": "templates",
+    ".xml": "config",
+    ".yaml": "config",
+    ".yml": "config",
+    ".json": "config",
+    ".properties": "config",
+    ".env": "config",
+    ".graphql": "config",
+    ".graphqls": "config",
+    ".transfer.xml": "config",
+    ".impex": "data_scripts",
+    ".csv": "data_scripts",
+    ".sql": "data_scripts",
+    ".css": "css",
+    ".scss": "css",
+    ".less": "css"
+  },
+  "test_dir_markers": [
+    "test",
+    "tests",
+    "testsrc",
+    "spec",
+    "__tests__",
+    "Test",
+    "Tests"
+  ],
+  "source_dir_markers": [
+    "src",
+    "testsrc",
+    "groovysrc",
+    "scalasrc",
+    "kotlinsrc"
+  ],
+  "_source_dir_markers_readme": "below a directory with one of these names only dot-dirs, .git and node_modules are skipped - skip_dirs are build-output names and a source package may carry the same name (a Java package `cache` lost 123 lines to the scanner)",
+  "skip_dirs": [
+    ".git",
+    "node_modules",
+    "vendor",
+    "target",
+    "build",
+    "dist",
+    "classes",
+    "gensrc",
+    "testclasses",
+    ".idea",
+    ".angular",
+    "coverage",
+    "tmp",
+    "temp",
+    "log",
+    "logs",
+    "var",
+    "cache",
+    "generated",
+    "eclipsebin"
+  ],
+  "standard_dirs": [],
+  "standard_units": [],
+  "standard_unit_prefixes": [],
+  "third_party_packages": [],
+  "entry_point_patterns": {
+    "frontend_controller": null,
+    "api_controller": null,
+    "template_route": null
+  },
+  "override_patterns": {
+    "di_override": null,
+    "class_shadowing_namespace_prefixes": []
+  },
+  "deprecation_patterns": [],
+  "integration_signals": [
+    {
+      "id": "http-client",
+      "pattern": "RestTemplate|WebClient|HttpClient|GuzzleHttp|axios\\.|fetch\\(|curl_init"
+    },
+    {
+      "id": "soap",
+      "pattern": "SoapClient|javax\\.xml\\.ws|jakarta\\.xml\\.ws|wsdl"
+    },
+    {
+      "id": "messaging",
+      "pattern": "RabbitMQ|amqp|kafka|sqs|JmsTemplate|MessageBroker|EventDispatcher"
+    },
+    {
+      "id": "erp",
+      "pattern": "SAP|S/4|IDoc|RFC|JCo|Navision|Dynamics|NetSuite|Odoo"
+    },
+    {
+      "id": "payment",
+      "pattern": "Adyen|Stripe|PayPal|Klarna|Mollie|Braintree|Computop|Unzer|Wirecard|Payone"
+    },
+    {
+      "id": "search",
+      "pattern": "Solr|Elasticsearch|OpenSearch|Algolia|Bloomreach|FactFinder|Fredhopper|Constructor"
+    },
+    {
+      "id": "pim-cms",
+      "pattern": "Akeneo|Pimcore|inRiver|Contentful|Storyblok|Hygraph|Contentstack|Magnolia|Bloomreach"
+    }
+  ],
+  "target_api_endpoint_families": [],
+  "target_content_component_types": [],
+  "source_content_component_pattern": null
+}

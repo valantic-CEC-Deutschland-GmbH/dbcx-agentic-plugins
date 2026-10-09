@@ -1,0 +1,8 @@
+{
+  "frontend": "Channels & content",
+  "api": "Core API",
+  "plugin": "Connector / add-on",
+  "admin": "Account administration",
+  "facade": "Automation Center",
+  "core": "Contact data & segments"
+}

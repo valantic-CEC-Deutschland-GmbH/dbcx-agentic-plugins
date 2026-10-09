@@ -1,0 +1,2756 @@
+{
+ "deliverables": {
+  "D1": {
+   "title": "Effort estimate per solution option",
+   "requires": [
+    "req",
+    "estimation"
+   ],
+   "resolve_handover": true,
+   "vendor_code_basis": true,
+   "purpose": "Every requirement of the client's list estimated per solution option: the approach (greenfield: standard, partial, custom; migration: keep, adapt, convert to standard, rebuild, retire, new), a {estimation.size_term.en} size with its derivation and basis, the effort from the editable size mapping, on top the PM, SA, BA and QA surcharges and the fixed phases per option - every total and every cost as a formula.",
+   "sources": "state/requirements.json, analysis/scopes/*.md, analysis/consolidated/SUMMARY.md, input/handover/*.json, reference/platform-standard.md",
+   "sources_client": "The client's requirement list as received; per requirement and option an estimate against the vendor's documentation and standard code and - for a migration - the code analysis of today's shop; the consolidated phases, exclusions and risks; verified technology facts.",
+   "extra": "Sizes are {estimation.size_term.en} sizes; the effort in {estimation.unit} follows from the mapping on the Parameters sheet, as do the surcharges per option and the day rate. Change a value there and every total, cost and chart follows. No total is typed; only the fixed phases carry an entered, editable effort.",
+   "sheets": [
+    {
+     "name": "Management_Summary",
+     "type": "mgmt",
+     "readme": "total and cost per option (formulas over the detail sheets) and the assessment in words",
+     "kpis": [
+      {
+       "id": "req_total",
+       "label": "Requirements in the list",
+       "formula": "=COUNTA({rng:Estimation.req_id})",
+       "note": "one row per requirement on the Estimation sheet",
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "options",
+       "kpis": [
+        {
+         "id": "total_{o.id}",
+         "label": "{o.label}: total effort ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.option},\"{o.label}\",{rng:Surcharges_and_Phases.pd})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "development, surcharges and fixed phases (sheet Surcharges_and_Phases)",
+         "when": "!scenario_mode"
+        },
+        {
+         "id": "cost_{o.id}",
+         "label": "{o.label}: cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.option},\"{o.label}\",{rng:Surcharges_and_Phases.cost})",
+         "number_format": "#,##0",
+         "text_decimals": 0,
+         "note": "total effort at the day rate of the Parameter sheet - an order of magnitude, not an offer",
+         "when": "!scenario_mode"
+        },
+        {
+         "id": "dev_{o.id}",
+         "label": "{o.label}: development ({estimation.unit_short.en})",
+         "formula": "=SUM({rng:Estimation.pd_{o.id}})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "the {estimation.size_term.en} sizes of all requirements, positions summed",
+         "when": "!scenario_mode"
+        },
+        {
+         "id": "xxl_{o.id}",
+         "label": "{o.label}: requirements above the sprint limit",
+         "formula": "=COUNTIF({rng:Estimation.flag_{o.id}},\"{L:_not_sprint}\")+COUNTIF({rng:Estimation.flag_{o.id}},\"{L:_cut}\")",
+         "note": "{last:estimation.sizes} or split into positions (sheet Estimation_Positions)"
+        },
+        {
+         "id": "open_{o.id}",
+         "label": "{o.label}: not assessed",
+         "formula": "=COUNTIF({rng:Estimation.appr_{o.id}},\"{L:NOT-ASSESSED}\")",
+         "note": "must be 0",
+         "edition": "full"
+        }
+       ],
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "scenarios",
+       "when": "scenario_mode",
+       "kpis": [
+        {
+         "id": "total_{s.id}",
+         "label": "{s.label}: total effort ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},\"{s.label}\",{rng:Surcharges_and_Phases.pd})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "{s.option_label}: {target.platform} with surcharges and fixed phases, plus {estimation.integration_platform} (sheet Scenarios)",
+         "when_set": [
+          {
+           "when": "!is",
+           "set": {
+            "note": "{s.option_label}: development, surcharges and fixed phases of this scenario's row classes (sheet Scenarios)"
+           }
+          }
+         ]
+        },
+        {
+         "id": "cost_{s.id}",
+         "label": "{s.label}: cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},\"{s.label}\",{rng:Surcharges_and_Phases.cost})",
+         "number_format": "#,##0",
+         "text_decimals": 0,
+         "note": "Total effort at the day rate of the Parameters sheet - an order of magnitude, not a quote"
+        },
+        {
+         "id": "platform_{s.id}",
+         "label": "{s.label}: {target.platform} ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},\"{s.label}\",{rng:Surcharges_and_Phases.area},\"{target.platform}\")",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "development, saving, surcharges and fixed phases"
+        },
+        {
+         "id": "is_{s.id}",
+         "when": "is",
+         "label": "{s.label}: {estimation.integration_platform} ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},\"{s.label}\",{rng:Surcharges_and_Phases.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "development on {estimation.integration_platform} with the same surcharges"
+        }
+       ]
+      },
+      {
+       "id": "wp_total",
+       "when": "system_mode",
+       "label": "Work packages in the selected scenario",
+       "formula": "=SUM({rng:Estimation.insel})",
+       "note": "one row per work package on sheet Estimation, inputs of other owners included"
+      },
+      {
+       "id": "total_sel",
+       "when": "system_mode",
+       "label": "Total effort in the selected scenario ({estimation.unit_short.en})",
+       "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.insel},1)",
+       "number_format": "#,##0.0",
+       "text_decimals": 1,
+       "note": "every system: development, surcharges and fixed phases (sheet Surcharges_and_Phases); the scenario is chosen on sheet Parameters"
+      },
+      {
+       "id": "cost_sel",
+       "when": [
+        "system_mode",
+        "!hide_cost"
+       ],
+       "label": "Cost in the selected scenario ({estimation.currency})",
+       "formula": "=SUMIFS({rng:Surcharges_and_Phases.cost},{rng:Surcharges_and_Phases.insel},1)",
+       "number_format": "#,##0",
+       "text_decimals": 0,
+       "note": "total effort at the day rate of sheet Parameters - an order of magnitude, not an offer"
+      },
+      {
+       "repeat": "scenarios",
+       "when": "system_multi",
+       "kpis": [
+        {
+         "id": "sctotal_{s.id}",
+         "label": "{s.label}: total effort ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},\"{s.q}\",{rng:Scenarios.pd})",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "every system of this scenario (sheet Scenarios)"
+        }
+       ]
+      },
+      {
+       "repeat": "systems",
+       "when": "system_mode",
+       "kpis": [
+        {
+         "id": "sys_{y.id}",
+         "label": "{y.label}: effort in the selected scenario ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.system},\"{y.q}\",{rng:Surcharges_and_Phases.insel},1)",
+         "number_format": "#,##0.0",
+         "text_decimals": 1,
+         "note": "development, surcharges and fixed phases; estimated by {y.owner}"
+        }
+       ]
+      },
+      {
+       "id": "cond_sel",
+       "when": "system_mode",
+       "label": "of which conditional development ({estimation.unit_short.en})",
+       "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.insel},1,{rng:Estimation.condition},\"<>\")",
+       "number_format": "#,##0.0",
+       "text_decimals": 1,
+       "note": "work packages of rows with a condition (column Condition)"
+      },
+      {
+       "id": "interim_sel",
+       "when": "system_mode",
+       "label": "of which development for interim solutions ({estimation.unit_short.en})",
+       "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.insel},1,{rng:Estimation.interim},\"<>\")",
+       "number_format": "#,##0.0",
+       "text_decimals": 1,
+       "note": "work packages of rows that describe an interim solution"
+      },
+      {
+       "id": "open_total",
+       "when": "system_mode",
+       "label": "Open inputs of other owners",
+       "formula": "=COUNTIFS({rng:Estimation.pd},\"\",{rng:Estimation.req_id},\"<>\")",
+       "note": "empty effort cells on sheet Estimation - their effort is missing from every total until it is entered"
+      },
+      {
+       "repeat": "owners",
+       "when": "system_mode",
+       "kpis": [
+        {
+         "id": "open_{w.id}",
+         "label": "Open inputs: {w.label}",
+         "formula": "=COUNTIFS({rng:Estimation.owner},\"{w.q}\",{rng:Estimation.pd},\"\")",
+         "note": "empty effort cells of this owner"
+        }
+       ]
+      },
+      {
+       "id": "open_share",
+       "when": "system_mode",
+       "label": "Share of open inputs in all work packages",
+       "formula": "=IFERROR(COUNTIFS({rng:Estimation.pd},\"\",{rng:Estimation.req_id},\"<>\")/SUM({rng:Estimation.insel}),0)",
+       "number_format": "0%",
+       "note": "open inputs per work package in the selected scenario"
+      },
+      {
+       "id": "gaps",
+       "when": "system_mode",
+       "label": "Gaps: not solvable in their system",
+       "formula": "=COUNTIFS({rng:Estimation.coverage},\"{L:gap|cov}\",{rng:Estimation.insel},1)",
+       "note": "how they were decided: sheet Completeness"
+      }
+     ],
+     "tiles": [
+      {
+       "kpi": "req_total",
+       "status": "neutral",
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "options",
+       "kpis": [
+        {
+         "kpi": "total_{o.id}",
+         "status": "standard"
+        },
+        {
+         "kpi": "cost_{o.id}",
+         "status": "rework"
+        }
+       ],
+       "when": [
+        "!scenario_mode",
+        "!system_mode"
+       ]
+      },
+      {
+       "repeat": "scenarios",
+       "when": "scenario_mode",
+       "kpis": [
+        {
+         "kpi": "total_{s.id}",
+         "status": "standard"
+        }
+       ]
+      },
+      {
+       "kpi": "total_sel",
+       "status": "standard",
+       "when": "system_mode"
+      },
+      {
+       "kpi": "cost_sel",
+       "status": "rework",
+       "when": [
+        "system_mode",
+        "!hide_cost"
+       ]
+      },
+      {
+       "kpi": "open_total",
+       "status": "neutral",
+       "when": "system_mode"
+      },
+      {
+       "kpi": "wp_total",
+       "status": "neutral",
+       "when": "system_mode"
+      }
+     ],
+     "charts": [
+      {
+       "type": "bar",
+       "block": "cmp",
+       "title": "Total effort per option ({estimation.unit_short.en})",
+       "when": [
+        "!scenario_mode",
+        "!system_mode"
+       ]
+      },
+      {
+       "type": "bar",
+       "block": "cmp",
+       "title": "Total effort per scenario ({estimation.unit_short.en})",
+       "when": "scenario_mode"
+      },
+      {
+       "type": "bar",
+       "block": "sys",
+       "title": "Total effort per system in the selected scenario ({estimation.unit_short.en})",
+       "when": "system_mode"
+      },
+      {
+       "type": "bar",
+       "block": "cmp",
+       "title": "Total effort per scenario ({estimation.unit_short.en})",
+       "when": "system_multi"
+      }
+     ],
+     "when_set": [
+      {
+       "when": "system_mode",
+       "set": {
+        "readme": "Total effort and cost of the selected scenario, per system, open inputs of other owners and the assessment in words (formulas over the detail sheets)"
+       }
+      }
+     ]
+    },
+    {
+     "name": "README",
+     "type": "readme"
+    },
+    {
+     "name": "Parameters",
+     "type": "parameters",
+     "readme": "day rate, sprint limit, {estimation.size_term.en} mapping and surcharges per option - editable; every total, cost and chart recomputes",
+     "headers": [
+      "Parameter",
+      "Value",
+      "Meaning"
+     ],
+     "tables_beside": true,
+     "rows": [
+      {
+       "name": "Day rate",
+       "value": "$estimation.day_rate",
+       "meaning": "day rate in {estimation.currency} for the cost per option - an order of magnitude, not an offer",
+       "when": "!hide_cost"
+      },
+      {
+       "name": "Sprint limit",
+       "value": "$estimation.sprint_limit_pd",
+       "meaning": "from this effort in {estimation.unit} a requirement does not fit a sprint ({last:estimation.sizes}, flagged); anything larger is split into positions",
+       "when": "!system_mode"
+      },
+      {
+       "repeat": "selsc",
+       "when": "system_mode",
+       "rows": [
+        {
+         "name": "Scenario",
+         "value": "{f.label}",
+         "validation": "{f.labels}",
+         "meaning": "the scenario the single-scenario sheets show (client lists, Estimation, Totals, key figures); chosen from the table of scenarios"
+        }
+       ]
+      }
+     ],
+     "tables": [
+      {
+       "id": "tshirt",
+       "title": "{estimation.size_term.en} mapping: size to {estimation.unit_short.en}",
+       "headers": [
+        {
+         "id": "size",
+         "header": "Size",
+         "width": 18
+        },
+        {
+         "id": "pd",
+         "header": "Effort ({estimation.unit_short.en})",
+         "width": 12
+        }
+       ],
+       "rows": "$estimation.tshirt_map"
+      },
+      {
+       "id": "surcharge",
+       "title": "Surcharges per option in % of the development: PM project management, SA solution architecture, BA business analysis, QA quality assurance",
+       "headers": [
+        {
+         "id": "role",
+         "header": "Role",
+         "width": 18
+        },
+        {
+         "repeat": "options",
+         "headers": [
+          {
+           "id": "{o.id}",
+           "header": "{o.label}: surcharge (%)",
+           "from": "pct",
+           "width": 16
+          }
+         ]
+        }
+       ],
+       "rows": "$estimation.surcharges",
+       "when": "!system_mode"
+      },
+      {
+       "id": "surcharge",
+       "when": "system_mode",
+       "title": "Surcharges per system and option in % on the development: PM project management, SA solution architecture, BA business analysis, QA quality assurance",
+       "headers": [
+        {
+         "id": "role",
+         "header": "Role",
+         "width": 18
+        },
+        {
+         "repeat": "sysopts",
+         "headers": [
+          {
+           "id": "{k.key}",
+           "header": "{k.label}: surcharge (%)",
+           "from": "pct",
+           "width": 16
+          }
+         ]
+        }
+       ],
+       "rows": "$estimation.surcharges"
+      },
+      {
+       "id": "range",
+       "when": [
+        "system_mode",
+        "range"
+       ],
+       "title": "Range: factor on the effort per certainty of the estimate",
+       "headers": [
+        {
+         "id": "level",
+         "header": "Certainty",
+         "label": true,
+         "width": 14
+        },
+        {
+         "id": "min",
+         "header": "Factor min",
+         "width": 11
+        },
+        {
+         "id": "max",
+         "header": "Factor max",
+         "width": 11
+        }
+       ],
+       "rows": "$estimation.range_factors"
+      },
+      {
+       "id": "pick",
+       "when": "system_mode",
+       "title": "Scenarios: the option per system",
+       "headers": [
+        {
+         "id": "scenario",
+         "header": "Scenario",
+         "width": 20
+        },
+        {
+         "id": "system",
+         "header": "System",
+         "width": 20
+        },
+        {
+         "id": "option",
+         "header": "Option",
+         "width": 20
+        },
+        {
+         "id": "parent",
+         "header": "Base option",
+         "width": 16
+        }
+       ],
+       "rows": [
+        {
+         "repeat": "picks",
+         "rows": [
+          {
+           "scenario": "{k.scenario}",
+           "system": "{k.system}",
+           "option": "{k.option}",
+           "parent": "{k.parent}"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "components",
+       "when": [
+        "system_mode",
+        "components"
+       ],
+       "title": "Promised components per system",
+       "headers": [
+        {
+         "id": "component",
+         "header": "Component",
+         "width": 24
+        },
+        {
+         "id": "system",
+         "header": "System",
+         "width": 20
+        }
+       ],
+       "rows": [
+        {
+         "repeat": "components",
+         "rows": [
+          {
+           "component": "{c.label}",
+           "system": "{c.system}"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "system_mode",
+       "set": {
+        "readme": "Day rate, the selected scenario, {estimation.size_term.en} mapping, surcharges per system and option, the range per certainty of the estimate and the option per system in each scenario - editable; every total, all costs and every chart recalculate"
+       }
+      }
+     ]
+    },
+    {
+     "repeat": "passthrough",
+     "when": "system_mode",
+     "sheets": [
+      {
+       "name": "{p.name}",
+       "type": "table",
+       "dataset": "passthrough:{p.group}",
+       "table_name": "{p.table}",
+       "readme": "The client's list as received (list “{p.sheet}”, columns unchanged and in their order), beside it per system the effort in the selected scenario (sheet Parameters): the sum of the work packages that roll up to the row, of which conditional and of which interim solution, the number of work packages and the impact per system",
+       "columns": [
+        {
+         "splice": "p.columns"
+        },
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "id": "sys_{y.id}",
+           "header": "{y.label} ({estimation.unit_short.en})",
+           "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:c_{p.idcol}}&\"\",{rng:Estimation.insel},1,{rng:Estimation.system},\"{y.q}\"))",
+           "number_format": "#,##0.0",
+           "width": 12
+          }
+         ]
+        },
+        {
+         "id": "total",
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:c_{p.idcol}}&\"\",{rng:Estimation.insel},1))",
+         "number_format": "#,##0.0",
+         "width": 11
+        },
+        {
+         "id": "cond",
+         "header": "of which conditional ({estimation.unit_short.en})",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:c_{p.idcol}}&\"\",{rng:Estimation.insel},1,{rng:Estimation.condition},\"<>\"))",
+         "number_format": "#,##0.0",
+         "width": 11
+        },
+        {
+         "id": "interim",
+         "header": "of which interim solution ({estimation.unit_short.en})",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:c_{p.idcol}}&\"\",{rng:Estimation.insel},1,{rng:Estimation.interim},\"<>\"))",
+         "number_format": "#,##0.0",
+         "width": 12
+        },
+        {
+         "id": "wpn",
+         "header": "Number of work packages",
+         "formula": "=IF({cell:c_{p.idcol}}=\"\",\"\",COUNTIFS({rng:Estimation.rollup},{cell:c_{p.idcol}}&\"\",{rng:Estimation.insel},1))",
+         "width": 11
+        },
+        {
+         "id": "impacts",
+         "header": "Impact per system",
+         "field": "impacts",
+         "wrap": true,
+         "sparse": true,
+         "width": 50
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Other_Rows",
+     "type": "table",
+     "dataset": "other_rows",
+     "table_name": "OtherRows",
+     "when": [
+      "system_mode",
+      "other_rows"
+     ],
+     "readme": "Rows that are on no list of the client (technical rows without a client row, interfaces, added sections) - per system their effort in the selected scenario; together with the client lists they make up the whole development (reconciliation on sheet Totals)",
+     "columns": [
+      {
+       "id": "rid",
+       "header": "ID",
+       "field": "id",
+       "width": 11
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "wrap": true,
+       "verbatim": true,
+       "width": 30
+      },
+      {
+       "header": "Group",
+       "field": "group",
+       "label": true,
+       "width": 14
+      },
+      {
+       "repeat": "systems",
+       "columns": [
+        {
+         "id": "sys_{y.id}",
+         "header": "{y.label} ({estimation.unit_short.en})",
+         "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:rid}&\"\",{rng:Estimation.insel},1,{rng:Estimation.system},\"{y.q}\"))",
+         "number_format": "#,##0.0",
+         "width": 12
+        }
+       ]
+      },
+      {
+       "id": "total",
+       "header": "Total ({estimation.unit_short.en})",
+       "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:rid}&\"\",{rng:Estimation.insel},1))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "cond",
+       "header": "of which conditional ({estimation.unit_short.en})",
+       "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:rid}&\"\",{rng:Estimation.insel},1,{rng:Estimation.condition},\"<>\"))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "interim",
+       "header": "of which interim solution ({estimation.unit_short.en})",
+       "formula": "=IF({cell:rid}=\"\",\"\",SUMIFS({rng:Estimation.pd},{rng:Estimation.rollup},{cell:rid}&\"\",{rng:Estimation.insel},1,{rng:Estimation.interim},\"<>\"))",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "wpn",
+       "header": "Number of work packages",
+       "formula": "=IF({cell:rid}=\"\",\"\",COUNTIFS({rng:Estimation.rollup},{cell:rid}&\"\",{rng:Estimation.insel},1))",
+       "width": 11
+      },
+      {
+       "id": "impacts",
+       "header": "Impact per system",
+       "field": "impacts",
+       "wrap": true,
+       "sparse": true,
+       "width": 50
+      }
+     ]
+    },
+    {
+     "name": "Requirements",
+     "type": "table",
+     "dataset": "requirements",
+     "readme": "The client's requirement list as received - the reference for every trace",
+     "table_name": "Requirements",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 10
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 18,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "width": 30,
+       "wrap": true,
+       "verbatim": true
+      },
+      {
+       "header": "Description",
+       "field": "description",
+       "width": 55,
+       "wrap": true,
+       "verbatim": true,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Acceptance criteria",
+       "field": "acceptance_criteria",
+       "width": 45,
+       "wrap": true,
+       "verbatim": true,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Release",
+       "field": "phase",
+       "width": 10,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Priority",
+       "field": "priority",
+       "width": 9,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Group",
+       "field": "group",
+       "width": 11,
+       "label": true,
+       "emphasis": "support",
+       "group": "detail"
+      },
+      {
+       "header": "Exclusions",
+       "field": "exclusions",
+       "width": 40,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "verbatim": true,
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "References",
+       "field": "references",
+       "sep": ", ",
+       "width": 18,
+       "emphasis": "support",
+       "group": "detail",
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      },
+      {
+       "header": "Sources",
+       "field": "sources",
+       "sep": ", ",
+       "width": 16,
+       "emphasis": "support",
+       "group": "detail",
+       "when_set": [
+        {
+         "when": "system_mode",
+         "set": {
+          "sparse": true
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Estimation",
+     "type": "table",
+     "dataset": "wps",
+     "row_key": "req_id",
+     "table_name": "Estimation",
+     "when": "system_mode",
+     "readme": "One row per work package (requirement × system × option, for a dependent system per base option), grouped by requirement: starting point, coverage, approach, {estimation.size_term.en} size, effort from the {estimation.size_term.en} mapping (with positions their sum) with its range by the certainty of the estimate (sheet Parameters), estimation assumptions and basis; rows of other owners are empty input cells",
+     "columns": [
+      {
+       "header": "Requirement",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "width": 24,
+       "wrap": true,
+       "verbatim": true
+      },
+      {
+       "id": "rollup",
+       "header": "Rolls up to",
+       "field": "rollup",
+       "width": 11
+      },
+      {
+       "id": "epic",
+       "header": "Epic",
+       "field": "epic",
+       "width": 14
+      },
+      {
+       "id": "release",
+       "header": "Release",
+       "field": "release",
+       "width": 10
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 18
+      },
+      {
+       "id": "option",
+       "header": "Option",
+       "field": "option",
+       "width": 16,
+       "sparse": true
+      },
+      {
+       "id": "parent",
+       "header": "Base option",
+       "field": "parent",
+       "width": 14,
+       "sparse": true
+      },
+      {
+       "id": "start",
+       "header": "Starting point",
+       "field": "starting_point",
+       "label": true,
+       "label_ctx": "sp",
+       "width": 13,
+       "sparse": true
+      },
+      {
+       "id": "coverage",
+       "header": "Coverage",
+       "field": "coverage",
+       "label": true,
+       "label_ctx": "cov",
+       "width": 12,
+       "sparse": true
+      },
+      {
+       "id": "appr",
+       "header": "Approach",
+       "field": "approach",
+       "label": true,
+       "label_ctx": "appr",
+       "width": 16,
+       "sparse": true
+      },
+      {
+       "id": "impact",
+       "header": "Impact",
+       "field": "impact",
+       "wrap": true,
+       "width": 30,
+       "sparse": true
+      },
+      {
+       "id": "mech",
+       "header": "Mechanism",
+       "field": "mechanism",
+       "wrap": true,
+       "width": 24,
+       "sparse": true
+      },
+      {
+       "id": "size",
+       "header": "{estimation.size_column.en}",
+       "field": "size",
+       "emphasis": "decision",
+       "status": "$estimation.size_status",
+       "validation": "$estimation.sizes",
+       "sparse": true,
+       "width": 9,
+       "number_format": "@"
+      },
+      {
+       "id": "pd",
+       "header": "Effort ({estimation.unit_short.en})",
+       "field": "pd_input",
+       "formula_field": "pd_formula",
+       "default": null,
+       "input_field": "input",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "pd_min",
+       "header": "{estimation.unit_short.en} min",
+       "formula": "=IF({cell:pd}=\"\",\"\",{cell:pd}*IFERROR(INDEX({pt:range.min},MATCH({cell:certainty},{pt:range.level},0)),1))",
+       "number_format": "#,##0.0",
+       "width": 9,
+       "when": "range"
+      },
+      {
+       "id": "pd_max",
+       "header": "{estimation.unit_short.en} max",
+       "formula": "=IF({cell:pd}=\"\",\"\",{cell:pd}*IFERROR(INDEX({pt:range.max},MATCH({cell:certainty},{pt:range.level},0)),1))",
+       "number_format": "#,##0.0",
+       "width": 9,
+       "when": "range"
+      },
+      {
+       "id": "certainty",
+       "header": "Certainty of the estimate",
+       "field": "confidence",
+       "label": true,
+       "internal": false,
+       "sparse": true,
+       "width": 12
+      },
+      {
+       "id": "asm",
+       "header": "Estimation assumptions",
+       "field": "assumption",
+       "wrap": true,
+       "sparse": true,
+       "width": 30
+      },
+      {
+       "id": "basis",
+       "header": "Basis",
+       "grundlage": true,
+       "grundlage_from": [
+        "ev"
+       ],
+       "grundlage_text_from": [
+        "asm"
+       ],
+       "grundlage_default_field": "basis_default",
+       "grundlage_key": "akeys",
+       "grundlage_key_labels": "akey_labels",
+       "width": 26
+      },
+      {
+       "id": "routed",
+       "header": "Routed from",
+       "field": "routed_from",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "condition",
+       "header": "Condition",
+       "field": "condition",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "interim",
+       "header": "Interim solution",
+       "field": "interim",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "owner",
+       "header": "Estimated by",
+       "field": "owner",
+       "width": 16
+      },
+      {
+       "id": "insel",
+       "header": "In the selected scenario",
+       "formula_field": "insel_f",
+       "field": "insel_f",
+       "emphasis": "support",
+       "group": "sc",
+       "width": 10
+      },
+      {
+       "repeat": "scenarios",
+       "columns": [
+        {
+         "id": "in_{s.id}",
+         "header": "In {s.label}",
+         "formula_field": "in_f.{s.id}",
+         "field": "in_f.{s.id}",
+         "emphasis": "support",
+         "group": "sc",
+         "width": 10
+        }
+       ]
+      },
+      {
+       "id": "ev",
+       "header": "Locations",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "d",
+       "edition": "full",
+       "width": 40
+      },
+      {
+       "id": "der",
+       "header": "Derivation",
+       "field": "derivation",
+       "wrap": true,
+       "emphasis": "support",
+       "group": "d",
+       "width": 40
+      }
+     ]
+    },
+    {
+     "name": "Estimation",
+     "type": "table",
+     "dataset": "estimation",
+     "row_key": "req_id",
+     "decision_budget": "per_block",
+     "table_name": "Estimation",
+     "pages_wide": 1,
+     "readme": "One row per requirement, one column block per option: approach, {estimation.size_term.en} size, effort from the {estimation.size_term.en} mapping (the sum of its positions where it has some), note on the sprint limit, estimation assumptions and basis; collapsed: evidence, derivation, mechanism",
+     "columns": [
+      {
+       "header": "Requirement",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "width": 26,
+       "wrap": true,
+       "verbatim": true
+      },
+      {
+       "id": "klasse",
+       "header": "Class",
+       "field": "klasse",
+       "label": true,
+       "label_ctx": "cls",
+       "width": 16,
+       "when": "row_classes"
+      },
+      {
+       "header": "Epic",
+       "field": "epic",
+       "width": 16
+      },
+      {
+       "header": "Release",
+       "field": "release",
+       "width": 10
+      },
+      {
+       "header": "Priority",
+       "field": "priority",
+       "width": 9
+      },
+      {
+       "repeat": "options",
+       "columns": [
+        {
+         "id": "appr_{o.id}",
+         "header": "{o.label}: Approach",
+         "field": "opt.{o.id}.approach",
+         "label": true,
+         "label_ctx": "appr",
+         "validation": "$estimation.approaches.{o.start}",
+         "width": 21
+        },
+        {
+         "id": "size_{o.id}",
+         "header": "{o.label}: {estimation.size_term.en}",
+         "field": "opt.{o.id}.size",
+         "emphasis": "decision",
+         "status": "$estimation.size_status",
+         "validation": "$estimation.sizes",
+         "sparse": true,
+         "width": 9,
+         "number_format": "@"
+        },
+        {
+         "id": "pd_{o.id}",
+         "header": "{o.label}: Effort ({estimation.unit_short.en})",
+         "formula": "=IF(COUNTIFS({rng:Estimation_Positions.req_id},{cell:req_id},{rng:Estimation_Positions.option},\"{o.label}\")>0,SUMIFS({rng:Estimation_Positions.pd},{rng:Estimation_Positions.req_id},{cell:req_id},{rng:Estimation_Positions.option},\"{o.label}\"),IF({cell:size_{o.id}}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:size_{o.id}},\",\",\".\"),{pt:tshirt.size},0)),0)))",
+         "number_format": "#,##0.0",
+         "width": 11
+        },
+        {
+         "id": "flag_{o.id}",
+         "header": "{o.label}: Note",
+         "formula": "=IF(COUNTIFS({rng:Estimation_Positions.req_id},{cell:req_id},{rng:Estimation_Positions.option},\"{o.label}\")>0,\"{L:_cut}\",IF({cell:pd_{o.id}}>={p:Sprint limit},\"{L:_not_sprint}\",\"\"))",
+         "width": 14
+        },
+        {
+         "id": "is_size_{o.id}",
+         "header": "{o.label}: {estimation.integration_platform} {estimation.size_term.en}",
+         "field": "opt.{o.id}.is_size",
+         "validation": "$estimation.sizes",
+         "sparse": true,
+         "width": 11,
+         "when": "is",
+         "number_format": "@"
+        },
+        {
+         "id": "is_pd_{o.id}",
+         "header": "{o.label}: {estimation.integration_platform} ({estimation.unit_short.en})",
+         "formula": "=IF(COUNTIFS({rng:Estimation_Positions.req_id},{cell:req_id},{rng:Estimation_Positions.option},\"{o.label}\")>0,SUMIFS({rng:Estimation_Positions.is_pd},{rng:Estimation_Positions.req_id},{cell:req_id},{rng:Estimation_Positions.option},\"{o.label}\"),IF({cell:is_size_{o.id}}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:is_size_{o.id}},\",\",\".\"),{pt:tshirt.size},0)),0)))",
+         "number_format": "#,##0.0",
+         "width": 11,
+         "when": "is"
+        },
+        {
+         "id": "is_note_{o.id}",
+         "header": "{o.label}: {estimation.integration_platform} note",
+         "field": "opt.{o.id}.is_note",
+         "wrap": true,
+         "sparse": true,
+         "width": 26,
+         "when": "is"
+        },
+        {
+         "id": "asm_{o.id}",
+         "header": "{o.label}: Estimation assumptions",
+         "field": "opt.{o.id}.assumption",
+         "wrap": true,
+         "sparse": true,
+         "width": 30
+        },
+        {
+         "id": "basis_{o.id}",
+         "header": "{o.label}: Basis",
+         "grundlage": true,
+         "grundlage_from": [
+          "ev_{o.id}"
+         ],
+         "grundlage_text_from": [
+          "asm_{o.id}"
+         ],
+         "grundlage_key": "req_id@{o.id}",
+         "width": 28
+        },
+        {
+         "id": "save_size_{o.id}",
+         "header": "{o.label}: Saving {estimation.size_term.en}",
+         "field": "opt.{o.id}.saved_size",
+         "validation": "$estimation.sizes",
+         "sparse": true,
+         "width": 11,
+         "when": "savings_{o.id}",
+         "number_format": "@"
+        },
+        {
+         "id": "save_pd_{o.id}",
+         "header": "{o.label}: Saving ({estimation.unit_short.en})",
+         "formula": "=IF({cell:save_size_{o.id}}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:save_size_{o.id}},\",\",\".\"),{pt:tshirt.size},0)),0))",
+         "number_format": "#,##0.0",
+         "width": 11,
+         "when": "savings_{o.id}"
+        },
+        {
+         "id": "saves_{o.id}",
+         "header": "{o.label}: relieves",
+         "field": "opt.{o.id}.saves",
+         "sep": ", ",
+         "sparse": true,
+         "width": 16,
+         "when": "savings_{o.id}"
+        },
+        {
+         "id": "ev_{o.id}",
+         "header": "{o.label}: Evidence",
+         "field": "opt.{o.id}.evidence",
+         "evidence": true,
+         "wrap": true,
+         "emphasis": "support",
+         "group": "d_{o.id}",
+         "width": 40,
+         "when_set": [
+          {
+           "when": "scenario_mode",
+           "set": {
+            "edition": "full"
+           }
+          }
+         ]
+        },
+        {
+         "id": "der_{o.id}",
+         "header": "{o.label}: Derivation",
+         "field": "opt.{o.id}.derivation",
+         "wrap": true,
+         "emphasis": "support",
+         "group": "d_{o.id}",
+         "width": 40
+        },
+        {
+         "id": "mech_{o.id}",
+         "header": "{o.label}: Mechanism",
+         "field": "opt.{o.id}.mechanism",
+         "wrap": true,
+         "emphasis": "support",
+         "group": "d_{o.id}",
+         "width": 28
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "readme": "One row per requirement (client requirement, technical migration, refactoring), one column block per option: approach, {estimation.size_term.en} size, effort from the {estimation.size_term.en} mapping (for positions their sum), sprint-limit note, effort on {estimation.integration_platform}, estimation assumptions and basis; for refactoring the saving in the migration"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Estimation_Positions",
+     "type": "table",
+     "dataset": "positions",
+     "row_key": "req_id",
+     "table_name": "EstimationPositions",
+     "readme": "Requirements above the sprint limit, split into positions (each at most {last:estimation.sizes}); their effort on the Estimation sheet is the sum of these rows",
+     "columns": [
+      {
+       "header": "Requirement",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "header": "Position",
+       "field": "position",
+       "width": 9
+      },
+      {
+       "header": "Option",
+       "field": "option",
+       "width": 14
+      },
+      {
+       "header": "Content of the position",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "header": "{estimation.size_term.en}",
+       "id": "size",
+       "field": "size",
+       "emphasis": "decision",
+       "status": "$estimation.size_status",
+       "validation": "$estimation.sizes",
+       "width": 9,
+       "number_format": "@"
+      },
+      {
+       "header": "Effort ({estimation.unit_short.en})",
+       "id": "pd",
+       "formula": "=IF({cell:size}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:size},\",\",\".\"),{pt:tshirt.size},0)),0))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "header": "{estimation.integration_platform} {estimation.size_term.en}",
+       "id": "is_size",
+       "field": "is_size",
+       "validation": "$estimation.sizes",
+       "sparse": true,
+       "width": 11,
+       "when": "is",
+       "number_format": "@"
+      },
+      {
+       "header": "{estimation.integration_platform} ({estimation.unit_short.en})",
+       "id": "is_pd",
+       "formula": "=IF({cell:is_size}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:is_size},\",\",\".\"),{pt:tshirt.size},0)),0))",
+       "number_format": "#,##0.0",
+       "width": 11,
+       "when": "is"
+      },
+      {
+       "header": "Estimation assumptions",
+       "field": "assumption",
+       "wrap": true,
+       "sparse": true,
+       "width": 30
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 28
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "width": 40,
+       "when_set": [
+        {
+         "when": "scenario_mode",
+         "set": {
+          "edition": "full"
+         }
+        }
+       ]
+      },
+      {
+       "header": "Derivation",
+       "field": "derivation",
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "width": 40
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Estimation_Positions",
+     "type": "table",
+     "dataset": "sys_positions",
+     "row_key": "req_id",
+     "table_name": "EstimationPositions",
+     "when": "system_mode",
+     "readme": "Work packages above the sprint limit, cut into positions (each at most {last:estimation.sizes}); their effort on sheet Estimation is the sum of these rows",
+     "columns": [
+      {
+       "id": "req_id",
+       "header": "Requirement",
+       "field": "req_id",
+       "width": 11
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 18
+      },
+      {
+       "id": "option",
+       "header": "Option",
+       "field": "option",
+       "width": 16,
+       "sparse": true
+      },
+      {
+       "id": "parent",
+       "header": "Base option",
+       "field": "parent",
+       "width": 14,
+       "sparse": true
+      },
+      {
+       "header": "Position",
+       "field": "position",
+       "width": 9
+      },
+      {
+       "header": "Content of the position",
+       "field": "title",
+       "width": 34,
+       "wrap": true
+      },
+      {
+       "id": "size",
+       "header": "{estimation.size_column.en}",
+       "field": "size",
+       "emphasis": "decision",
+       "status": "$estimation.size_status",
+       "validation": "$estimation.sizes",
+       "width": 9,
+       "number_format": "@"
+      },
+      {
+       "id": "pd",
+       "header": "Effort ({estimation.unit_short.en})",
+       "formula": "=IF({cell:size}=\"\",0,IFERROR(INDEX({pt:tshirt.pd},MATCH(SUBSTITUTE(\"\"&{cell:size},\",\",\".\"),{pt:tshirt.size},0)),0))",
+       "number_format": "#,##0.0",
+       "width": 11
+      },
+      {
+       "id": "asm",
+       "header": "Estimation assumptions",
+       "field": "assumption",
+       "wrap": true,
+       "sparse": true,
+       "width": 30
+      },
+      {
+       "header": "Basis",
+       "grundlage": true,
+       "width": 28
+      },
+      {
+       "id": "ev",
+       "header": "Locations",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "edition": "full",
+       "width": 40
+      },
+      {
+       "header": "Derivation",
+       "field": "derivation",
+       "wrap": true,
+       "emphasis": "support",
+       "group": "detail",
+       "width": 40
+      }
+     ]
+    },
+    {
+     "name": "Surcharges_and_Phases",
+     "type": "table",
+     "dataset": "ontop",
+     "table_name": "SurchargesPhases",
+     "readme": "Per option: the development (sum of the estimation), the PM, SA, BA and QA surcharges (rates from the Parameter sheet) and the fixed phases incl. the technical migration tasks without a requirement - their effort is editable",
+     "columns": [
+      {
+       "header": "Option",
+       "field": "option",
+       "option_tint": true,
+       "width": 14,
+       "when": "!scenario_mode"
+      },
+      {
+       "header": "Scenario",
+       "id": "scenario",
+       "field": "scenario",
+       "width": 20,
+       "when": "scenario_mode"
+      },
+      {
+       "header": "Area",
+       "id": "area",
+       "field": "area",
+       "width": 20,
+       "when": "scenario_mode"
+      },
+      {
+       "header": "Block",
+       "id": "block",
+       "field": "block",
+       "label": true,
+       "label_ctx": "blk",
+       "width": 26
+      },
+      {
+       "header": "Line",
+       "field": "title",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "header": "Rate",
+       "id": "rate",
+       "field": "rate",
+       "formula_field": "rate_formula",
+       "number_format": "0%",
+       "sparse": true,
+       "width": 8
+      },
+      {
+       "header": "Effort ({estimation.unit_short.en})",
+       "id": "pd",
+       "field": "pd",
+       "formula_field": "pd_formula",
+       "numeric": true,
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "header": "Cost ({estimation.currency})",
+       "id": "cost",
+       "formula": "={cell:pd}*{p:Day rate}",
+       "number_format": "#,##0",
+       "width": 12
+      },
+      {
+       "header": "Derivation",
+       "field": "derivation",
+       "wrap": true,
+       "width": 45
+      },
+      {
+       "header": "Total line",
+       "id": "line",
+       "field": "line",
+       "width": 22,
+       "emphasis": "support",
+       "group": "detail",
+       "when": "scenario_mode"
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "sparse": true,
+       "emphasis": "support",
+       "width": 36,
+       "when_set": [
+        {
+         "when": "scenario_mode",
+         "set": {
+          "edition": "full"
+         }
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "readme": "Per scenario: the {target.platform} development of its row classes (sum of the estimate), the saving through refactoring, the surcharges PM, SA, BA and QA (rates from the Parameters sheet), the scenario's fixed phases - their effort is editable - and the {estimation.integration_platform} development with the same surcharges"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Surcharges_and_Phases",
+     "type": "table",
+     "dataset": "sys_ontop",
+     "table_name": "SurchargesPhases",
+     "when": "system_mode",
+     "readme": "Per system and option: the development (sum of the work packages on sheet Estimation; a dependent system per base option), the surcharges PM, SA, BA and QA (rates from sheet Parameters, on inputs of other owners only on request) and the fixed phases - their effort is editable",
+     "columns": [
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 18
+      },
+      {
+       "id": "option",
+       "header": "Option",
+       "field": "option",
+       "sparse": true,
+       "width": 16
+      },
+      {
+       "id": "parent",
+       "header": "Base option",
+       "field": "parent",
+       "sparse": true,
+       "width": 14
+      },
+      {
+       "id": "scenario",
+       "header": "Scenario",
+       "field": "scenario",
+       "sparse": true,
+       "width": 18,
+       "when": "ontop_total"
+      },
+      {
+       "id": "block",
+       "header": "Block",
+       "field": "block",
+       "label": true,
+       "label_ctx": "blk",
+       "width": 20
+      },
+      {
+       "header": "Position",
+       "field": "title",
+       "wrap": true,
+       "width": 34
+      },
+      {
+       "id": "rate",
+       "header": "Rate",
+       "field": "rate",
+       "formula_field": "rate_formula",
+       "number_format": "0%",
+       "sparse": true,
+       "width": 8
+      },
+      {
+       "id": "pd",
+       "header": "Effort ({estimation.unit_short.en})",
+       "field": "pd",
+       "formula_field": "pd_formula",
+       "numeric": true,
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "cost",
+       "header": "Cost ({estimation.currency})",
+       "formula": "={cell:pd}*{p:Day rate}",
+       "number_format": "#,##0",
+       "width": 12,
+       "when": "!hide_cost"
+      },
+      {
+       "header": "Derivation",
+       "field": "derivation",
+       "wrap": true,
+       "width": 40
+      },
+      {
+       "id": "insel",
+       "header": "In the selected scenario",
+       "formula_field": "insel_f",
+       "field": "insel_f",
+       "emphasis": "support",
+       "group": "sc",
+       "width": 10
+      },
+      {
+       "repeat": "scenarios",
+       "columns": [
+        {
+         "id": "in_{s.id}",
+         "header": "In {s.label}",
+         "formula_field": "in_f.{s.id}",
+         "field": "in_f.{s.id}",
+         "emphasis": "support",
+         "group": "sc",
+         "width": 10
+        }
+       ]
+      },
+      {
+       "header": "Locations",
+       "field": "evidence",
+       "evidence": true,
+       "wrap": true,
+       "sparse": true,
+       "emphasis": "support",
+       "edition": "full",
+       "width": 36
+      }
+     ]
+    },
+    {
+     "name": "Scenarios",
+     "type": "overview",
+     "class": "overview",
+     "when": "scenario_mode",
+     "title": "Scenarios: effort and cost per scenario",
+     "readme": "Per scenario (option and row classes): {target.platform} development, saving, surcharges PM, SA, BA and QA, fixed phases; {estimation.integration_platform} development with the same surcharges; total effort and cost - all formulas over the sheet Surcharges_and_Phases",
+     "when_set": [
+      {
+       "when": "!is",
+       "set": {
+        "readme": "Per scenario (option and row classes): development, saving, surcharges PM, SA, BA and QA, fixed phases, total effort and cost - all formulas over the sheet Surcharges_and_Phases"
+       }
+      }
+     ],
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "{target.platform} per scenario ({estimation.unit_short.en})",
+       "row_header": "Line",
+       "row_values_from": "scenario_lines.platform",
+       "total_label": "{target.platform} total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}",
+           "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},\"{s.label}\",{rng:Surcharges_and_Phases.area},\"{target.platform}\",{rng:Surcharges_and_Phases.line},{row})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "is",
+       "title": "{estimation.integration_platform} per scenario ({estimation.unit_short.en})",
+       "row_header": "Line",
+       "row_values_from": "scenario_lines.is",
+       "total_label": "{estimation.integration_platform} total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}",
+           "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},\"{s.label}\",{rng:Surcharges_and_Phases.area},\"{estimation.integration_platform}\",{rng:Surcharges_and_Phases.line},{row})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "id": "sc",
+       "title": "Total per scenario",
+       "row_header": "Scenario",
+       "row_values_from": "scenarios.label",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Total effort per scenario ({estimation.unit_short.en})"
+       },
+       "columns": [
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "{target.platform} ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{target.platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{estimation.integration_platform} ({estimation.unit_short.en})",
+         "when": "is",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Scenarios",
+     "type": "table",
+     "dataset": "sys_scenarios",
+     "table_name": "ScenarioSystems",
+     "when": "system_multi",
+     "readme": "Per scenario and system: development, surcharges, fixed phases, total effort and cost, of which conditional and of which interim solution - formulas over the sheets Surcharges_and_Phases and Estimation",
+     "columns": [
+      {
+       "id": "scenario",
+       "header": "Scenario",
+       "field": "scenario",
+       "width": 20
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "width": 20
+      },
+      {
+       "id": "dev",
+       "header": "Development ({estimation.unit_short.en})",
+       "formula_field": "dev_f",
+       "field": "dev_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "sur",
+       "header": "Surcharges ({estimation.unit_short.en})",
+       "formula_field": "sur_f",
+       "field": "sur_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "ph",
+       "header": "Fixed phases ({estimation.unit_short.en})",
+       "formula_field": "ph_f",
+       "field": "ph_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "pd",
+       "header": "Total ({estimation.unit_short.en})",
+       "formula_field": "pd_f",
+       "field": "pd_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "cost",
+       "header": "Cost ({estimation.currency})",
+       "formula": "={cell:pd}*{p:Day rate}",
+       "number_format": "#,##0",
+       "width": 12,
+       "when": "!hide_cost"
+      },
+      {
+       "id": "cond",
+       "header": "of which conditional ({estimation.unit_short.en})",
+       "formula_field": "cond_f",
+       "field": "cond_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      },
+      {
+       "id": "interim",
+       "header": "of which interim solution ({estimation.unit_short.en})",
+       "formula_field": "interim_f",
+       "field": "interim_f",
+       "number_format": "#,##0.0",
+       "width": 12
+      }
+     ]
+    },
+    {
+     "name": "Totals",
+     "type": "overview",
+     "class": "overview",
+     "title": "Totals per option, per epic and per release",
+     "readme": "build-up of the total per option (development, surcharges, fixed phases, total, cost) and the development per epic and per release - all formulas",
+     "blocks": [
+      {
+       "type": "matrix",
+       "title": "Build-up per option",
+       "row_header": "Option",
+       "rows_are": "options",
+       "total": false,
+       "chart": false,
+       "columns": [
+        {
+         "header": "Development ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Surcharges ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Fixed phases ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:phase|blk}\")+SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "Above the sprint limit",
+         "formula": "=COUNTIF({rng:Estimation.flag_{o.id}},\"{L:_not_sprint}\")+COUNTIF({rng:Estimation.flag_{o.id}},\"{L:_cut}\")"
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "when": "scenario_mode",
+       "title": "Build-up per scenario",
+       "row_header": "Scenario",
+       "row_values_from": "scenarios.label",
+       "total": false,
+       "chart": false,
+       "columns": [
+        {
+         "header": "{target.platform}: development ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{target.platform}\",{rng:Surcharges_and_Phases.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Saving ({estimation.unit_short.en})",
+         "when": "refactoring",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.block},\"{L:saving|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{target.platform}: surcharges ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{target.platform}\",{rng:Surcharges_and_Phases.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Fixed phases ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.block},\"{L:phase|blk}\")+SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{target.platform} total ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{target.platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{estimation.integration_platform} total ({estimation.unit_short.en})",
+         "when": "is",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.cost})",
+         "number_format": "#,##0"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "title": "Development per epic",
+       "row_header": "Epic",
+       "row_values_from": "estimation.epic",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "options",
+         "columns": [
+          {
+           "header": "{o.label}: development ({estimation.unit_short.en})",
+           "formula": "=SUMIF({rng:Estimation.epic},{row},{rng:Estimation.pd_{o.id}})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "title": "Development per release",
+       "row_header": "Release",
+       "row_values_from": "estimation.release",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "options",
+         "columns": [
+          {
+           "header": "{o.label}: development ({estimation.unit_short.en})",
+           "formula": "=SUMIF({rng:Estimation.release},{row},{rng:Estimation.pd_{o.id}})",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "when": "scenario_mode",
+       "title": "Development per epic",
+       "row_header": "Epic",
+       "row_values_from": "estimation.epic",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}: development ({estimation.unit_short.en})",
+           "formula": "={s.f_epic}",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "scenario_mode",
+       "title": "Development per release",
+       "row_header": "Release",
+       "row_values_from": "estimation.release",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}: development ({estimation.unit_short.en})",
+           "formula": "={s.f_release}",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "row_classes",
+       "title": "Development per row class",
+       "row_header": "Row class",
+       "row_values_from": "classes.label",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}: development ({estimation.unit_short.en})",
+           "formula": "={s.f_class}",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "title": "Totals per scenario, epic, release and row class",
+        "readme": "Build-up of the total per scenario (development, saving, surcharges, fixed phases, {estimation.integration_platform}, total, cost) from the sheet Surcharges_and_Phases and the development per scenario by epic, release and row class (net of the saving) - all formulas"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Totals",
+     "type": "overview",
+     "class": "overview",
+     "when": "system_mode",
+     "title": "Totals per system, release and epic",
+     "readme": "For the selected scenario (sheet Parameters): build-up per system (development with its range, surcharges, fixed phases, total, cost, of which conditional, of which interim solution, open inputs), development per release and system and per epic and system; with several scenarios the total effort per system and scenario; the reconciliation of the client lists with the whole development - all formulas",
+     "blocks": [
+      {
+       "type": "kv",
+       "rows": [
+        {
+         "label": "Selected scenario (sheet Parameters)",
+         "formula": "={p:Scenario}"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "id": "sys",
+       "title": "Build-up per system in the selected scenario",
+       "row_header": "System",
+       "row_values_from": "sum_systems.label",
+       "total_label": "Total",
+       "chart": {
+        "type": "bar",
+        "column": 4,
+        "title": "Total effort per system ({estimation.unit_short.en})"
+       },
+       "columns": [
+        {
+         "header": "Development ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.system},{row},{rng:Surcharges_and_Phases.insel},1,{rng:Surcharges_and_Phases.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Surcharges ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.system},{row},{rng:Surcharges_and_Phases.insel},1,{rng:Surcharges_and_Phases.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Fixed phases ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.system},{row},{rng:Surcharges_and_Phases.insel},1,{rng:Surcharges_and_Phases.block},\"{L:phase|blk}\")+SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.system},{row},{rng:Surcharges_and_Phases.insel},1,{rng:Surcharges_and_Phases.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.system},{row},{rng:Surcharges_and_Phases.insel},1)",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Cost ({estimation.currency})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.cost},{rng:Surcharges_and_Phases.system},{row},{rng:Surcharges_and_Phases.insel},1)",
+         "number_format": "#,##0",
+         "when": "!hide_cost"
+        },
+        {
+         "header": "Development min ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd_min},{rng:Estimation.system},{row},{rng:Estimation.insel},1)",
+         "number_format": "#,##0.0",
+         "when": "range"
+        },
+        {
+         "header": "Development max ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd_max},{rng:Estimation.system},{row},{rng:Estimation.insel},1)",
+         "number_format": "#,##0.0",
+         "when": "range"
+        },
+        {
+         "header": "of which conditional ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.system},{row},{rng:Estimation.insel},1,{rng:Estimation.condition},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "of which interim solution ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.system},{row},{rng:Estimation.insel},1,{rng:Estimation.interim},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Open inputs",
+         "formula": "=COUNTIFS({rng:Estimation.system},{row},{rng:Estimation.pd},\"\")"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "title": "Development per release and system in the selected scenario",
+       "row_header": "Release",
+       "row_values_from": "wps.release",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "header": "{y.label} ({estimation.unit_short.en})",
+           "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.release},{row},{rng:Estimation.system},\"{y.q}\",{rng:Estimation.insel},1)",
+           "number_format": "#,##0.0"
+          }
+         ]
+        },
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.release},{row},{rng:Estimation.insel},1)",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "of which conditional ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.release},{row},{rng:Estimation.insel},1,{rng:Estimation.condition},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "of which interim solution ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.release},{row},{rng:Estimation.insel},1,{rng:Estimation.interim},\"<>\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "title": "Development per epic and system in the selected scenario",
+       "row_header": "Epic",
+       "row_values_from": "wps.epic",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "header": "{y.label} ({estimation.unit_short.en})",
+           "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.epic},{row},{rng:Estimation.system},\"{y.q}\",{rng:Estimation.insel},1)",
+           "number_format": "#,##0.0"
+          }
+         ]
+        },
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.epic},{row},{rng:Estimation.insel},1)",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "of which conditional ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.epic},{row},{rng:Estimation.insel},1,{rng:Estimation.condition},\"<>\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "of which interim solution ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.epic},{row},{rng:Estimation.insel},1,{rng:Estimation.interim},\"<>\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "system_multi",
+       "title": "Total effort per system and scenario ({estimation.unit_short.en})",
+       "row_header": "System",
+       "row_values_from": "sum_systems.label",
+       "total_label": "Total",
+       "chart": false,
+       "columns": [
+        {
+         "repeat": "scenarios",
+         "columns": [
+          {
+           "header": "{s.label}",
+           "formula": "=SUMIFS({rng:Scenarios.pd},{rng:Scenarios.system},{row},{rng:Scenarios.scenario},\"{s.q}\")",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "matrix",
+       "when": "components",
+       "title": "Promised components in the selected scenario",
+       "row_header": "Component",
+       "row_values_from": "components.label",
+       "total": false,
+       "chart": false,
+       "columns": [
+        {
+         "header": "System",
+         "formula": "=INDEX({pt:components.system},MATCH({row},{pt:components.component},0))"
+        },
+        {
+         "header": "Total effort of the system ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.system},INDEX({pt:components.system},MATCH({row},{pt:components.component},0)),{rng:Surcharges_and_Phases.insel},1)",
+         "number_format": "#,##0.0"
+        }
+       ]
+      },
+      {
+       "type": "kv",
+       "title": "Reconciliation: client lists and other rows make up the whole development",
+       "rows": [
+        {
+         "repeat": "passthrough",
+         "rows": [
+          {
+           "label": "List “{p.sheet}”: development ({estimation.unit_short.en})",
+           "formula": "=SUM({rng:{p.name}.total})"
+          }
+         ]
+        },
+        {
+         "when": "other_rows",
+         "label": "Other rows: development ({estimation.unit_short.en})",
+         "formula": "=SUM({rng:Other_Rows.total})"
+        },
+        {
+         "label": "Development in total (sheet Estimation) ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.insel},1)"
+        },
+        {
+         "repeat": "selsc",
+         "rows": [
+          {
+           "label": "Difference (must be 0)",
+           "formula": "=SUMIFS({rng:Estimation.pd},{rng:Estimation.insel},1)-({f.recon})"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Comparison",
+     "type": "overview",
+     "class": "overview",
+     "title": "Options side by side",
+     "readme": "the options side by side: total effort, cost and their parts, with a chart",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "cmp",
+       "title": "Total effort and cost per option",
+       "row_header": "Option",
+       "rows_are": "options",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Total effort per option ({estimation.unit_short.en})"
+       },
+       "columns": [
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "Development ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:dev|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Surcharges ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:surcharge|blk}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Fixed phases ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:phase|blk}\")+SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.option},{row},{rng:Surcharges_and_Phases.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        }
+       ],
+       "when": "!scenario_mode"
+      },
+      {
+       "type": "matrix",
+       "id": "cmp",
+       "when": "scenario_mode",
+       "title": "Total effort and cost per scenario",
+       "row_header": "Scenario",
+       "row_values_from": "scenarios.label",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Total effort per scenario ({estimation.unit_short.en})"
+       },
+       "columns": [
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.cost})",
+         "number_format": "#,##0"
+        },
+        {
+         "header": "{target.platform} total ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{target.platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "{estimation.integration_platform} total ({estimation.unit_short.en})",
+         "when": "is",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.area},\"{estimation.integration_platform}\")",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Fixed phases ({estimation.unit_short.en})",
+         "formula": "=SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.block},\"{L:phase|blk}\")+SUMIFS({rng:Surcharges_and_Phases.pd},{rng:Surcharges_and_Phases.scenario},{row},{rng:Surcharges_and_Phases.block},\"{L:migration-task|blk}\")",
+         "number_format": "#,##0.0"
+        }
+       ]
+      }
+     ],
+     "when_set": [
+      {
+       "when": "scenario_mode",
+       "set": {
+        "title": "Scenarios compared",
+        "readme": "The scenarios side by side: total effort, cost and their parts, with a chart (the same lines as the sheet Scenarios)"
+       }
+      }
+     ],
+     "when": "!system_mode"
+    },
+    {
+     "name": "Comparison",
+     "type": "overview",
+     "class": "overview",
+     "when": "system_multi",
+     "title": "Scenarios compared",
+     "readme": "The scenarios side by side: total effort, cost, their parts and the effort per system - which systems drive the difference -, with a chart (formulas over sheet Scenarios)",
+     "blocks": [
+      {
+       "type": "matrix",
+       "id": "cmp",
+       "title": "Total effort and cost per scenario",
+       "row_header": "Scenario",
+       "row_values_from": "sys_scenario_rows.label",
+       "total": false,
+       "chart": {
+        "type": "bar",
+        "column": 1,
+        "title": "Total effort per scenario ({estimation.unit_short.en})"
+       },
+       "columns": [
+        {
+         "header": "Total ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},{row},{rng:Scenarios.pd})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Cost ({estimation.currency})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},{row},{rng:Scenarios.cost})",
+         "number_format": "#,##0",
+         "when": "!hide_cost"
+        },
+        {
+         "header": "Development ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},{row},{rng:Scenarios.dev})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Surcharges ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},{row},{rng:Scenarios.sur})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "Fixed phases ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},{row},{rng:Scenarios.ph})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "of which conditional ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},{row},{rng:Scenarios.cond})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "header": "of which interim solution ({estimation.unit_short.en})",
+         "formula": "=SUMIF({rng:Scenarios.scenario},{row},{rng:Scenarios.interim})",
+         "number_format": "#,##0.0"
+        },
+        {
+         "repeat": "systems",
+         "columns": [
+          {
+           "header": "{y.label} ({estimation.unit_short.en})",
+           "formula": "=SUMIFS({rng:Scenarios.pd},{rng:Scenarios.scenario},{row},{rng:Scenarios.system},\"{y.q}\")",
+           "number_format": "#,##0.0"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Completeness",
+     "type": "table",
+     "dataset": "completeness",
+     "table_name": "Completeness",
+     "when": "system_mode",
+     "readme": "Is everything covered? Every row has a work package or is without a system for a stated reason; every interface end at a system of this estimate has a work package; open inputs of other owners; gaps (not solvable in a system) and how they were decided",
+     "columns": [
+      {
+       "header": "Check",
+       "field": "check_label",
+       "width": 20
+      },
+      {
+       "id": "row",
+       "header": "Row",
+       "field": "row",
+       "width": 11
+      },
+      {
+       "header": "Title",
+       "field": "title",
+       "wrap": true,
+       "verbatim": true,
+       "width": 26
+      },
+      {
+       "id": "system",
+       "header": "System",
+       "field": "system",
+       "sparse": true,
+       "width": 18
+      },
+      {
+       "header": "Detail",
+       "field": "detail",
+       "wrap": true,
+       "sparse": true,
+       "width": 40
+      },
+      {
+       "header": "Decision",
+       "field": "decision",
+       "wrap": true,
+       "sparse": true,
+       "width": 40
+      },
+      {
+       "id": "count",
+       "header": "Work packages",
+       "field": "count_f",
+       "formula_field": "count_f",
+       "width": 12
+      },
+      {
+       "id": "status",
+       "header": "Status",
+       "field": "status",
+       "formula_field": "status_f",
+       "emphasis": "decision",
+       "label_ctx": "chk",
+       "width": 18,
+       "status": {
+        "ok": "standard",
+        "filled": "standard",
+        "missing": "rebuild",
+        "open": "rework",
+        "none": "neutral",
+        "removed": "neutral",
+        "route": "standard",
+        "route-external": "assumption",
+        "overrule": "rework",
+        "reduce": "assumption"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Exclusions",
+     "type": "table",
+     "dataset": "exclusions",
+     "table_name": "Exclusions",
+     "readme": "what no figure of this workbook contains (licences, work on the ERP or S/4 side, hosting, ...) and what a figure depends on - with the effect if it does not hold",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 8
+      },
+      {
+       "header": "Kind",
+       "field": "kind",
+       "label": true,
+       "width": 13,
+       "emphasis": "decision",
+       "status": {
+        "dependency": "rework",
+        "exclusion": "neutral"
+       }
+      },
+      {
+       "header": "Exclusion",
+       "field": "assumption",
+       "width": 60,
+       "wrap": true
+      },
+      {
+       "header": "Effect on the estimate",
+       "field": "effect",
+       "width": 50,
+       "wrap": true
+      },
+      {
+       "header": "Requirements",
+       "field": "requirement_ids",
+       "sep": ", ",
+       "width": 22,
+       "wrap": true
+      },
+      {
+       "header": "Applies to",
+       "field": "scope",
+       "width": 20
+      }
+     ]
+    },
+    {
+     "name": "Risks",
+     "type": "table",
+     "dataset": "risks",
+     "row_key": "id",
+     "table_name": "Risks",
+     "readme": "what can move a total or block an option - qualitative, without a surcharge, with a mitigation",
+     "columns": [
+      {
+       "header": "ID",
+       "field": "id",
+       "width": 8
+      },
+      {
+       "header": "Risk",
+       "field": "risk",
+       "width": 50,
+       "wrap": true
+      },
+      {
+       "header": "Impact",
+       "field": "impact",
+       "label": true,
+       "width": 11,
+       "emphasis": "decision",
+       "status": {
+        "blocker": "rebuild",
+        "major": "rework",
+        "minor": "neutral"
+       }
+      },
+      {
+       "header": "Likelihood",
+       "field": "likelihood",
+       "label": true,
+       "width": 12
+      },
+      {
+       "header": "Options",
+       "field": "options",
+       "sep": ", ",
+       "width": 16
+      },
+      {
+       "header": "Affects",
+       "field": "affected",
+       "sep": ", ",
+       "width": 18,
+       "wrap": true
+      },
+      {
+       "header": "Mitigation",
+       "field": "mitigation",
+       "width": 50,
+       "wrap": true
+      },
+      {
+       "header": "Evidence",
+       "field": "evidence",
+       "width": 40,
+       "wrap": true,
+       "evidence": true,
+       "emphasis": "support",
+       "group": "loc"
+      }
+     ]
+    },
+    {
+     "name": "Claims",
+     "type": "claims",
+     "scopes": "all",
+     "readme": "Every statement of this workbook with its evidence and score"
+    }
+   ],
+   "when_set": [
+    {
+     "when": "scenario_mode",
+     "set": {
+      "resolve_handover": null,
+      "code_locators": false,
+      "grundlage_refs": true,
+      "handover_basis": [
+       "requirements-coverage",
+       "target-readiness",
+       "customization-depth",
+       "code-inventory"
+      ],
+      "purpose": "Every requirement of the client's list and every technical migration and refactoring row estimated per solution option: the approach, a {estimation.size_term.en} size with derivation and basis, the effort from the editable size mapping - for {target.platform} and {estimation.integration_platform} separately -, on top the PM, SA, BA and QA surcharges and the fixed phases per scenario; every total and cost is a formula."
+     }
+    },
+    {
+     "when": "system_mode",
+     "set": {
+      "resolve_handover": null,
+      "code_locators": false,
+      "grundlage_refs": true,
+      "handover_basis": [
+       "requirements-coverage",
+       "target-readiness",
+       "customization-depth",
+       "code-inventory"
+      ],
+      "title": "Effort estimate per system",
+      "purpose": "Every requirement that touches a system of this solution estimated as a work package per system and option: starting point, coverage, approach, a {estimation.size_term.en} size with derivation and basis, the effort from the editable size mapping with its range; systems of other owners as empty input cells; per system and option the surcharges and fixed phases; the client's lists with the effort per system beside them - every total and cost a formula.",
+      "sources_client": "The client's lists as received; the impact of every row per system; per work package an estimate against the vendor's documentation; the decisions on gaps; the consolidated phases, exclusions and risks; verified technology facts.",
+      "extra": "Sizes are {estimation.size_term.en} sizes; the effort in {estimation.unit_short.en} follows from the mapping on sheet Parameters, as do the range, the surcharges per system and option, the day rate and the scenario shown. Change a value there and every total, all costs and every chart follow. Inputs of other owners (empty, shaded cells on sheet Estimation) count in every total as soon as they are entered."
+     }
+    }
+   ]
+  }
+ },
+ "common": {
+  "readme": {
+   "basis_handover": "“Code analysis · <id>” – a row of the released code analysis of today's shop (the requirement, task or unit it describes); the places in the code are listed there, not in this workbook",
+   "when_set": [
+    {
+     "when": "scenario_mode",
+     "set": {
+      "glossary_text": "Standard = documented capability of the vendor product in the stated version. Custom = built or to be built for {engagement.client}. Code analysis = the released analysis of today's shop; the basis names the row an estimate rests on (requirement, task or unit)."
+     }
+    },
+    {
+     "when": "system_mode",
+     "set": {
+      "glossary_text": "Standard = documented capability of the vendor product in the named version. Work package = one requirement in one system and option. Gap = not solvable in that system; where the work goes is on sheet Completeness. Scenario = one option per system."
+     }
+    }
+   ]
+  }
+ }
+}

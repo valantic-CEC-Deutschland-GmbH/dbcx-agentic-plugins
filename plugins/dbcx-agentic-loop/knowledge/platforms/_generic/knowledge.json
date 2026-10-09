@@ -1,0 +1,9 @@
+{
+  "_readme": "Generic pack knowledge: intentionally empty lists; add client specifics in <project>/overrides/knowledge.json.",
+  "standard_units": [],
+  "standard_unit_prefixes": [],
+  "third_party_packages": [],
+  "deprecation_patterns": [],
+  "target_api_endpoint_families": [],
+  "target_content_component_types": []
+}

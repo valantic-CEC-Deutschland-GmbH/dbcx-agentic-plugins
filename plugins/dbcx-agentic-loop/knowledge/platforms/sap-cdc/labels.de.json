@@ -1,0 +1,8 @@
+{
+  "_readme": "SAP-Customer-Data-Cloud-Wortlaut für die Mechanismus-Token der Methode tech-fit-estimation (über die Methoden-Labels gelegt, wenn dieses Paket das Plattform-Paket des Laufs ist).",
+  "module": "Produkt / Paket (Customer Identity, Customer Consent, CIAM for B2B)",
+  "app": "Vorgefertigte Integration / Connector",
+  "setting": "Konsolen-Konfiguration / Policy",
+  "extension-point": "Extension / Webhook / Dataflow",
+  "custom-code": "Eigener Code (Screen-Set-JavaScript, Extension- oder Webhook-Endpunkt, Integration)"
+}

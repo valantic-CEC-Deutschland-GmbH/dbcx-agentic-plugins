@@ -1,0 +1,562 @@
+{
+ "name": "ea-landscape",
+ "display": "Enterprise / CX architecture: as-is landscape and target architecture",
+ "version": "0.4.0",
+ "description": "Evidence-first reading of the client's architecture from their own documents: system inventory and data-object inventory with single-source-of-truth assessment (D1), one profile per system with interfaces, ownership, capabilities, pain points and constraints (D2), the consolidated data-flow picture and SSOT matrix (D3), and a target architecture as evidenced options with a roadmap (D4). Unit of analysis = one system of the landscape. Every mastership conflict, every visual-only diagram and every assumed interface becomes a client question with the effect of its answer.",
+ "knowledge_slots": {
+  "reference_architecture": {
+   "kind": "reference-architecture",
+   "role": "reference_architecture",
+   "required": false
+  }
+ },
+ "defaults": {
+  "landscape": {
+   "focus": "",
+   "as_is_diagram": "Landscape_AsIs.drawio",
+   "target_diagram": "Landscape_Target.drawio"
+  },
+  "strategy": {
+   "vision": "",
+   "horizon": ""
+  },
+  "system": {
+   "noun": "System",
+   "noun_plural": "Systems",
+   "categories": [
+    "erp",
+    "pim",
+    "crm",
+    "commerce",
+    "cms",
+    "dam",
+    "mdm",
+    "search",
+    "marketing",
+    "service",
+    "integration",
+    "analytics",
+    "custom",
+    "other"
+   ],
+   "lifecycles": [
+    "active",
+    "planned",
+    "retiring",
+    "retired"
+   ],
+   "relevances": [
+    "core",
+    "peripheral",
+    "out-of-scope"
+   ],
+   "protocol_styles": [
+    "api",
+    "file",
+    "event",
+    "batch",
+    "manual",
+    "unknown"
+   ],
+   "strategic_moves": [
+    "introduce",
+    "replace",
+    "consolidate",
+    "re-home-ssot",
+    "retire",
+    "keep"
+   ]
+  },
+  "deliverables": {
+   "D1": {
+    "enabled": true,
+    "file": "Landscape_System_Inventory.xlsx",
+    "diagram": "Landscape_AsIs.drawio"
+   },
+   "D2": {
+    "enabled": true,
+    "file": "Landscape_System_Profiles.xlsx"
+   },
+   "D3": {
+    "enabled": true,
+    "file": "Landscape_Data_Flows_SSOT.xlsx"
+   },
+   "D4": {
+    "enabled": true,
+    "file": "Landscape_Target_Architecture.xlsx",
+    "diagram": "Landscape_Target.drawio"
+   }
+  },
+  "rules": {
+   "do_not_run": [],
+   "documents_read_only": true
+  },
+  "scoring": {
+   "gate_personas": [
+    "cto",
+    "head_of_it",
+    "head_of_ecommerce",
+    "product_owner"
+   ]
+  }
+ },
+ "profiles": {
+  "_readme": "run.json `profile` (`dbcx init run --profile`) selects one block; its values sit on the method defaults, knowledge packs, engagement.json and run.json still win. full = the complete pipeline (scoring, claims and human_input keep the engine defaults: one client critic and the standard critics, 4 rounds, quotes warn, live questions, rulings optional). lean = one analysis over everything: no scope split (the scopes phase is skipped), the consolidator reads the corpus, the inventory passes on the deterministic checks (CHECK, verbatim quotes, locators - no critic), one standard critic on the consolidations, one round plus one rework round for defects, quotes required, rulings required before the inventory, questions released in batches. The final gate is unchanged. ea-landscape lean: all four workbooks and both diagrams are built; D2 (one profile per system) comes from the inventory's system rows and data objects and the FLOWS flows (deliverables.<lang>.json `profile_patches.lean`), and what only a system analysis provides (capabilities, pain points, constraints, users, the one-paragraph summary) reads `not assessed`.",
+  "full": {
+   "split": "by_scope",
+   "consolidator_reads_corpus": false
+  },
+  "lean": {
+   "split": "none",
+   "consolidator_reads_corpus": true,
+   "scoring": {
+    "critics": [
+     "standard"
+    ],
+    "phase_critics": {
+     "inventory": []
+    },
+    "pass_rule": "defects+quotes",
+    "max_gauntlet_rounds": 1,
+    "defect_rework_rounds": 1,
+    "freeze_register_after_round": 1
+   },
+   "claims": {
+    "quotes": "required"
+   },
+   "human_input": {
+    "release": "batched",
+    "rulings": "required"
+   },
+   "phase_hints": {
+    "preflight": {
+     "hint": "dbcx check_fill; dbcx smoke ea-landscape; dbcx md_to_json --generate; dbcx corpus index; dbcx intake; dbcx status init; researcher (dbcx render research) if a reference-architecture pack is set; profile lean: quotes are required, for vendor facts too (PS-7 rows through `dbcx reference add --quote`) - allowlist the documentation domains the researcher and the standard critic will cite in run.json `evidence_bases: [{\"id\": \"standard-docs\", \"domains\": [\"<docs host>\", ...]}]` (merged by id over the method's base; `dbcx safe_web \"<generic query>\" --check-only --url https://<docs host>/...` shows the allowlist); then `dbcx rulings draft` - the rulings come before the inventory"
+    },
+    "inventory": {
+     "before": "dbcx corpus index; dbcx corpus list (profile lean: the inventory is the extraction of everything - every claim carries a verbatim quote; no critic scores it, it passes on CHECK + quotes + locators)",
+     "after": "dbcx render handover; dbcx build_excel D1; dbcx build_landscape_diagram --as-is; early gate read (profile lean: no discover, no plan_waves, no waves - the consolidations follow directly)"
+    },
+    "consolidation_flows": {
+     "before": "dbcx render digest FLOWS (profile lean: the inventory and the corpus - the consolidator derives the interfaces from the corpus itself)"
+    },
+    "consolidation_target": {
+     "before": "dbcx render digest TARGET (profile lean: FLOWS.json, the inventory and the corpus)"
+    }
+   }
+  }
+ },
+ "init_fields": {
+  "landscape.focus": "which part of the landscape is in scope, e.g. 'the CX architecture (commerce, PIM, CRM, marketing, service)' or 'the whole enterprise landscape'",
+  "strategy.vision": "the client's strategic vision in 1-3 sentences, as the strategy documents state it (the target architecture is derived from this, never invented)",
+  "strategy.horizon": "the horizon the roadmap must fit, e.g. '18 months, two phases'"
+ },
+ "evidence_bases": [
+  {
+   "id": "corpus",
+   "kind": "corpus",
+   "roots": [
+    "@project/corpus",
+    "@project/input"
+   ],
+   "read_only": true,
+   "external": false,
+   "roles": [
+    "orchestrator",
+    "inventory",
+    "analyst",
+    "critic-client"
+   ],
+   "note": "the client's own documents as indexed text with stable locators (dbcx corpus index); cite SRC-nnn#p12 / #s7 / #para12 / #Sheet!R12 / #item:<id> / #L120; a source in corpus/unextractable.md may only be cited as `visual, unverified`"
+  },
+  {
+   "id": "reference",
+   "kind": "reference",
+   "roots": [
+    "@project/reference"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "verified reference and vendor facts of this engagement, section 7 rows cited by id PS-7-NNN"
+  },
+  {
+   "id": "handover",
+   "kind": "handover",
+   "roots": [
+    "input/handover"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "frozen artefacts imported from earlier runs, cited as HO-<type>#<id>"
+  },
+  {
+   "id": "analyses",
+   "kind": "derived",
+   "roots": [
+    "analysis"
+   ],
+   "external": false,
+   "roles": [
+    "*"
+   ],
+   "note": "the run's own analysis files; a system analyst reads only its own system's file plus the finalized systems it receives data from (the client critic checks it)"
+  },
+  {
+   "id": "standard-docs",
+   "kind": "web",
+   "domains": [],
+   "roles": [
+    "orchestrator",
+    "consolidator",
+    "critic-standard",
+    "researcher"
+   ],
+   "note": "vendor and reference-architecture documentation with generic queries only (no client name, no system name of the client, no corpus locator)"
+  }
+ ],
+ "artefacts": {
+  "consumes": [
+   {
+    "type": "client-context",
+    "required": false,
+    "note": "a released client-context artefact of an earlier run (business model, markets, strategic goals); cited as HO-client-context#<id>, never restated as this run's own finding"
+   }
+  ],
+  "produces": [
+   {
+    "type": "system-inventory",
+    "source": "analysis/inventory/landscape_inventory.json",
+    "scope": "D1"
+   },
+   {
+    "type": "data-flows",
+    "source": "analysis/consolidated/FLOWS.json",
+    "scope": "FLOWS"
+   },
+   {
+    "type": "target-architecture",
+    "source": "analysis/consolidated/TARGET.json",
+    "scope": "TARGET"
+   }
+  ]
+ },
+ "scopes": {
+  "kind": "system",
+  "noun_key": "system.noun",
+  "output_dir": "analysis/scopes",
+  "agent_prefix": "analyst-",
+  "discover": "discover",
+  "wave_rule": "dependency",
+  "state_key": "systems",
+  "size_field": "size",
+  "id_prefix": "C-"
+ },
+ "inventory": {
+  "scope": "D1",
+  "kind": "inventory",
+  "output": "analysis/inventory/landscape_inventory.md",
+  "agent": "inventory",
+  "scopes_table": "systems",
+  "scopes_key": "name",
+  "handover": "analysis/inventory/HANDOVER.md",
+  "brief": "inventory",
+  "inputs": {
+   "SOURCES": "corpus/index.json (one row per client document: id, title, type, quality) and corpus/text/SRC-nnn.md (the extracted text with locator anchors)",
+   "UNEXTRACTABLE": "corpus/unextractable.md (images, diagrams and scans without a text layer - citable only as `visual, unverified`, each one a client question)",
+   "GREP": "grep -rn \"<term>\" corpus/text/ | head -40   or   dbcx corpus grep \"<regex>\""
+  },
+  "derived_markers": [
+   "index.json"
+  ]
+ },
+ "consolidations": {
+  "FLOWS": {
+   "kind": "data_flows",
+   "output": "analysis/consolidated/FLOWS.md",
+   "digest_tables": [
+    "interfaces",
+    "data_ownership",
+    "open_questions"
+   ],
+   "deliverable": "D3"
+  },
+  "TARGET": {
+   "kind": "target_architecture",
+   "output": "analysis/consolidated/TARGET.md",
+   "digest_tables": [
+    "data_ownership",
+    "capabilities",
+    "pain_points",
+    "constraints"
+   ],
+   "deliverable": "D4",
+   "head_fields": {
+    "LANDSCAPE FOCUS": "{landscape.focus}",
+    "STRATEGIC VISION (the options are derived from this, nothing else)": "{strategy.vision}",
+    "HORIZON": "{strategy.horizon}",
+    "AS-IS PICTURE (read before you write a single option)": "analysis/consolidated/FLOWS.md + analysis/consolidated/FLOWS.json (flows, SSOT matrix, integration debt)"
+   }
+  }
+ },
+ "phases": [
+  {
+   "id": "preflight",
+   "type": "simple",
+   "hint": "dbcx check_fill; dbcx smoke ea-landscape; dbcx md_to_json --generate; dbcx corpus index; dbcx intake; dbcx status init; researcher (dbcx render research) if a reference-architecture pack is set"
+  },
+  {
+   "id": "inventory",
+   "type": "gauntlet",
+   "scope": "D1",
+   "deliverable": "D1",
+   "before": "dbcx corpus index; dbcx corpus list",
+   "after": "dbcx render handover; dbcx discover; dbcx plan_waves; dbcx build_excel D1; dbcx build_landscape_diagram --as-is; early gate read"
+  },
+  {
+   "id": "waves",
+   "type": "scopes",
+   "deliverable": "D2"
+  },
+  {
+   "id": "consolidation_flows",
+   "type": "gauntlet",
+   "scope": "FLOWS",
+   "deliverable": "D3",
+   "enabled_if": "deliverables.D3.enabled"
+  },
+  {
+   "id": "consolidation_target",
+   "type": "gauntlet",
+   "scope": "TARGET",
+   "deliverable": "D4",
+   "enabled_if": "deliverables.D4.enabled"
+  },
+  {
+   "id": "excel_build",
+   "type": "build"
+  },
+  {
+   "id": "final_gate",
+   "type": "gate"
+  }
+ ],
+ "deliverable_sources": {
+  "D1": [
+   "analysis/inventory/landscape_inventory.json",
+   "analysis/summaries/D1.md"
+  ],
+  "D2": [
+   "analysis/scopes/*.json",
+   "analysis/summaries/D2.md"
+  ],
+  "D3": [
+   "analysis/consolidated/FLOWS.json",
+   "analysis/summaries/D3.md"
+  ],
+  "D4": [
+   "analysis/consolidated/TARGET.json",
+   "analysis/summaries/D4.md"
+  ]
+ },
+ "gauntlet": {
+  "pack_sections": {
+   "system": [
+    "Summary",
+    "Profile"
+   ],
+   "inventory": [
+    "Sources",
+    "Strategic vision"
+   ],
+   "data_flows": [
+    "SSOT matrix"
+   ],
+   "target_architecture": [
+    "Options"
+   ]
+  },
+  "row_tables": {
+   "system": [
+    [
+     "interfaces",
+     "id"
+    ],
+    [
+     "data_ownership",
+     "data_object"
+    ],
+    [
+     "capabilities",
+     "capability"
+    ],
+    [
+     "pain_points",
+     "finding"
+    ],
+    [
+     "constraints",
+     "constraint"
+    ]
+   ],
+   "inventory": [
+    [
+     "systems",
+     "name"
+    ],
+    [
+     "data_objects",
+     "name"
+    ],
+    [
+     "sources",
+     "id"
+    ],
+    [
+     "strategic_vision",
+     "topic"
+    ]
+   ],
+   "data_flows": [
+    [
+     "flows",
+     "id"
+    ],
+    [
+     "ssot_matrix",
+     "data_object"
+    ],
+    [
+     "integration_debt",
+     "finding"
+    ]
+   ],
+   "target_architecture": [
+    [
+     "options",
+     "id"
+    ],
+    [
+     "roadmap",
+     "phase"
+    ],
+    [
+     "principles",
+     "principle"
+    ]
+   ]
+  }
+ },
+ "briefs": {
+  "rows": [
+   [
+    "LANDSCAPE FOCUS",
+    "{landscape.focus}"
+   ],
+   [
+    "STRATEGIC VISION (client's own words)",
+    "{strategy.vision}"
+   ],
+   [
+    "HORIZON",
+    "{strategy.horizon}"
+   ],
+   [
+    "SYSTEM NOUN",
+    "{system.noun} (plural {system.noun_plural})"
+   ],
+   [
+    "SYSTEM CATEGORIES",
+    "{list:system.categories}"
+   ],
+   [
+    "LOCATOR GRAMMAR",
+    "SRC-nnn#p12 (PDF page), #s7 (slide), #para12 (docx block), #Sheet!R12 (xlsx row), #item:<id> / #frame:<name> (board), #L120 (text block); `visual, unverified` for a source listed in corpus/unextractable.md"
+   ]
+  ],
+  "notes_title": "METHOD NOTES (enterprise architecture)",
+  "notes_keys": {
+   "inventory": [
+    "source_reading_rules",
+    "system_identity_rules",
+    "ssot_rules",
+    "question_rules"
+   ],
+   "analyst": [
+    "landscape_locator_rules",
+    "interface_rules",
+    "ssot_rules",
+    "integration_styles",
+    "question_rules"
+   ],
+   "consolidate:FLOWS": [
+    "ssot_rules",
+    "integration_styles",
+    "flow_dedup_rules"
+   ],
+   "consolidate:TARGET": [
+    "target_option_rules",
+    "reference_pattern_hint",
+    "integration_styles"
+   ],
+   "critic-client": [
+    "landscape_locator_rules",
+    "question_rules",
+    "source_reading_rules"
+   ],
+   "critic-standard": [
+    "reference_pattern_hint",
+    "integration_styles",
+    "reference_docs_hint"
+   ],
+   "gate": [
+    "question_rules"
+   ],
+   "researcher": [
+    "reference_docs_hint",
+    "reference_pattern_hint"
+   ]
+  },
+  "analyst_inputs": {
+   "INVENTORY": "analysis/inventory/landscape_inventory.json (your system's row and the data objects are yours; the other rows are context you may cite but never re-measure)",
+   "CORPUS INDEX": "corpus/index.json  (dbcx corpus list)",
+   "CORPUS GREP": "grep -rn \"<term>\" corpus/text/ | head -40   or   dbcx corpus grep \"<regex>\"",
+   "UNEXTRACTABLE": "corpus/unextractable.md"
+  },
+  "consolidator_inputs": "analysis/scopes/*.md (open only for rows the digest points to), analysis/inventory/landscape_inventory.md, analysis/inventory/HANDOVER.md, analysis/consolidated/estate_observations.json, reference/platform-standard.md; the TARGET consolidation additionally reads analysis/consolidated/FLOWS.md and analysis/consolidated/FLOWS.json - the passed as-is picture is the only as-is you may rely on. You have no access to the client's documents (corpus): a fact you miss becomes an open question, never a guess.",
+  "critic_client_persona": "the client's own enterprise architect: knows every document in the corpus and what the stakeholders said in the workshops, has lived through the last two integration projects and is sceptical of consultants. Evidence base = the client's documents (corpus) and the analysis itself; never external reference material or vendor documentation.",
+  "critic_standard_persona_key": "reference_persona",
+  "critic_standard_persona": "an independent reference architect for enterprise and CX architectures: knows the common capability maps and system types, where a single source of truth belongs for each data object, which integration styles hold up at which volume, and the current capabilities, editions and plans of the vendor products named. Evidence base = external documentation, reference architectures and best practice only; never the client's own documents.",
+  "consolidator_inputs_lean": "analysis/consolidated/digest-FLOWS.md resp. digest-TARGET.md (read first: the inventory rows with their claim ids, the corpus index), analysis/inventory/landscape_inventory.md, corpus/index.json and corpus/text/SRC-nnn.md (you read the client's documents yourself in this run - `grep -rn \"<term>\" corpus/text/` or `dbcx corpus grep \"<regex>\"`), corpus/unextractable.md, reference/platform-standard.md; the TARGET consolidation additionally reads analysis/consolidated/FLOWS.md and analysis/consolidated/FLOWS.json - the passed as-is picture. A fact from the corpus carries its locator and a verbatim quote; what no document says becomes an open question, never a guess."
+ },
+ "snippets": {
+  "rulings_topics": "platforms: target platforms, the legacy systems and their end of life; middleware: the integration platform, the integration styles and principles; master-data: which system masters which data object; identity: customer and employee identity and access; scope-boundaries: which systems, channels and interfaces are in or out of scope; naming: system and interface naming conventions",
+  "source_reading_rules": "A document is evidence for what it SAYS, not for what it depicts. A box-and-line picture proves that someone drew a line, not that an interface exists: a line without accompanying text is recorded with the locator and the phrase `visual, unverified` and becomes a client question. Two documents that disagree are BOTH cited and the disagreement is the finding - never silently pick the newer one. A source's date and origin (who wrote it, for which purpose) decide how much weight it carries; state both in the Sources table.",
+  "system_identity_rules": "One row per system that exists as a deployable, separately licensed or separately operated thing - not per module, not per project name. A product name and a project name for the same installation are ONE row with both names. Two similarly named products of the same vendor can be different products: separate them by documentation, never by name similarity. `relevance` decides the effort: core = analysed in full, peripheral = light pass, out-of-scope = named in the inventory and not analysed; back every peripheral/out-of-scope verdict with a claim.",
+  "ssot_rules": "Single source of truth is a property of a DATA OBJECT, not of a system: for every data object exactly one system may be the master. A mastership statement is only usable when it names the document that says so - `claimed_master_systems` therefore holds every system a document claims mastership for, not the one you consider right. Two or more claims for one object = `conflict` in the SSOT matrix, a client question with the effect of its answer, and no verdict invented in between. A system that writes back into another system's object is a `copy`, not a second master. `unknown` is a legitimate verdict and better than a guess.",
+  "interface_rules": "One row per interface, identified by counterpart plus direction plus data objects. `direction` is written from the point of view of YOUR system (in = your system receives). A `protocol_style` other than `unknown` needs a locator that names the mechanism (API, file drop, event/queue, batch job, manual export). Frequency is quoted as the document states it (`nightly`, `every 15 min`, `on demand`); never converted into a number the document does not give. Middleware is named when a document names it - an interface that runs through a bus is not a point-to-point interface. Never infer an interface from two boxes being adjacent in a diagram; if the diagram is your only source, say `visual, unverified` and raise the question.",
+  "integration_styles": "The styles to distinguish and their usual failure mode: `api` (synchronous, coupling in latency and availability), `event` (asynchronous, needs idempotency and replay), `file` (batch windows, silent partial failures), `batch` (scheduled, staleness equal to the interval), `manual` (a person, therefore no SLA and no audit trail), `unknown` (nobody documented it - the finding is the gap itself). Point-to-point counts are the integration-debt signal: n systems fully meshed give n*(n-1) directed interfaces, a hub gives 2n; state which of the two the landscape resembles and with which number.",
+  "flow_dedup_rules": "Two systems describing the same interface from both ends are ONE flow: merge them, keep both source locators, and record the disagreement (direction, frequency, data objects) as a finding rather than choosing a side. A flow id is stable (`FL-001`); the flow keeps its id when its details are corrected. Every flow row names the claim ids of the system analyses it rests on; a flow no system analysis evidences is not a flow but an open question.",
+  "target_option_rules": "An option is a STRATEGIC MOVE with consequences, not a wish: introduce, replace, consolidate, re-home-ssot, retire, keep. Every option names the systems affected, the flows that change, the data objects that are re-mastered, its prerequisites and its risks, and it cites the strategic statement (with locator) it serves - an option no documented vision asks for does not belong in the deliverable. An option that breaks a documented constraint (contract term, end-of-life date, regulation) is either `rejected` with that constraint named or carries the constraint as a prerequisite. Exactly one option per decision is `preferred`; the alternatives stay in the table so the client sees what was weighed. `keep` is a real option and must appear wherever a move was considered and rejected.",
+  "question_rules": "The client question list is a deliverable of this method, not a by-product. Every mastership conflict, every `visual, unverified` locator, every assumed interface and every constraint without a date becomes one question via `dbcx questions add <scope> client \"...\" --effect \"which decision the answer moves\"`. The effect is mandatory and is written so a stakeholder sees what stalls without the answer. A question is never answered by reasoning; it is answered by the client or it stays open.",
+  "landscape_locator_rules": "Every interface row, every ownership row and every pain point carries either a corpus locator (SRC-nnn#anchor) or the exact phrase `visual, unverified`. A statement about a system's version, owner or hosting names the document and its date. `dbcx evidence resolve \"<locator>\"` checks a locator before you publish it; a locator that does not resolve makes the claim unverifiable.",
+  "reference_pattern_hint": "Judge a pattern, not a product: where does the single source of truth for this data object belong in a reference architecture of this shape, which integration style fits the volume and the consistency requirement, and which capability is expected of which system type. Where a reference-architecture pack is set, its capability map, system types and SSOT placements are the yardstick and are cited; where none is set, name the reference architecture or vendor documentation you use and its date.",
+  "reference_docs_hint": "External lookups use generic queries only: the product and the capability, never the client's name, a system name of the client or a corpus locator. Verified facts go into the reference file with `dbcx reference add --fact ... --applies <version/edition> --url ... --provenance critic|researcher` and are cited by their id PS-7-NNN afterwards."
+ },
+ "research_topics": "For every vendor product named in the landscape and in the target options: current capabilities, editions/plans and their limits for the exact version the documents name, the product's own integration surface (APIs, events, file interfaces) and which data objects it can master; end-of-life and maintenance dates; for every strategic move in the options: the reference pattern for that move (where the single source of truth belongs, which integration style is recommended) with URL and date. Resolve every *(verify)* item of the reference-architecture pack seed.",
+ "lint": {
+  "allow_terms": [
+   "product version",
+   "vendor version",
+   "interface version",
+   "schema version",
+   "master data",
+   "single source of truth"
+  ]
+ },
+ "progress": {
+  "size_weighted": true
+ }
+}

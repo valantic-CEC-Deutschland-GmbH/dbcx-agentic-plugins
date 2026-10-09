@@ -1,0 +1,63 @@
+{
+  "_readme": [
+    "commercetools pack knowledge. Both lists are a SEED (see _stamp): written from stable API-shape knowledge, to be re-verified per engagement against docs.commercetools.com for the project's region, API version and licensed products.",
+    "target_api_endpoint_families lists resource families relative to the project endpoint (https://api.<region>.commercetools.com/<projectKey>/...). Every resource is available in HTTP/REST and in GraphQL; writes go through the per-resource UPDATE ACTION catalogue with optimistic concurrency (version + 409), which is the contract a fit estimation must read.",
+    "target_content_component_types is deliberately NOT a list of platform content types: commercetools ships NO CMS. The entries name the few content-shaped platform primitives that do exist and then the external-CMS component types a project has to provide itself - each of those is custom work (CMS + binding + renderer), never covered-standard."
+  ],
+  "target_api_endpoint_families": [
+    "/products, /product-drafts, /product-types",
+    "/product-projections, /product-projections/search and /product-search (eventually consistent read projections, /product-projections/suggest)",
+    "/product-selections",
+    "/standalone-prices",
+    "/categories",
+    "/inventory (InventoryEntry per SKU and supply channel)",
+    "/carts, /me/carts, /me/active-cart",
+    "/orders, /me/orders, /order-edits",
+    "/customers, /me, /customers/password-token (customer sign-in and password flows)",
+    "/customer-groups",
+    "/business-units (B2B company hierarchy) and /associate-roles (B2B permissions within a unit)",
+    "/quotes, /quote-requests, /staged-quotes (B2B RFQ flow)",
+    "/approval-rules, /approval-flows (B2B approvals)",
+    "/cart-discounts, /discount-codes, /product-discounts",
+    "/shopping-lists, /me/shopping-lists, /reviews",
+    "/payments",
+    "/shipping-methods (+ /shipping-methods/matching-cart), /zones, /tax-categories",
+    "/stores",
+    "/channels (supply and distribution channels)",
+    "/types (custom-field definitions for any resource) and /custom-objects (untyped JSON store)",
+    "/states (lifecycle state machines for order, payment, review, product, quote)",
+    "/subscriptions (at-least-once, unordered), /extensions (synchronous hooks with a hard timeout), /messages (change messages per resource)",
+    "/graphql (the whole project model as one GraphQL endpoint)",
+    "auth host: POST /oauth/token (OAuth2 client credentials and password flows, scoped per project)",
+    "import host: Import API (import-containers, import-sinks for asynchronous bulk load)"
+  ],
+  "target_content_component_types": [
+    "NO native CMS - commercetools ships no page, template, slot, block or content-version resource",
+    "platform primitive: localized fields on catalog resources (name, description, slug, metaTitle, metaDescription)",
+    "platform primitive: Asset on ProductVariant / Category (images, videos, documents with localized labels)",
+    "platform primitive: Type-based custom fields (content attached to any resource, typed and validated)",
+    "platform primitive: CustomObject (untyped JSON container, often used as a stopgap content or configuration store)",
+    "platform primitive: ProductSelection (curated assortment per Store, the merchandising equivalent that does exist)",
+    "commercetools Frontend: page folder",
+    "commercetools Frontend: page template",
+    "commercetools Frontend: page version / preview",
+    "commercetools Frontend: tastic (frontend component bound to a data source)",
+    "commercetools Frontend: data source (query bound to a commercetools resource)",
+    "external CMS component: hero / banner",
+    "external CMS component: rich text / editorial block",
+    "external CMS component: media gallery, image, video",
+    "external CMS component: navigation menu and footer",
+    "external CMS component: landing / campaign page",
+    "external CMS component: curated product grid or slider bound to /product-projections/search",
+    "external CMS component: category or brand content page",
+    "external CMS component: content slot / experience fragment for personalisation",
+    "external CMS component: FAQ / accordion, teaser, CTA",
+    "external CMS component: form (contact, newsletter, request-a-quote)",
+    "external CMS component: SEO metadata and redirect management (no platform URL resolver beyond slugs)"
+  ],
+  "_stamp": {
+    "date": "2026-09-08",
+    "source": "seed from general platform knowledge, to be verified",
+    "verify_first": "which CMS and which frontend the target architecture uses (the platform provides neither), whether commercetools Frontend and Checkout are licensed, the per-project limits and quotas for the region, the GA status of Product Search / search merchandising, and which back-office capabilities (order management, merchandising, CSR) are covered by a product rather than by custom work"
+  }
+}

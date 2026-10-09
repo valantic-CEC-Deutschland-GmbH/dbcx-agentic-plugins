@@ -1,0 +1,1020 @@
+{
+ "_readme": [
+  "SAP Commerce pack knowledge. Structural regexes are stable; the lists under 'seed' semantics carry a version stamp and are refreshed per project (dbcx render research).",
+  "standard_units are NOT listed here: adapter.derive_knowledge lists them from hybris/bin/platform and hybris/bin/modules of the client's repository.",
+  "check_recipes: at most three sentences each; the scanner records a recipe's trigger per unit (glob [+ content] on unit-relative paths, an adapter signal, or an override resolution) in inventory units.<u>.triggers, and the method renders ONLY triggered recipes into that unit's analyst brief."
+ ],
+ "standard_dirs": [
+  "hybris/bin/platform",
+  "hybris/bin/modules",
+  "hybris/bin/ext-"
+ ],
+ "standard_unit_prefixes": [
+  "sapproductconfigsom",
+  "sapcpq",
+  "sapb2baccelerator",
+  "cds",
+  "datahub",
+  "occ",
+  "chineseprofile",
+  "chatbot",
+  "tmaeu",
+  "gigyaupdate",
+  "sapcxcds",
+  "cdsintegration",
+  "yprofile",
+  "cxrecommendations",
+  "merchandising",
+  "merchandisingpersonalization",
+  "merchandisingtrendingcategory",
+  "kymacore",
+  "sapyprofile",
+  "yb2baccelerator",
+  "sapcommerceclouddeployment",
+  "cloudstorestorefront",
+  "kafka"
+ ],
+ "third_party_packages": [
+  "b2bacceleratoraddon",
+  "commerceorgaddon",
+  "commerceorgsamplesaddon",
+  "assistedservicestorefront",
+  "assistedservicecustomerinterestsaddon",
+  "assistedservicepromotionaddon",
+  "smarteditaddon",
+  "captchaaddon",
+  "orderselfserviceaddon",
+  "customerticketingaddon",
+  "notificationaddon",
+  "stocknotificationaddon",
+  "customerinterestsaddon",
+  "textfieldconfiguratortemplateaddon",
+  "secureportaladdon",
+  "promotionenginesamplesaddon",
+  "consignmenttrackingaddon",
+  "pcmbackofficesamplesaddon",
+  "b2bpunchoutaddon",
+  "multicountrysampledataaddon",
+  "sapproductconfigaddon",
+  "sapordermgmtb2baddon",
+  "sapordermgmtaddon",
+  "sapinvoiceaddon",
+  "sapquoteaddon",
+  "sapdigitalpaymentaddon",
+  "sapoaaaddon",
+  "saprevenuecloudaddon",
+  "subscriptionaddon",
+  "subscriptionbundleaddon",
+  "configurablebundleaddon",
+  "personalizationaddon",
+  "personalizationsampledataaddon",
+  "adaptivesearchsamplesaddon",
+  "ordermanagementaddon",
+  "messagecentercsaddon",
+  "checkoutaddon",
+  "yb2bcheckoutaddon",
+  "selectivecartaddon",
+  "selectivecartsplitlistaddon",
+  "timedaccesspromotionengineaddon",
+  "cmsoccaddon",
+  "yoccaddon",
+  "acceleratorwebservicesaddon",
+  "gigyaloginaddon",
+  "gigyab2boccaddon",
+  "gigyaoccaddon",
+  "merchandisingaddon",
+  "merchandisingstorefrontsampledataaddon",
+  "sapymktrecommendationaddon",
+  "sapymktsegmentationaddon",
+  "sapymktsyncaddon",
+  "sapb2baddon",
+  "chineseprofileaddon",
+  "chineseaddressaddon",
+  "chineselogisticaddon",
+  "chinesetaxinvoiceaddon",
+  "chinesepspalipayaddon",
+  "chinesepspwechatpayaddon",
+  "chinesecommerceorgaddon",
+  "spartacussampledataaddon",
+  "xyformsappliance",
+  "sapcpqquoteaddon",
+  "sapcpqproductconfigaddon",
+  "b2ctelcoaddon",
+  "personalizationsearchsamplesaddon"
+ ],
+ "entry_point_patterns": {
+  "frontend_controller": "@Controller\\b|extends AbstractPageController|extends AbstractCheckoutStepController|extends AbstractSearchPageController",
+  "api_controller": "@RestController\\b|extends BaseCommerceController|extends BaseController\\b.*commercewebservices",
+  "template_route": null
+ },
+ "override_patterns": {
+  "di_override": "<alias\\s+name=\"\\w+\"\\s+alias=\"\\w+\"|<bean\\s+id=\"default\\w+\"\\s+class=\"(?!de\\.hybris|com\\.sap)|<aop:",
+  "class_shadowing_namespace_prefixes": [
+   "de.hybris.",
+   "com.sap.",
+   "com.hybris."
+  ]
+ },
+ "deprecation_patterns": [
+  {
+   "id": "DEP-JALO",
+   "pattern": "de\\.hybris\\.platform\\.jalo\\.",
+   "glob": "*.java,*.jsp,*.jspf,*.inc,*.tag,*.tagx,*.groovy",
+   "title": "Direct Jalo layer usage",
+   "since": "Long deprecated (ServiceLayer replaces Jalo, 5.x)",
+   "replacement": "ServiceLayer (ModelService/FlexibleSearchService)",
+   "verify": false
+  },
+  {
+   "id": "DEP-YCOMMERCEWEBSERVICES",
+   "pattern": "ycommercewebservices",
+   "glob": "*.xml,*.java,*.properties,manifest.json",
+   "title": "ycommercewebservices template (OCC v2 template extension)",
+   "since": "2005 (replaced by commercewebservices)",
+   "replacement": "commercewebservices",
+   "verify": true
+  },
+  {
+   "id": "DEP-ACCELERATOR-STOREFRONT",
+   "pattern": "yacceleratorstorefront|yb2bacceleratorstorefront|acceleratorstorefrontcommons",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json",
+   "title": "JSP Accelerator storefront (deprecated in favour of Composable Storefront)",
+   "since": "Accelerator storefronts deprecated with 2205/2211 (verify exact release note)",
+   "replacement": "SAP Commerce Cloud, composable storefront (Spartacus) + OCC",
+   "verify": true
+  },
+  {
+   "id": "DEP-ADDONSUPPORT",
+   "pattern": "addonsupport|acceleratoraddon",
+   "glob": "extensioninfo.xml,*.xml",
+   "title": "Accelerator AddOn mechanism (storefront-coupled)",
+   "since": "Tied to accelerator storefront deprecation",
+   "replacement": "OCC extensions + composable storefront feature libraries",
+   "verify": true
+  },
+  {
+   "id": "DEP-COCKPITS",
+   "pattern": "\\b(?:cmscockpit|productcockpit|admincockpit|importcockpit|reportcockpit|yacceleratorcockpits|configurablebundlecockpits|subscriptioncockpits|subscriptionbundlecockpits)\\b|(?:requires-extension|extension)\\s+name\\s*=\\s*['\"]cockpit['\"]",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json,*-spring.xml",
+   "title": "Legacy cockpit extensions (removal documented by the vendor)",
+   "since": "Deprecated 6.6/6.7; reportcockpit removed 1905, importcockpit removed 2005; cockpit, admincockpit, cmscockpit, productcockpit, yacceleratorcockpits, configurablebundlecockpits, subscriptioncockpits, subscriptionbundlecockpits deleted with the 2211 framework update (Q3 2025, 2211-jdk21.1)",
+   "replacement": "Backoffice (cmscockpit: SmartEdit; yacceleratorcockpits: yacceleratorbackoffice)",
+   "verify": false,
+   "verified": {
+    "date": "2026-09-24",
+    "by": "pack tool saphelp.py (help.sap.com JSON API)",
+    "sources": [
+     "https://help.sap.com/docs/SAP_COMMERCE_CLOUD_PUBLIC_CLOUD/9b5366ff6eb34df5be29881ff55f97d2/eed83e2b3de8482d9c2c7d283778691a.html?version=v2211",
+     "https://help.sap.com/docs/SAP_COMMERCE/c5613bd3cc9942efb74d017b40eb0892/57fd8bb3de164cdd8ea4d16a8287e88f.html?version=1905",
+     "https://help.sap.com/docs/SAP_COMMERCE/c5613bd3cc9942efb74d017b40eb0892/57fd8bb3de164cdd8ea4d16a8287e88f.html?version=2005"
+    ],
+    "identifiers": {
+     "reportcockpit": "removed 1905 (Deprecations and Removals 1905)",
+     "importcockpit": "removed 2005 (Deprecations and Removals 2005)",
+     "cockpit, admincockpit, cmscockpit, productcockpit, yacceleratorcockpits, configurablebundlecockpits, subscriptioncockpits, subscriptionbundlecockpits": "deletion page 2211 (Q3 2025)"
+    }
+   }
+  },
+  {
+   "id": "DEP-COCKPITS-UNVERIFIED",
+   "pattern": "\\b(?:cscockpit|ordercockpit|printcockpit)\\b|\\bcockpit\\b",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json,*-spring.xml",
+   "title": "Legacy cockpit identifier WITHOUT a vendor removal record (verify before calling it removed)",
+   "since": "No row in the Deprecation Status tables 2005/2105/2211 nor in Deprecations and Removals 1905/2005 (checked 2026-09-24); the bare word 'cockpit' also matches unrelated text (e.g. Backoffice 'cockpit-config')",
+   "replacement": "cscockpit: Backoffice Customer Support Cockpit (vendor-named successor); others: verify",
+   "verify": true
+  },
+  {
+   "id": "DEP-HMC",
+   "pattern": "\\bhmc\\b|hmc\\.xml",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json,hmc.xml,*.xml",
+   "title": "hMC (removed)",
+   "since": "Removed in 1905",
+   "replacement": "Backoffice",
+   "verify": false
+  },
+  {
+   "id": "DEP-DATAHUB",
+   "pattern": "datahub",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json,*.properties",
+   "title": "Data Hub integration",
+   "since": "Deprecated in 2011, removed 2205 (verify)",
+   "replacement": "Integration API / CPI (sapcpi* extensions)",
+   "verify": true
+  },
+  {
+   "id": "DEP-Y2YSYNC",
+   "pattern": "y2ysync",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json",
+   "title": "y2ysync",
+   "since": "Deprecated (verify)",
+   "replacement": "Integration API / outbound sync",
+   "verify": true
+  },
+  {
+   "id": "DEP-ASM-STOREFRONT",
+   "pattern": "assistedservicestorefront",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json",
+   "title": "ASM accelerator storefront addon",
+   "since": "Tied to accelerator deprecation",
+   "replacement": "ASM in composable storefront (assistedservicewebservices)",
+   "verify": true
+  },
+  {
+   "id": "DEP-SAPCORE-JCO",
+   "pattern": "sapcorejco|sapcorebol|sapordermgmt",
+   "glob": "extensioninfo.xml,localextensions.xml,manifest.json",
+   "title": "Synchronous JCo/BOL based SAP ERP integration (sapcorejco, sapordermgmt*)",
+   "since": "Deprecated with move to CPI/OData based integration (verify)",
+   "replacement": "sapcpi* / saps4om* (S/4HANA Order Management OCC)",
+   "verify": true
+  },
+  {
+   "id": "DEP-SOLR-LEGACY-API",
+   "pattern": "org\\.apache\\.solr\\.client\\.solrj\\.impl\\.HttpSolrClient",
+   "glob": "*.java",
+   "title": "Direct SolrJ HttpSolrClient usage",
+   "since": "Solr client API changes with Solr 8/9 (verify)",
+   "replacement": "Use solrfacetsearch abstractions",
+   "verify": true
+  },
+  {
+   "id": "DEP-SPRING-SECURITY-XML",
+   "pattern": "http://www\\.springframework\\.org/schema/security",
+   "glob": "*-spring*.xml,*security*.xml",
+   "title": "Spring Security XML configuration in storefront (storefront session security)",
+   "since": "Storefront-bound; irrelevant in headless",
+   "replacement": "OAuth2 / OCC token-based security",
+   "verify": false
+  },
+  {
+   "id": "DEP-JAVAX",
+   "pattern": "import javax\\.(servlet|persistence|annotation|validation)\\.",
+   "glob": "*.java",
+   "title": "javax.* namespace usage (Jakarta migration risk on newer platform versions)",
+   "since": "Relevant for Tomcat 10 / Jakarta EE (verify per target version)",
+   "replacement": "jakarta.*",
+   "verify": true
+  },
+  {
+   "id": "DEP-COMMERCEWEBSERVICES-V1",
+   "pattern": "/rest/v1/|commercewebservices/v1",
+   "glob": "*.java,*.xml,*.jsp,*.js",
+   "title": "OCC v1 usage",
+   "since": "Removed",
+   "replacement": "OCC v2",
+   "verify": false
+  },
+  {
+   "id": "DEP-PROMOTIONS-LEGACY",
+   "pattern": "de\\.hybris\\.platform\\.promotions\\.(jalo|PromotionsService|model\\.(Product|Order)Promotion)",
+   "glob": "*.java,*.impex",
+   "title": "Legacy promotions module (pre rule engine)",
+   "since": "Deprecated since 6.x in favour of promotion engine",
+   "replacement": "promotionengineservices",
+   "verify": false
+  },
+  {
+   "id": "DEP-DEFAULT-PASSWORD-ENCODER",
+   "pattern": "md5|MD5PasswordEncoder|plain\\b.*passwordEncoding",
+   "glob": "*.properties,*.impex,*.java",
+   "title": "Weak password encoding",
+   "since": "n/a (security)",
+   "replacement": "pbkdf2 / argon2",
+   "verify": true
+  },
+  {
+   "id": "DEP-SESSION-CART-JSP",
+   "pattern": "sessionService\\.getAttribute|getCurrentSession\\(\\)\\.setAttribute",
+   "glob": "*.java",
+   "title": "Session-attribute based state (headless risk, not a deprecation)",
+   "since": "n/a",
+   "replacement": "Stateless OCC / cart-based state",
+   "verify": false
+  },
+  {
+   "id": "CCV2-LOCALFS",
+   "pattern": "new File\\(|Files\\.write|FileUtils\\.|Paths\\.get\\(|FileOutputStream|FileInputStream",
+   "glob": "*.java",
+   "title": "Local file system access (CCv2: no persistent local disk; use media storage / Azure Blob hot folders)",
+   "since": "CCv2 constraint",
+   "replacement": "MediaService / cloudhotfolder / Azure Blob",
+   "verify": true
+  },
+  {
+   "id": "CCV2-HOTFOLDER",
+   "pattern": "acceleratorservices\\.dataimport\\.batch|hotfolder|HotFolder",
+   "glob": "*.java,*.xml,*.properties",
+   "title": "Hot folder integration (CCv2 requires cloudhotfolder / azurecloudhotfolder)",
+   "since": "CCv2 constraint",
+   "replacement": "cloudhotfolder extension + Azure Blob storage",
+   "verify": true
+  },
+  {
+   "id": "CCV2-TOMCAT-JVM",
+   "pattern": "^tomcat\\.|^java\\.mem|^catalina\\.",
+   "glob": "*.properties",
+   "title": "Tomcat/JVM tuning in properties (not applicable on CCv2, configured via manifest/aspects)",
+   "since": "CCv2 constraint",
+   "replacement": "manifest.json properties / aspects",
+   "verify": true
+  },
+  {
+   "id": "CCV2-MEDIA-LOCAL",
+   "pattern": "localFileMediaStorageStrategy|media\\.folder\\..*\\.storage\\.strategy",
+   "glob": "*.properties,*.xml",
+   "title": "Local file media storage strategy (CCv2 uses Azure Blob)",
+   "since": "CCv2 constraint",
+   "replacement": "azureBlobMediaStorageStrategy",
+   "verify": true
+  },
+  {
+   "id": "CCV2-SMTP-LOCAL",
+   "pattern": "^mail\\.smtp\\.server|^mail\\.from",
+   "glob": "*.properties",
+   "title": "Mail server configuration (CCv2: external SMTP relay required, see TR-21)",
+   "since": "CCv2 constraint",
+   "replacement": "external mail provider",
+   "verify": true
+  },
+  {
+   "id": "UPG-2205-2211-SPRING",
+   "pattern": "WebSecurityConfigurerAdapter|org\\.springframework\\.security\\.oauth2\\.provider",
+   "glob": "*.java",
+   "title": "Spring Security APIs changed between 2205 and 2211 (Spring Security 5.7/5.8)",
+   "since": "2211 (verify)",
+   "replacement": "SecurityFilterChain beans / platform oauth2 extension",
+   "verify": true
+  },
+  {
+   "id": "UPG-2205-2211-JDK",
+   "pattern": "javax\\.annotation\\.|com\\.sun\\.|sun\\.misc\\.",
+   "glob": "*.java",
+   "title": "JDK 11 -> JDK 17 migration risk (removed internal APIs)",
+   "since": "2211 requires JDK 17 (verify)",
+   "replacement": "jakarta.annotation / public APIs",
+   "verify": true
+  }
+ ],
+ "integration_signals": [
+  {
+   "id": "sig-0",
+   "pattern": "org.springframework.web.client.RestTemplate"
+  },
+  {
+   "id": "sig-1",
+   "pattern": "org.apache.http.client"
+  },
+  {
+   "id": "sig-2",
+   "pattern": "java.net.http.HttpClient"
+  },
+  {
+   "id": "sig-3",
+   "pattern": "javax.xml.ws"
+  },
+  {
+   "id": "sig-4",
+   "pattern": "jakarta.xml.ws"
+  },
+  {
+   "id": "sig-5",
+   "pattern": "javax.jws"
+  },
+  {
+   "id": "sig-6",
+   "pattern": "org.springframework.ws"
+  },
+  {
+   "id": "sig-7",
+   "pattern": "com.sap.conn.jco"
+  },
+  {
+   "id": "sig-8",
+   "pattern": "org.springframework.integration"
+  },
+  {
+   "id": "sig-9",
+   "pattern": "sapcpi"
+  },
+  {
+   "id": "sig-10",
+   "pattern": "outboundservices"
+  },
+  {
+   "id": "sig-11",
+   "pattern": "integrationservices"
+  },
+  {
+   "id": "sig-12",
+   "pattern": "odata2"
+  },
+  {
+   "id": "sig-13",
+   "pattern": "javax.jms"
+  },
+  {
+   "id": "sig-14",
+   "pattern": "jakarta.jms"
+  },
+  {
+   "id": "sig-15",
+   "pattern": "org.apache.camel"
+  },
+  {
+   "id": "sig-16",
+   "pattern": "com.fasterxml.jackson"
+  },
+  {
+   "id": "sig-17",
+   "pattern": "javax.xml.bind"
+  },
+  {
+   "id": "sig-18",
+   "pattern": "jakarta.xml.bind"
+  },
+  {
+   "id": "sig-19",
+   "pattern": "org.apache.cxf"
+  },
+  {
+   "id": "sig-20",
+   "pattern": "feign"
+  },
+  {
+   "id": "sig-21",
+   "pattern": "retrofit"
+  },
+  {
+   "id": "sig-22",
+   "pattern": "okhttp"
+  },
+  {
+   "id": "sig-23",
+   "pattern": "hotfolder"
+  },
+  {
+   "id": "sig-24",
+   "pattern": "de.hybris.platform.acceleratorservices.dataimport.batch"
+  },
+  {
+   "id": "sig-25",
+   "pattern": "com.microsoft.azure"
+  },
+  {
+   "id": "sig-26",
+   "pattern": "com.azure"
+  },
+  {
+   "id": "sig-27",
+   "pattern": "amazonaws"
+  },
+  {
+   "id": "sig-28",
+   "pattern": "software.amazon"
+  },
+  {
+   "id": "sig-29",
+   "pattern": "org.springframework.kafka"
+  },
+  {
+   "id": "sig-30",
+   "pattern": "javax.mail"
+  },
+  {
+   "id": "sig-31",
+   "pattern": "jakarta.mail"
+  },
+  {
+   "id": "sig-32",
+   "pattern": "com.salesforce"
+  },
+  {
+   "id": "sig-33",
+   "pattern": "sforce"
+  },
+  {
+   "id": "sig-34",
+   "pattern": "force.com"
+  },
+  {
+   "id": "sig-35",
+   "pattern": "punchout"
+  },
+  {
+   "id": "sig-36",
+   "pattern": "cxml"
+  },
+  {
+   "id": "sig-37",
+   "pattern": "saml"
+  },
+  {
+   "id": "sig-38",
+   "pattern": "oauth2"
+  },
+  {
+   "id": "sig-39",
+   "pattern": "openid"
+  },
+  {
+   "id": "sig-40",
+   "pattern": "jwt"
+  },
+  {
+   "id": "sig-41",
+   "pattern": "com.nimbusds"
+  },
+  {
+   "id": "sig-42",
+   "pattern": "org.keycloak"
+  },
+  {
+   "id": "sig-43",
+   "pattern": "msal"
+  },
+  {
+   "id": "sig-44",
+   "pattern": "com.microsoft.aad"
+  }
+ ],
+ "target_api_endpoint_families": [
+  "/basesites",
+  "/{baseSiteId}/catalogs",
+  "/{baseSiteId}/products/{productCode}",
+  "/{baseSiteId}/products/search",
+  "/{baseSiteId}/products/suggestions",
+  "/{baseSiteId}/products/{productCode}/references",
+  "/{baseSiteId}/products/{productCode}/reviews",
+  "/{baseSiteId}/products/{productCode}/stock",
+  "/{baseSiteId}/products/expresssearch",
+  "/{baseSiteId}/users/{userId}",
+  "/{baseSiteId}/users/{userId}/carts",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/entries",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/addresses/delivery",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/deliverymode",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/paymentdetails",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/vouchers",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/save",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/entrygroups",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/clonesavedcart",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/restoresavedcart",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/flagForDeletion",
+  "/{baseSiteId}/users/{userId}/orders",
+  "/{baseSiteId}/users/{userId}/orders/{code}",
+  "/{baseSiteId}/users/{userId}/orders/{code}/cancellation",
+  "/{baseSiteId}/users/{userId}/orderReturns",
+  "/{baseSiteId}/users/{userId}/addresses",
+  "/{baseSiteId}/users/{userId}/paymentdetails",
+  "/{baseSiteId}/users/{userId}/customergroups",
+  "/{baseSiteId}/users/{userId}/consents",
+  "/{baseSiteId}/users/{userId}/notificationpreferences",
+  "/{baseSiteId}/users/{userId}/productinterests",
+  "/{baseSiteId}/users/{userId}/password",
+  "/{baseSiteId}/users/{userId}/login",
+  "/{baseSiteId}/users/{userId}/replenishmentOrders",
+  "/{baseSiteId}/users/{userId}/quotes",
+  "/{baseSiteId}/users/{userId}/quotes/{quoteCode}",
+  "/{baseSiteId}/users/{userId}/tickets",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/costcenter",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/paymenttype",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/entries/ (bulk)",
+  "/{baseSiteId}/users/{userId}/orgUnits",
+  "/{baseSiteId}/users/{userId}/orgCustomers",
+  "/{baseSiteId}/users/{userId}/orderApprovals",
+  "/{baseSiteId}/users/{userId}/orgUnitUserGroups",
+  "/{baseSiteId}/users/{userId}/budgets",
+  "/{baseSiteId}/costcenters",
+  "/{baseSiteId}/orgUnits",
+  "/{baseSiteId}/orgProducts",
+  "/{baseSiteId}/orgUnits/{orgUnitId}/orders (unit-level order history)",
+  "/{baseSiteId}/cms/pages",
+  "/{baseSiteId}/cms/components",
+  "/{baseSiteId}/languages",
+  "/{baseSiteId}/currencies",
+  "/{baseSiteId}/countries",
+  "/{baseSiteId}/titles",
+  "/{baseSiteId}/cardtypes",
+  "/{baseSiteId}/deliverycountries",
+  "/{baseSiteId}/stores",
+  "/{baseSiteId}/promotions",
+  "/{baseSiteId}/vouchers",
+  "/{baseSiteId}/export/products",
+  "/{baseSiteId}/feeds/orders/statusfeed",
+  "/{baseSiteId}/forgottenpasswordtokens",
+  "/{baseSiteId}/customergroups",
+  "/{baseSiteId}/users/{userId}/futureStocks",
+  "/{baseSiteId}/punchout/* (b2bpunchoutocc, verify)",
+  "/{baseSiteId}/users/{userId}/accountsummaries (sapinvoiceocc / account summary, verify)",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/requestedretrievaldate (verify)",
+  "/{baseSiteId}/users/{userId}/carts/{cartId}/serviceOrder (verify)",
+  "/authorizationserver/oauth/token"
+ ],
+ "target_content_component_types": [
+  "CMSParagraphComponent",
+  "SimpleBannerComponent",
+  "BannerComponent",
+  "SimpleResponsiveBannerComponent",
+  "CMSLinkComponent",
+  "NavigationComponent",
+  "CategoryNavigationComponent",
+  "FooterNavigationComponent",
+  "BreadcrumbComponent",
+  "SearchBoxComponent",
+  "MiniCartComponent",
+  "LoginComponent",
+  "ProductCarouselComponent",
+  "ProductReferencesComponent",
+  "CMSTabParagraphContainer",
+  "ProductAddToCartComponent",
+  "ProductDetailsTabComponent",
+  "ProductSpecsTabComponent",
+  "ProductReviewsTabComponent",
+  "ProductImagesComponent",
+  "ProductIntroComponent",
+  "ProductSummaryComponent",
+  "ProductVariantSelectorComponent",
+  "ProductGridComponent",
+  "CMSProductListComponent",
+  "SearchResultsListComponent",
+  "SearchResultsGridComponent",
+  "ProductRefinementComponent",
+  "CartComponent",
+  "CartTotalsComponent",
+  "CartApplyCouponComponent",
+  "SaveForLaterComponent",
+  "CartQuickOrderFormComponent",
+  "QuickOrderComponent",
+  "CartCouponComponent",
+  "CheckoutProgress",
+  "CheckoutProgressMobileTop",
+  "CheckoutProgressMobileBottom",
+  "CheckoutOrderSummary",
+  "CheckoutPlaceOrder",
+  "CheckoutDeliveryAddress",
+  "CheckoutDeliveryMode",
+  "CheckoutPaymentDetails",
+  "CheckoutReviewOrder",
+  "CheckoutReviewPayment",
+  "CheckoutReviewShipping",
+  "CheckoutReviewOverview",
+  "CheckoutCostCenterComponent",
+  "CheckoutPaymentType",
+  "CheckoutScheduleReplenishmentOrder",
+  "AccountOrderHistoryComponent",
+  "AccountOrderDetailsItemsComponent",
+  "AccountOrderDetailsTotalsComponent",
+  "AccountOrderDetailsActionsComponent",
+  "AccountOrderDetailsShippingComponent",
+  "AccountOrderDetailsOverviewComponent",
+  "AccountAddressBookComponent",
+  "AccountPaymentDetailsComponent",
+  "AccountSavedCartHistoryComponent",
+  "SavedCartDetailsOverviewComponent",
+  "SavedCartDetailsItemsComponent",
+  "SavedCartDetailsActionComponent",
+  "AddToSavedCartsComponent",
+  "ReplenishmentHistoryComponent",
+  "ReplenishmentDetailItemsComponent",
+  "ReplenishmentDetailTotalsComponent",
+  "ReplenishmentDetailShippingComponent",
+  "ReplenishmentDetailActionsComponent",
+  "ReplenishmentDetailOrderHistoryComponent",
+  "AccountOrderDetailsReorderComponent",
+  "AccountOrderDetailsGroupedItemsComponent",
+  "OrderConfirmationThankMessageComponent",
+  "OrderConfirmationItemsComponent",
+  "OrderConfirmationTotalsComponent",
+  "OrderConfirmationOverviewComponent",
+  "OrderConfirmationShippingComponent",
+  "OrderConfirmationContinueButtonComponent",
+  "ReturnRequestOverviewComponent",
+  "ReturnRequestItemsComponent",
+  "ReturnRequestTotalsComponent",
+  "ReturnOrderComponent",
+  "CancelOrderComponent",
+  "CancelOrderConfirmationComponent",
+  "ReturnOrderConfirmationComponent",
+  "OrderCancellationRequestComponent",
+  "AmendOrderComponent",
+  "GuestRegisterFormComponent",
+  "ForgotPasswordComponent",
+  "ResetPasswordComponent",
+  "RegisterCustomerComponent",
+  "ReturningCustomerLoginComponent",
+  "ReturningCustomerRegisterComponent",
+  "UpdateProfileComponent",
+  "UpdateEmailComponent",
+  "UpdatePasswordComponent",
+  "CloseAccountComponent",
+  "ConsentManagementComponent",
+  "MyCouponsComponent",
+  "MyInterestsComponent",
+  "NotificationPreferenceComponent",
+  "MyAccountViewOrderComponent",
+  "OrderReturnRequestListComponent",
+  "StoreFinderComponent",
+  "StoreFinderListComponent",
+  "StoreFinderPageComponent",
+  "SiteContextSelectorComponent",
+  "LanguageCurrencyComponent",
+  "HamburgerMenuComponent",
+  "AnonymousConsentManagementBannerComponent",
+  "AnonymousConsentOpenDialogComponent",
+  "TabParagraphContainer",
+  "VideoComponent",
+  "PDFDocumentComponent",
+  "JspIncludeComponent",
+  "FlexCmsComponent",
+  "SiteLogoComponent",
+  "ScrollToTopComponent",
+  "ManageUnitsListComponent",
+  "ManageUsersListComponent",
+  "ManageCostCentersListComponent",
+  "ManageBudgetsListComponent",
+  "ManageUserGroupsListComponent",
+  "ManagePermissionsListComponent",
+  "AccountOrderApprovalListComponent",
+  "OrderApprovalDetailTotalsComponent",
+  "OrderApprovalDetailApprovalDetailsComponent",
+  "OrderApprovalDetailShippingComponent",
+  "OrderApprovalDetailItemsComponent",
+  "OrderApprovalDetailFormComponent",
+  "AccountQuoteListComponent",
+  "QuoteDetailsComponent",
+  "QuoteHeaderOverviewComponent",
+  "QuoteItemsComponent",
+  "QuoteSummaryComponent",
+  "QuoteCommentsComponent",
+  "QuoteLinksComponent",
+  "ImportExportOrderEntriesComponent",
+  "ImportOrderEntriesComponent",
+  "ExportOrderEntriesComponent",
+  "UnitLevelOrderHistoryComponent",
+  "UnitLevelOrderDetailsComponent",
+  "AccountMyCompanyComponent",
+  "AccountOrderDetailsSummaryComponent",
+  "OrderApprovalListComponent",
+  "ProductConfigurationComponent",
+  "CpqConfiguratorComponent",
+  "EpdVisualizationComponent",
+  "VisualPickingComponent",
+  "CmsLinkComponent",
+  "AsmComponent",
+  "MerchandisingCarouselComponent",
+  "SearchResultsPageComponent",
+  "AssistedServiceComponent"
+ ],
+ "source_content_component_pattern": "INSERT_UPDATE\\s+(\\w+Component)\\s*;",
+ "_stamp": {
+  "version_pair": "2205 on-premise -> 2211 CCv2 + composable storefront",
+  "date": "2026-09",
+  "refresh_with": "dbcx render research"
+ },
+ "standard_units": [],
+ "shared_types_attribute_ownership": {
+  "_readme": "shared platform item types extended by many modules; when a module is removed the TYPE survives but its attributes do not - check 'defined at extension' per attribute",
+  "types": [
+   "SAPConfiguration",
+   "BaseStore",
+   "BaseSite",
+   "CMSSite",
+   "Product",
+   "Order",
+   "Cart",
+   "B2BUnit",
+   "Customer"
+  ]
+ },
+ "message_key_tag_families": {
+  "_readme": "JSP accelerator: which 'code=' attributes are message-key lookups (count these) and which are not",
+  "message_key_tags": [
+   "spring:theme",
+   "spring:message",
+   "project wrapper tags whose body delegates to spring:theme/spring:message",
+   "Java string literals concatenated into a message code"
+  ],
+  "not_message_keys": [
+   "ycommerce:testId (automation ids)"
+  ],
+  "note": "template liveness is decided by taglib prefix + tag name at the invocation site, never by a tag file's basename - duplicated basenames across sibling tag folders are the accelerator's normal shape"
+ },
+ "module_name_traps": [
+  {
+   "pattern": "sapinvoice*",
+   "note": "sapinvoiceaddon/bol/facades/services = legacy 'SAP Invoice' (JCo-direct, deprecated Q4 2024, no OCC member of any kind); sapbillinginvoiceocc = the separate, current 'SAP Billing Invoice Integration'; the composable Invoice Display (@spartacus/pdf-invoices) is documented as part of the S/4HANA Order Management Integration - name similarity is not a migration path"
+  },
+  {
+   "pattern": "sapordermgmt*",
+   "note": "Synchronous Order Management module (sapordermgmtservices/bol/b2bfacades/...): deprecated 2211, removed from the installer at 2211-jdk21.1; documented mitigation is module-level (saps4omservices/facades/backoffice/occ), there is no class-level successor for its DTOs; the module also owned SAPConfiguration.sapordermgmt_* attributes"
+  },
+  {
+   "pattern": "secureportaladdon",
+   "note": "the EXTENSION was deprecated and deleted (registration -> b2bcommerce/b2bcommercefacades, storefront layer -> b2bacceleratoraddon) while CMSSecurePortalRestriction the TYPE still ships at 2211 (first defined at b2bacceleratorservices) - 'extension deleted, capability survives'"
+  }
+ ],
+ "check_recipes": [
+  {
+   "id": "addon-installed",
+   "title": "AddOn installed?",
+   "trigger": {
+    "signal": "adapter: acceleratoraddon folder or *addon name"
+   },
+   "text": "Check the two addoninstall footprints before judging deployment: the storefront's extensioninfo.xml requires-extension of the AddOn, and storefront-prefixed lines (additionalWebSpringConfigs, wro4jconfigscan) in the AddOn's project.properties vs project.properties.template. buildcallbacks copying acceleratoraddon/ and gitignored copy targets prove the build-time install; an empty manifest storefrontAddons list proves nothing. project.properties lines absent from the template are hand edits a re-install drops."
+  },
+  {
+   "id": "addon-content",
+   "title": "CMS/AddOn content visible?",
+   "trigger": {
+    "glob": "*.impex",
+    "content": "ContentCatalog|contentCatalogs|\\$contentCV\\b|\\$contentCatalog\\b"
+   },
+   "text": "Three separate tests: (1) the target content catalog exists in this estate and its store/site extension is active (an addon folder for a catalog the site does not have is never read); (2) the ImpEx writes the Online version or a sync runs; (3) for AddOn content, the AddOn is installed. Resolve $macros before quoting any value."
+  },
+  {
+   "id": "addon-i18n",
+   "title": "Which texts win?",
+   "trigger": {
+    "glob": "*/messages/base*.properties,*MessageSource*.java,*ResourceBundleSource*.java",
+    "exclude": "*/testsrc/*"
+   },
+   "text": "Storefront messages resolve database labels first, then AddOn bundles in ALPHABETICAL AddOn order (RequiredAddOnsNameProvider) with fallbackToSystemLocale=false: an earlier English-only base.properties hides later SAP translations. Count key-set intersections per language before stating which languages exist; a singleton theme message source shares the fallback of the theme built last."
+  },
+  {
+   "id": "process-reachability",
+   "title": "Process definition: what actually runs",
+   "trigger": {
+    "signal": "adapter: *-process.xml / process/*.xml (process_reach)"
+   },
+   "text": "Only nodes reachable from the root's start attribute ever run (the evidence shows unreachable nodes; `dbcx process_reach <file>`). For every wait node name the TARGET of each timeout branch: a timeout that rejoins a SUCCEEDED end turns a missing acknowledgement into a business success."
+  },
+  {
+   "id": "custom-cache",
+   "title": "Custom cache",
+   "trigger": {
+    "glob": "*.java",
+    "content": "AbstractCacheKey|implements\\s+CacheKey\\b|CacheValueLoader|InvalidationListener|@Cacheable\\b|CacheBuilder|Caffeine\\.newBuilder"
+   },
+   "text": "Compare the key's equals/hashCode fields with what the claim says the key separates by (tenant, site, language, key) and with AbstractCacheKey (tenantId). List invalidation per operation - CREATE as well as UPDATE/DELETE - against every key the fallback path writes, and state the TTL."
+  },
+  {
+   "id": "which-copy-executes",
+   "title": "Which copy executes?",
+   "trigger": {
+    "glob": "*spring*.xml",
+    "content": "<alias\\b|primary\\s*=\\s*[\"']true|\\bparent\\s*=\\s*[\"']"
+   },
+   "text": "A bean with primary=\"true\" wins by-type injection before any name match (DefaultListableBeanFactory); an alias re-points every lookup of the standard id; a parent= bean or subclass in a sibling extension may override the methods you describe. For every service method in a claim, search estate-wide for aliases, primary beans, parent= and extends, and say which copy runs."
+  },
+  {
+   "id": "occ-project-beans",
+   "title": "Standard OCC/API on project beans",
+   "trigger": {
+    "override_resolution": "overrides-standard",
+    "target": "(?i)(service|dao|facade|strategy|populator|converter|provider|resolver|finder|evaluator|validator)$"
+   },
+   "text": "This unit re-points standard bean ids (evidence). Standard OCC/API resources then call standard methods on the project bean: list which methods it overrides (incl. state filters in DAO queries) before stating what a standard resource returns or that an API gap exists."
+  },
+  {
+   "id": "secrets",
+   "title": "Secret-like key or column",
+   "trigger": {
+    "glob": "*.impex,*.properties",
+    "exclude": "*/messages/*,*/localization/*,*locales_*,*/i18n/*",
+    "content": "(?im)^[^#\\n]*?(password|passwd|secret|apikey|api[._-]key|client[._-]?secret|sharedsecret|access[._-]?token)[\\w.\\-\\[\\]=]*\\s*[=;:]"
+   },
+   "text": "Read the value masked (length and form only, never print it): a placeholder (<...>, empty, ${...}) is not a secret; resolve ImpEx $macros first. For a real literal state whether the file is reachable in production (which import path, which persona/aspect loads it - `dbcx effective_property`) and whether rotation is needed; never relay an unscored secret finding as fact."
+  },
+  {
+   "id": "lib-jars",
+   "title": "Bundled jars",
+   "trigger": {
+    "glob": "lib/*.jar,web/webroot/WEB-INF/lib/*.jar"
+   },
+   "text": "<extension>/lib lands on the GLOBAL classpath: compare each jar's embedded META-INF/maven/**/pom.xml dependencies with the jars in this lib/, the platform and sibling extensions; report missing and version-clashing jars and any dependency only a sibling extension ships (load order, no requires-extension)."
+  },
+  {
+   "id": "integration-hooks",
+   "title": "Integration API hooks",
+   "trigger": {
+    "glob": "*.java,*spring*.xml",
+    "content": "PrePersistHook|PostPersistHook|Pre-Persist-Hook|Post-Persist-Hook"
+   },
+   "text": "Integration API persistence hooks are chosen per request by the Pre-Persist-Hook / Post-Persist-Hook HTTP header the caller (e.g. CPI) sends - no repository file names which hook runs; say so instead of hunting. The named bean must implement PrePersistHook/PostPersistHook (SpringBeanPersistenceHookProvider); an AfterSaveListener is a different mechanism."
+  },
+  {
+   "id": "buildcallback-patch",
+   "title": "Build-time patch of a vendor file",
+   "trigger": {
+    "glob": "buildcallbacks.xml",
+    "content": "replaceregexp|<replace\\b"
+   },
+   "text": "Name the patched vendor file and the matched pattern: a regex that no longer matches after an upgrade silently does nothing (no build failure). Check the pattern against the TARGET version's file."
+  },
+  {
+   "id": "tenant-scope-state",
+   "title": "Tenant-scoped bean state",
+   "trigger": {
+    "glob": "*spring*.xml",
+    "content": "scope\\s*=\\s*[\"']tenant[\"']"
+   },
+   "text": "scope=\"tenant\" is ONE shared instance per tenant (the tenant scope resolves to the singleton), not one per job run: a tenant-scoped job or performable keeping run state in instance fields shares it across concurrent runs."
+  },
+  {
+   "id": "template-copy",
+   "title": "Generated from a vendor template",
+   "trigger": {
+    "signal": "adapter: template_diff found a vendor template"
+   },
+   "text": "Only modified and new files are client logic (`dbcx template_diff <repo> <unit>`); never call an unchanged template copy a patch of standard. Judge a modified or overriding class against the shipped class of the TARGET version - the workaround may be obsolete or now harmful."
+  },
+  {
+   "id": "property-default",
+   "title": "Effective property values",
+   "trigger": {
+    "glob": "*.java,*.groovy",
+    "content": "getConfiguration\\(\\)\\s*\\.\\s*get\\w*\\(|Config\\.get(?:Parameter|Boolean|Int|Long|String)\\("
+   },
+   "text": "Before stating an effective value, or that a vendor default applies, resolve the key with `dbcx effective_property <repo> <key>` (manifest.json useConfig chain per persona/aspect; deployment-time Cloud Portal layers stay invisible - say so)."
+  },
+  {
+   "id": "items-locator",
+   "title": "items.xml locator",
+   "trigger": {
+    "glob": "*-items.xml",
+    "content": "<itemtype\\b[\\s\\S]*?<itemtype\\b"
+   },
+   "text": "A grep hit on a qualifier in an items.xml proves the string exists, not which type owns it: derive the owning <itemtype> block (its start and end lines) before citing a range, the way an ImpEx value needs its header. Cite the block of the type the statement is about."
+  },
+  {
+   "id": "addon-coredata-template",
+   "title": "AddOn core-data import folder",
+   "trigger": {
+    "glob": "*/import/contentCatalogs/template/*,*/import/productCatalogs/template/*,*/import/stores/template/*"
+   },
+   "text": "The addonsupport Core Data Import hook reads the fixed `template` folder and injects the catalog identity by ImpEx macro substitution; per-catalog-named folders belong to the separate AddOn Sample Data Import. Say which of the two mechanisms reads the files you cite."
+  },
+  {
+   "id": "punchout-occ",
+   "title": "PunchOut on the target",
+   "trigger": {
+    "glob": "*.java,*spring*.xml,extensioninfo.xml",
+    "content": "b2bpunchout|PunchOut(?:Session|Service|Controller|Facade)"
+   },
+   "text": "Standard b2bpunchoutocc covers the PunchOut transport (profile, setup, order, session, requisition); estate-specific session policy (compliance checks, preview or group state, custom authentication) still needs its own OCC extension or backend hook. Split the two instead of calling the unit wholly standard or wholly custom."
+  },
+  {
+   "id": "checkout-wiring",
+   "title": "Checkout steps and their wiring",
+   "trigger": {
+    "glob": "*checkout*.xml",
+    "content": "CheckoutStep|checkoutStep|merge\\s*=\\s*[\"']true"
+   },
+   "text": "In the accelerator a checkout step controller and its bean/transition wiring can live in different units: merge=\"true\" maps in multi-step-checkout-config.xml let an AddOn contribute steps to the storefront's map. Cite the file that actually contributes the entry, and search sibling AddOns before calling a step unwired."
+  },
+  {
+   "id": "occ-feature-library",
+   "title": "Target API and feature library",
+   "trigger": {
+    "glob": "*.java",
+    "content": "@RestController\\b|extends\\s+BaseCommerceController|/\\{baseSiteId\\}/"
+   },
+   "text": "A D4 statement that standard OCC covers something names the OCC extension (e.g. commercewebservices, b2bocc) and the composable-storefront feature library that consumes it; where no feature library exists (e.g. checkout), that absence is the finding. Take library names from the vendor documentation, not from memory."
+  },
+  {
+   "id": "alltypes-export",
+   "title": "Deployed type names",
+   "trigger": {
+    "glob": "*alltypes*.impex,*/export/*.impex"
+   },
+   "text": "A type-system-generated export (alltypes.impex-style header written from a running type system) is repository evidence of deployed type, attribute and descriptor names, trimmed as the database holds them. Use it when items.xml is ambiguous (e.g. trailing spaces, localized columns), and say it reflects the system it was exported from."
+  },
+  {
+   "id": "swallowed-save",
+   "title": "Control flow after a platform failure",
+   "trigger": {
+    "glob": "*.java",
+    "content": "setStreamForMedia\\(|catch\\s*\\(\\s*(?:final\\s+)?ModelSavingException"
+   },
+   "text": "Platform services often rethrow unchecked (e.g. DefaultMediaService.setStreamForMedia on an unsaved model throws ModelSavingException), so a step after a swallowed save may never be reached. Reproduce every 'reached even after a failure' statement against the platform bytecode (javap), not from the custom code alone."
+  },
+  {
+   "id": "backoffice-editor-fallback",
+   "title": "Backoffice visibility",
+   "trigger": {
+    "glob": "*backoffice-config.xml",
+    "content": "<context\\b[^>]*\\btype\\s*="
+   },
+   "text": "A type without its own editor-area falls back to the standard Item editor area, whose unbound section shows every attribute not placed elsewhere; a type-level right covers all attributes unless an attribute-level right exists. Check that fallback before claiming an attribute is not visible or only readable as a list column."
+  },
+  {
+   "id": "media-storage",
+   "title": "Where media are stored",
+   "trigger": {
+    "glob": "*.java,*.properties,*.xml",
+    "content": "media\\.(?:folder|default)\\.[\\w.]*storage|MediaStorageStrategy|mediaconversion|enableImageProcessingService"
+   },
+   "text": "manifest.json image-processing flags (enableImageProcessingService, cloudmediaconversion) switch image processing, not media storage: the storage strategy per media folder (media.folder.*.storage.strategy, none set = platform default) decides where media live, and CCv2 is blob-backed by default. Check the strategy layer before inferring a media location."
+  }
+ ]
+}

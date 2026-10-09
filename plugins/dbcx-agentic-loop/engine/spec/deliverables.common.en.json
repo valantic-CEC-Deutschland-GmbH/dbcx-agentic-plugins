@@ -1,0 +1,183 @@
+{
+ "_readme": [
+  "Common Excel wording and style shared by every method (README, Management_Summary, engine sheets Assumptions / Sources / Open_Questions, claims sheet). Method deliverables.<lang>.json adds the `deliverables` block; both are deep-merged with <run>/overrides/deliverables.<lang>.json, then the override `patches` are applied.",
+  "style: valantic palette only (DESIGN §7). status keys: standard | rework | rebuild | neutral | assumption. Header tiers: normal | decision | support. Tab roles: result | assumptions | reference | internal."
+ ],
+ "style": {
+  "font": "Segoe UI",
+  "text": "100C2A",
+  "muted": "6B6880",
+  "accent": "FF4B4B",
+  "title_band": "100C2A",
+  "separator": "E3E3E8",
+  "input_fill": "FFF7F5",
+  "header": {
+   "normal": {
+    "fill": "3C4BC8",
+    "color": "FFFFFF"
+   },
+   "decision": {
+    "fill": "100C2A",
+    "color": "FFFFFF"
+   },
+   "support": {
+    "fill": "CDCDCD",
+    "color": "100C2A"
+   }
+  },
+  "status": {
+   "standard": {
+    "fill": "D4D7F3",
+    "chart": "3C4BC8"
+   },
+   "rework": {
+    "fill": "E9E1D3",
+    "chart": "C0AA81"
+   },
+   "rebuild": {
+    "fill": "FFD2D2",
+    "chart": "FF4B4B"
+   },
+   "neutral": {
+    "fill": "E8E8E8",
+    "chart": "CDCDCD"
+   },
+   "assumption": {
+    "fill": "E5DDE9",
+    "chart": "A78DB6"
+   }
+  },
+  "chart_sequence": [
+   "3C4BC8",
+   "C0AA81",
+   "A78DB6",
+   "CDCDCD",
+   "100C2A",
+   "8C95DE",
+   "D9CCB3"
+  ],
+  "option_bands": [
+   {"band": "3C4BC8", "color": "FFFFFF", "header": "D4D7F3"},
+   {"band": "C0AA81", "color": "100C2A", "header": "E9E1D3"},
+   {"band": "A78DB6", "color": "100C2A", "header": "E5DDE9"},
+   {"band": "100C2A", "color": "FFFFFF", "header": "E8E8E8"}
+  ],
+  "tabs": {
+   "result": "3C4BC8",
+   "assumptions": "A78DB6",
+   "reference": "CDCDCD",
+   "internal": "100C2A"
+  },
+  "max_decision_columns": 2,
+  "max_row_lines": 6,
+  "zoom": 90,
+  "footer": "{engagement.consultancy} · Confidential · Page &P of &N"
+ },
+ "common": {
+  "readme": {
+   "subtitle": "{engagement.consultancy} for {engagement.client} – {engagement.title}",
+   "purpose": "Purpose",
+   "created": "As of",
+   "basis": "Basis",
+   "basis_intro": "Every result row states its basis in the column “Basis”:",
+   "basis_code": "“Code” – a location in the repository (path relative to the checkout, with a line range where useful)",
+   "basis_vendor": "“Vendor documentation” – a source [Qn] listed on the sheet “{sources_sheet}” with title, address and check date",
+   "basis_assumption": "“Assumption (A-nn)” – a premise listed on the sheet “{assumptions_sheet}” that {engagement.client} can confirm or correct",
+   "evidence_text": "Every fact row names the place where it can be traced – file and line, document page or table cell.",
+   "sources": "Sources",
+   "aggregates": "Figures",
+   "aggregates_text": "Every figure, count and share is an Excel formula over the detail sheets. When a detail row changes, the overview and the management summary follow automatically.",
+   "glossary": "Terms",
+   "glossary_text": "Standard = documented capability of the vendor product in the stated version. Custom = built or to be built for {engagement.client}. Location = file (with a line range where useful), document page or table cell where a statement can be traced.",
+   "glossary_sources": "[Qn] = source in the vendor documentation (sheet “{sources_sheet}”).",
+   "glossary_assumptions": "A-nn = assumption {engagement.client} can confirm or correct (sheet “{assumptions_sheet}”).",
+   "notes": "Notes",
+   "sheet": "Sheet",
+   "content": "Content",
+   "claims_row": "Claims and reviews",
+   "claims_text": "Internal edition only: every claim on the sheet “{claims_sheet}” was scored 0–10 by independent reviewers – one against the client's own material, one or more against the external standard. A deliverable is released only when every reviewer's average reaches {threshold} and no claim was refuted. The review notes stay in the internal review notes.",
+   "questions_row": "Questions and answers",
+   "questions_text": "Internal edition only: the sheet “{questions_sheet}” lists every question to the client with its status (open / answered / unresolvable) and answer type: “Decision” = set as fact by the engagement lead, “Working assumption” = proposal the analysis proceeds under, “Stated by {engagement.client}” = answered by the client. In the customer edition every question the client has not answered appears as an assumption.",
+   "sheet_texts": {
+    "assumptions": "Assumptions the results rest on – please confirm each row (yes / no / partly) and comment where needed; the affected rows are named",
+    "sources": "Vendor documentation the results rely on ([Qn]), with address and check date",
+    "open_questions": "Questions to the client with status, answer type and answer (internal edition only)",
+    "claims": "Every claim with the reviewer scores (internal edition only)"
+   },
+   "basis_client": "“Stated by {engagement.client}” – information {engagement.client} gave"
+  },
+  "mgmt": {
+   "basis_line": "{engagement.consultancy} for {engagement.client} · {engagement.title} · as of {date}",
+   "kpi": "Figure",
+   "value": "Value",
+   "note": "Explanation",
+   "heading": "Assessment and recommendation",
+   "kpi_heading": "Figures",
+   "assumptions_heading": "Key assumptions (sheet {assumptions_sheet})",
+   "missing": "The assessment follows once the analysis is complete."
+  },
+  "claims": {
+   "scope": "Scope",
+   "id": "Claim id",
+   "type": "Type",
+   "target": "Feeds",
+   "statement": "Statement",
+   "evidence": "Evidence",
+   "score": "Score {critic}",
+   "avg": "Average",
+   "n_claims": "Claims",
+   "avg_critic": "Avg {critic}",
+   "below": "Claims < {threshold} (per reviewer)",
+   "unscored": "Unscored",
+   "reviewed": "Reviewed"
+  },
+  "open_questions": {
+   "name": "Open_Questions",
+   "headers": [
+    "ID",
+    "Question to the client",
+    "Effect of the answer",
+    "Raised by",
+    "Status",
+    "Answer"
+   ],
+   "answer_type_header": "Answer type"
+  },
+  "assumptions": {
+   "name": "Assumptions",
+   "alt_name": "Analysis_Assumptions",
+   "headers": [
+    "No.",
+    "Assumption",
+    "Why we assume it",
+    "If it does not hold",
+    "Affected",
+    "Correct? ({engagement.client})",
+    "Comment {engagement.client}"
+   ],
+   "options": [
+    "yes",
+    "no",
+    "partly"
+   ],
+   "default_wording": "The analysis assumes: {text}.",
+   "comment_prompt": "Free text, e.g. an addition or a restriction"
+  },
+  "sources": {
+   "name": "Sources",
+   "alt_name": "Vendor_Sources",
+   "headers": [
+    "No.",
+    "Source",
+    "Statement",
+    "Applies to",
+    "Address",
+    "Checked on"
+   ],
+   "missing": "(not in the reference catalogue)"
+  },
+  "basis": {
+   "header": "Basis"
+  }
+ }
+}

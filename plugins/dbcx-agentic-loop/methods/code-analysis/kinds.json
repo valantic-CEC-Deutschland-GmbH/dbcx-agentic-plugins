@@ -1,0 +1,1299 @@
+{
+ "_readme": [
+  "Analysis kinds of the code-analysis method (unit = one custom unit, inventory = D1, D3/D4 = consolidations). The marker CLAIMS embeds the engine claims table. Templates and schemas are generated per run with `dbcx md_to_json --generate`."
+ ],
+ "kinds": {
+  "unit": {
+   "title": "Unit analysis: <unit>",
+   "file": "unit-analysis.md",
+   "output_dir": "analysis/units",
+   "id_prefix": "C-<unit>-",
+   "head": {
+    "unit": {
+     "t": "s",
+     "req": true
+    },
+    "agent": {
+     "t": "s",
+     "req": true
+    },
+    "wave": "i",
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "status = draft | final; round = gauntlet round this version answers (0 = first version)",
+   "sections": [
+    {
+     "heading": "Summary",
+     "key": "summary",
+     "type": "text",
+     "req": true,
+     "help": "3-6 plain-language sentences for the client: purpose of the unit, for whom, central dependencies."
+    },
+    {
+     "heading": "Classification",
+     "key": "classification",
+     "type": "kv",
+     "req": true,
+     "fields": {
+      "depth": {
+       "t": "s",
+       "enum": [
+        "low",
+        "medium",
+        "heavy",
+        "rewrite"
+       ],
+       "req": true
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      },
+      "migration_relevance": {
+       "t": "s",
+       "enum": [
+        "frontend-only",
+        "backend-only",
+        "both",
+        "none"
+       ]
+      },
+      "disposition": {
+       "t": "s",
+       "enum": [
+        "keep",
+        "adapt-api",
+        "refactor-to-standard",
+        "rebuild-frontend",
+        "retire",
+        "third-party-replace"
+       ],
+       "req": true
+      },
+      "disposition_rationale": {
+       "t": "s",
+       "req": true
+      },
+      "key_statement": "s"
+     },
+     "help": "depth: low = configuration/data/thin glue; medium = extends standard, adds types, no replacement of standard behaviour; heavy = replaces standard behaviour or large own domain logic that still fits the standard model; rewrite = standard patched/shadowed, business logic in controllers/templates, or the unit exists to work around the standard and would not survive the migration as is. disposition (the migration guideline for this unit on the way to TARGET): keep = carry over unchanged (backend logic behind the standard API); admin UIs (HAC, Backoffice) stay in the target and do not prevent keep; adapt-api = keep the logic, expose/adjust it through the target API; refactor-to-standard = replace by standard functionality of the target (name it in disposition_rationale); rebuild-frontend = the unit renders storefront pages server-side (controllers/templates) and is rebuilt in the target frontend against the API; retire = dead, obsolete or replaced by hosting/tooling of the target; third-party-replace = partner/vendor tooling replaced by a target-standard equivalent; key_statement = the Kernaussage shown next to the classification and disposition (D2 Heatmap) in the client workbook: ONE sentence (<= 160 characters) in the deliverable language that states the consequence for the client (what the verdict means for the shop, its users or the project), using only facts of this row - no ids, no enum tokens, no class names, no figures the row does not carry"
+    },
+    {
+     "heading": "Code units",
+     "key": "code_units",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "fqn": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "new",
+        "extended",
+        "overridden",
+        "shadowed",
+        "aggregate"
+       ],
+       "req": true
+      },
+      "standard_counterpart": "n",
+      "purpose": "s",
+      "file": {
+       "t": "s",
+       "req": true
+      },
+      "lines": "s",
+      "count": "i"
+     },
+     "help": "one row per class/service/component (or 'aggregate' with count for trivial DTO/model/generated groups). overridden = the standard implementation is replaced (DI override, preference, decorator that replaces, plugin that short-circuits); extended = subclass/decorator without replacing the standard; shadowed = same class name/namespace overlays the standard (highest upgrade risk). Name the standard counterpart."
+    },
+    {
+     "heading": "Data model",
+     "key": "data_model",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "type": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "new-type",
+        "extended-standard-type",
+        "extended-custom-type",
+        "new-relation",
+        "new-enum",
+        "extended-enum",
+        "collection",
+        "other"
+       ],
+       "req": true
+      },
+      "base": "n",
+      "attributes_added": "i",
+      "attributes": "l",
+      "purpose": "s",
+      "standard_alternative": "n",
+      "file": {
+       "t": "s",
+       "req": true
+      },
+      "data_class": {
+       "t": "s",
+       "enum": [
+        "master-reloadable",
+        "master-shop-owned",
+        "transactional",
+        "config",
+        "derived"
+       ],
+       "req": true
+      },
+      "source_of_truth": "n"
+     },
+     "help": "every entity/table/schema element the unit adds or changes; standard_alternative = standard type/attribute that could hold it; data_class = what a data migration has to do with the rows of this type: master-reloadable (master data that can be re-imported from its source system - name it in source_of_truth), master-shop-owned (master data only the shop holds: must be migrated), transactional (orders, quotes, carts, tickets, histories: must be migrated or archived), config (CMS/site/config data: re-created by scripts), derived (caches, indexes, snapshots: rebuilt)"
+    },
+    {
+     "heading": "Workflows",
+     "key": "workflows",
+     "type": "table",
+     "fields": {
+      "name": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "new",
+        "customized-standard"
+       ],
+       "req": true
+      },
+      "standard_counterpart": "n",
+      "purpose": "s",
+      "file": {
+       "t": "s",
+       "req": true
+      }
+     },
+     "help": "business processes, state machines, order/checkout flows, event chains; kind = new | customized-standard (name the standard flow)"
+    },
+    {
+     "heading": "Scheduled jobs",
+     "key": "scheduled_jobs",
+     "type": "table",
+     "fields": {
+      "name": "s",
+      "job_class": "s",
+      "purpose": "s",
+      "file": "s"
+     },
+     "help": "cron jobs, console commands on a schedule, queue workers"
+    },
+    {
+     "heading": "Data scripts",
+     "key": "data_scripts",
+     "type": "table",
+     "fields": {
+      "area": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "new",
+        "customizes-standard-data"
+       ],
+       "req": true
+      },
+      "files": {
+       "t": "l",
+       "req": true
+      },
+      "notes": "s"
+     },
+     "help": "data import scripts, migrations, fixtures, seed/config data; kind = new | customizes-standard-data"
+    },
+    {
+     "heading": "Patched standard behaviour",
+     "key": "patched_standard",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "what": {
+       "t": "s",
+       "req": true
+      },
+      "how": {
+       "t": "s",
+       "enum": [
+        "service-override",
+        "class-shadowing",
+        "aop-or-plugin",
+        "config-override",
+        "template-override",
+        "event-hook",
+        "core-patch",
+        "other"
+       ],
+       "req": true
+      },
+      "standard_behaviour": "s",
+      "custom_behaviour": "s",
+      "risk_for_upgrade": {
+       "t": "s",
+       "enum": [
+        "low",
+        "medium",
+        "high"
+       ]
+      },
+      "security_relevant": "b",
+      "consequence": "s",
+      "file": {
+       "t": "s",
+       "req": true
+      },
+      "lines": "s",
+      "client_attention": "b"
+     },
+     "help": "every place where standard behaviour is changed rather than extended; core-patch = vendor code modified in place; client_attention = yes when the row describes a defect the client should act on regardless of the platform decision (feeds the optional D0); security_relevant = yes when the change touches authentication, authorisation, session, credentials, input validation, personal data or another protection of the shop (it feeds the D2 column Sicherheitsrelevant and the sheet Sicherheit_und_Betrieb) - decide it for EVERY row, no = assessed and not security relevant; consequence = ONE sentence on the business consequence for the client if the change breaks or stays as it is (e.g. customers can no longer log in after an upgrade), facts from this row only"
+    },
+    {
+     "heading": "Requirements",
+     "key": "requirements",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "req_id": {
+       "t": "s",
+       "req": true
+      },
+      "contribution": {
+       "t": "s",
+       "enum": [
+        "implements",
+        "partially-implements",
+        "supports",
+        "conflicts-with-exclusion"
+       ],
+       "req": true
+      },
+      "evidence": {
+       "t": "l",
+       "req": true
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      },
+      "standard_alternative": "n",
+      "standard_alternative_confidence": {
+       "t": "n",
+       "enum": [
+        "high",
+        "medium",
+        "low",
+        null
+       ]
+      },
+      "beyond_requirement": "n"
+     },
+     "help": "every requirement in docs/reference/requirements.json this unit's code contributes to; read the exclusions; standard_alternative = target-standard feature + version that could replace heavy custom code here; beyond_requirement = what the code does for this requirement that its description / acceptance criteria do NOT describe (variants, edge cases, additional rules) - one or two sentences, empty when the requirement describes the behaviour fully; this is the 'requirement partially described' signal, never a new requirement"
+    },
+    {
+     "heading": "Undocumented behaviour",
+     "key": "undocumented_behaviour",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "behaviour": {
+       "t": "s",
+       "req": true
+      },
+      "users": "s",
+      "nearest_requirement": "n",
+      "relation": {
+       "t": "s",
+       "enum": [
+        "extends-requirement",
+        "not-described"
+       ],
+       "req": true
+      },
+      "proposed_epic": "s",
+      "business_value": "s",
+      "evidence": {
+       "t": "l",
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      }
+     },
+     "help": "user-visible or business-relevant behaviour this unit implements that NO requirement in REQUIREMENTS describes. id = UB-<unit>-NN. relation = not-described (no requirement touches this behaviour at all -> becomes a proposed new requirement in D3) | extends-requirement (a requirement touches it but does not describe this part -> also recorded as beyond_requirement on that requirement's row; nearest_requirement names it). behaviour = what the shop does, in the client's language (who can do what, with which outcome); users = the role that uses it; proposed_epic = the epic of the client's list it would belong to; business_value = why the shop has it, if visible from code/comments/data. Technical plumbing with no user-visible effect is NOT undocumented behaviour. Empty table only with a Summary sentence saying that everything the unit does is described by the requirements it contributes to."
+    },
+    {
+     "heading": "Target API features",
+     "key": "api_features",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "feature_id": "s",
+      "feature": {
+       "t": "s",
+       "req": true
+      },
+      "primary_requirement": "n",
+      "current_implementation": {
+       "t": "s",
+       "req": true
+      },
+      "entry_points": "l",
+      "target_api_coverage": {
+       "t": "s",
+       "enum": [
+        "full",
+        "partial",
+        "none"
+       ],
+       "req": true
+      },
+      "target_api_endpoints": "l",
+      "custom_api_exists": "b",
+      "custom_api_needed": "s",
+      "content_dependency": {
+       "t": "s",
+       "enum": [
+        "standard-components",
+        "custom-components",
+        "none"
+       ],
+       "req": true
+      },
+      "content_components": "l",
+      "state_dependency": {
+       "t": "s",
+       "enum": [
+        "none",
+        "session-attributes",
+        "server-side-view-state",
+        "cart-based"
+       ]
+      },
+      "verdict": {
+       "t": "s",
+       "enum": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign"
+       ],
+       "req": true
+      },
+      "rationale": "s",
+      "related_requirements": "l",
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "every user-facing feature this unit implements (frontend controllers/templates/JS) or exposes (API controllers): how it is implemented today, whether the TARGET standard API covers it (endpoints), what custom API would be needed, dependency on content components and server-side state, verdict ready | needs-api-work | needs-redesign. primary_requirement = the ONE requirement id (FR/TR) this feature serves first; when no requirement describes it, the id of your own Undocumented behaviour row (UB-<unit>-NN) - the consolidation turns it into the NR id; related_requirements = further requirement ids it touches"
+    },
+    {
+     "heading": "Migration concerns",
+     "key": "migration_concerns",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "topic": {
+       "t": "s",
+       "enum": [
+        "session",
+        "cart",
+        "auth",
+        "security",
+        "i18n",
+        "content",
+        "search",
+        "performance",
+        "deployment-config",
+        "integration",
+        "data-migration",
+        "testing",
+        "other"
+       ],
+       "req": true
+      },
+      "affected_requirements": "l",
+      "finding": {
+       "t": "s",
+       "req": true
+      },
+      "impact": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor",
+        "none"
+       ],
+       "req": true
+      },
+      "recommendation": {
+       "t": "s",
+       "req": true
+      },
+      "consequence": "s",
+      "evidence": {
+       "t": "l",
+       "req": true
+      },
+      "client_attention": "b"
+     },
+     "help": "behaviour that breaks or changes on the target (headless/API-first, new auth model, data migration, deployment configuration): one row per concern with the requirement ids it affects (affected_requirements; empty only when it affects none). topic deployment-config = deployment artefacts INSIDE the repository that the move changes (manifest aspects and web-module placement, context roots, node groups in data scripts, properties files) - infrastructure the platform vendor operates (network, build infrastructure, licences, log collection, environments) is out of scope and gets no row; client_attention = yes for a defect of today's shop worth acting on independent of the migration (feeds the optional D0); consequence = for a client_attention or security/auth row: ONE sentence on the business consequence for the client (shown on the D2 sheet Sicherheit_und_Betrieb), empty otherwise"
+    },
+    {
+     "heading": "Deprecations",
+     "key": "deprecations",
+     "type": "table",
+     "fields": {
+      "what": {
+       "t": "s",
+       "req": true
+      },
+      "status": {
+       "t": "s",
+       "enum": [
+        "deprecated",
+        "removed-in-target",
+        "risky",
+        "false-positive"
+       ],
+       "req": true
+      },
+      "since": "s",
+      "replacement": "s",
+      "reason": "s",
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "verify EVERY scanner hit listed for this unit in your brief (DEPRECATION HITS) against source->target and add misses; a scanner hit on a definition, an unused import or a commented line is reported with status false-positive and the reason; reason = why this status (reachability, version fact); evidence = file:line"
+    },
+    {
+     "heading": "Integrations",
+     "key": "integrations",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "system": {
+       "t": "s",
+       "req": true
+      },
+      "direction": {
+       "t": "s",
+       "enum": [
+        "inbound",
+        "outbound",
+        "both"
+       ],
+       "req": true
+      },
+      "mechanism": {
+       "t": "s",
+       "enum": [
+        "integration-api",
+        "middleware",
+        "rest",
+        "soap",
+        "rfc-jco",
+        "file-transfer",
+        "edi",
+        "messaging",
+        "sso",
+        "js-widget",
+        "database",
+        "other"
+       ],
+       "req": true
+      },
+      "data_objects": "l",
+      "trigger": {
+       "t": "s",
+       "enum": [
+        "sync",
+        "async",
+        "batch",
+        "event"
+       ]
+      },
+      "implementation": {
+       "t": "s",
+       "enum": [
+        "standard",
+        "custom",
+        "partner"
+       ],
+       "req": true
+      },
+      "purpose": "s",
+      "target_note": "s",
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "every interface of this unit to a system outside the shop platform (ERP, CRM, identity provider, middleware, PIM, search/visual-search service, shipping, payment, procurement/punchout, file drops): system = the external system by name/role; direction = inbound (data comes into the shop) | outbound | both; mechanism = how; data_objects = business objects exchanged; trigger = sync (request/response in a user flow) | async | batch (job/file) | event; implementation = standard (platform module used as shipped) | custom (own code) | partner (third-party extension); target_note = what changes for this interface on the TARGET (frontend move, hosting, standard module). One row per system and direction; empty table only when the unit has no external interface (say so in Summary)."
+    },
+    {
+     "heading": "Rows without claim",
+     "key": "rows_without_claim",
+     "type": "list",
+     "optional": true,
+     "help": "OPTIONAL, not filled by you any more: extract_claims lists the rows no claim targets (coverage-round<n>.md / .json). Leave the section empty."
+    },
+    {
+     "heading": "Commands",
+     "key": "commands",
+     "type": "list",
+     "optional": true,
+     "help": "reproduction commands of this analysis' figures, one per line, in a code span"
+    },
+    "CLAIMS",
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to_unit": {
+       "t": "s",
+       "req": true
+      },
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": "s",
+      "affects": "s",
+      "status": {
+       "t": "s",
+       "enum": [
+        "open",
+        "answered",
+        "unresolvable"
+       ],
+       "req": true
+      },
+      "answer": "n"
+     },
+     "help": "questions about OTHER units go here, never answered by reading their code"
+    }
+   ]
+  },
+  "inventory": {
+   "title": "Inventory analysis (D1)",
+   "file": "inventory-analysis.md",
+   "output_dir": "analysis/inventory",
+   "id_prefix": "C-D1-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "status = draft | final",
+   "sections": [
+    {
+     "heading": "Repo notes",
+     "key": "repo_notes",
+     "type": "text",
+     "help": "repository layout, build setup, what is missing"
+    },
+    {
+     "heading": "Platform",
+     "key": "platform",
+     "type": "kv",
+     "req": true,
+     "fields": {
+      "version": {
+       "t": "s",
+       "req": true
+      },
+      "version_confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ]
+      },
+      "runtime": "n",
+      "hosting": "n",
+      "frontend_technology": "n",
+      "database": "n",
+      "search": "n",
+      "evidence": {
+       "t": "l",
+       "req": true
+      },
+      "notes": "s"
+     },
+     "help": "runtime = language/runtime version (JDK, PHP, Node)"
+    },
+    {
+     "heading": "Units",
+     "key": "units",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "name": {
+       "t": "s",
+       "req": true
+      },
+      "category": {
+       "t": "s",
+       "enum": "$unit.categories",
+       "req": true
+      },
+      "sub_categories": "l",
+      "description": {
+       "t": "s",
+       "req": true
+      },
+      "template_origin": "n",
+      "activation": {
+       "t": "n",
+       "enum": [
+        "active",
+        "dead",
+        "stub",
+        null
+       ]
+      },
+      "notes": "s"
+     },
+     "help": "one row per custom unit; description = 1-3 sentences a head of eCommerce understands; template_origin = generator template / boilerplate the unit was created from; activation = active (loaded per the active-units config) | dead (present but not loaded, or required by nothing that is loaded) | stub (no code, build residue) - back it with a claim, `ecom plan_waves` reads it to decide light pass / skip; notes = empty, generated, scanner corrections (say why)"
+    },
+    {
+     "heading": "Third-party packages",
+     "key": "packages",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "name": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "standard",
+        "third-party",
+        "custom"
+       ],
+       "req": true
+      },
+      "installed_on": "l",
+      "source": "s",
+      "notes": "s"
+     },
+     "help": "vendor add-ons, marketplace plugins, partner packages actually installed; kind = standard (vendor) | third-party | custom"
+    },
+    {
+     "heading": "Deprecations",
+     "key": "deprecations",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "what": {
+       "t": "s",
+       "req": true
+      },
+      "units": "l",
+      "status": {
+       "t": "s",
+       "enum": [
+        "deprecated",
+        "removed-in-target",
+        "risky",
+        "false-positive"
+       ],
+       "req": true
+      },
+      "since": "s",
+      "replacement": "s",
+      "verified_against": "s",
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "every scanner hit gets a status; verified_against = vendor documentation URL/title"
+    },
+    {
+     "heading": "Dependency notes",
+     "key": "dependency_notes",
+     "type": "table",
+     "fields": {
+      "from": "s",
+      "to": "s",
+      "kind": {
+       "t": "s",
+       "enum": [
+        "runtime-di",
+        "data",
+        "config",
+        "other"
+       ]
+      },
+      "note": "s",
+      "evidence": "s"
+     },
+     "help": "dependencies not visible in the unit manifests: DI references across units, data scripts referencing other units' types, config cross references"
+    },
+    "CLAIMS"
+   ]
+  },
+  "D3": {
+   "title": "Consolidation D3: requirements coverage",
+   "file": "consolidated-D3.md",
+   "output_dir": "analysis/consolidated",
+   "id_prefix": "C-D3-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i",
+    "target_version": {
+     "t": "s",
+     "req": true
+    }
+   },
+   "head_help": "",
+   "sections": [
+    {
+     "heading": "Coverage",
+     "key": "coverage",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "req_id": {
+       "t": "s",
+       "req": true
+      },
+      "verdict": {
+       "t": "s",
+       "enum": [
+        "covered-standard",
+        "covered-custom",
+        "partial",
+        "gap"
+       ],
+       "req": true
+      },
+      "today": {
+       "t": "s",
+       "enum": [
+        "custom",
+        "standard-in-use",
+        "partial",
+        "none"
+       ],
+       "req": true
+      },
+      "target_standard": {
+       "t": "s",
+       "enum": [
+        "full",
+        "partial",
+        "none"
+       ],
+       "req": true
+      },
+      "target_standard_ref": "s",
+      "target_standard_confidence": {
+       "t": "n",
+       "enum": [
+        "high",
+        "medium",
+        "low",
+        null
+       ]
+      },
+      "recommendation": {
+       "t": "s",
+       "enum": [
+        "use-standard",
+        "refactor-to-standard",
+        "keep-custom",
+        "build-new",
+        "clarify"
+       ],
+       "req": true
+      },
+      "business_effect": {
+       "t": "s",
+       "req": true
+      },
+      "key_statement": "s",
+      "description_gap": "n",
+      "current_state_note": "s",
+      "units": "l",
+      "standard_alternative_flag": "b",
+      "standard_alternative": "n",
+      "standard_alternative_confidence": {
+       "t": "n",
+       "enum": [
+        "high",
+        "medium",
+        "low",
+        null
+       ]
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      },
+      "evidence": "l"
+     },
+     "help": "one row per requirement of the client's list, the requirement text itself is never changed. verdict (sold wording) = covered-standard (met by TARGET standard functionality whether or not the current shop uses it) | covered-custom (met today by custom code) | partial | gap. today = how the CURRENT shop meets it: custom (own code) | standard-in-use (shipped functionality, used as shipped) | partial | none. target_standard = does the TARGET standard (platform version + target frontend) meet it: full | partial | none; target_standard_ref names feature, version floor and, for UI, the target-frontend component / API endpoint; target_standard_confidence. recommendation = use-standard (today none or standard-in-use, target full) | refactor-to-standard (custom today, standard exists in target) | keep-custom (custom today, no or partial standard: carry the logic over) | build-new (nothing today, no full standard) | clarify (contradiction or exclusion conflict - raise a client question). business_effect = ONE plain-language sentence for a business reader (what the recommendation means for the shop's users or for the project). description_gap = what the code does for this requirement beyond its description (from the units' beyond_requirement; empty when fully described) - this is 'requirement partially described', never a new requirement. Exclusions respected: code doing what is excluded does not count.; key_statement = the Kernaussage shown next to the verdict in the client workbook: ONE sentence (<= 160 characters) in the deliverable language that states the consequence for the client (what the verdict means for the shop, its users or the project), using only facts of this row - no ids, no enum tokens, no class names, no figures the row does not carry. recommendation clarify is shown as 'pending confirmation': it always rests on a client-directed question (the assumption the client confirms) A description gap needs a claim only when it is risk-bearing (it changes the verdict, the recommendation or the effort, or it carries a security or data risk); every other gap stays as row text without a claim. Never empty a gap cell to stay under the claim cap."
+    },
+    {
+     "heading": "New requirements",
+     "key": "new_requirements",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "epic": {
+       "t": "s",
+       "req": true
+      },
+      "title": {
+       "t": "s",
+       "req": true
+      },
+      "description": {
+       "t": "s",
+       "req": true
+      },
+      "acceptance_criteria": "s",
+      "exclusions": "s",
+      "references": "l",
+      "phase": "s",
+      "units": {
+       "t": "l",
+       "req": true
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      },
+      "proposed_handling": {
+       "t": "s",
+       "enum": [
+        "keep-in-scope",
+        "drop",
+        "merge-into-existing"
+       ],
+       "req": true
+      },
+      "confidence": {
+       "t": "s",
+       "enum": [
+        "high",
+        "medium",
+        "low"
+       ],
+       "req": true
+      },
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "part 2 of the joint requirement list: behaviour the shop has today that NO requirement of the client's list describes (from the units' Undocumented behaviour rows with relation not-described, de-duplicated across units). id = NR-001.. ; written in the client's own requirement format and language (epic from the client's epic list, title, description of the observed behaviour, acceptance_criteria derived from what the code verifiably does, exclusions, references = related FR/TR ids, phase = 'Offen'); rationale = why no existing requirement covers it (name the nearest one and what it lacks); proposed_handling = our proposal for the client's decision: keep-in-scope (looks forgotten) | drop (looks obsolete) | merge-into-existing (belongs into the description of FR/TR-x); the decision itself is the client's and is taken in the workbook. A behaviour any requirement touches is NOT a new requirement - it is a description_gap on that requirement."
+    },
+    "CLAIMS",
+    {
+     "heading": "Open questions",
+     "key": "open_questions",
+     "type": "table",
+     "optional": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "to": "s",
+      "question": {
+       "t": "s",
+       "req": true
+      },
+      "why_needed": "s",
+      "affects": "l",
+      "status": "s",
+      "answer": "s"
+     },
+     "help": "questions the consolidation cannot settle from the final scope analyses (scopes diverge, or a verdict rests on a client fact): to = the owning scope or client; affects = the requirement ids whose verdict the answer moves; end the question with 'Options: A) <answer> (recommended) B) <answer>; proceeding under A'"
+    }
+   ]
+  },
+  "D4": {
+   "title": "Consolidation D4: target readiness and migration tasks",
+   "file": "consolidated-D4.md",
+   "output_dir": "analysis/consolidated",
+   "id_prefix": "C-D4-",
+   "head": {
+    "status": {
+     "t": "s",
+     "enum": [
+      "draft",
+      "final"
+     ],
+     "req": true
+    },
+    "round": "i"
+   },
+   "head_help": "",
+   "sections": [
+    {
+     "heading": "Features",
+     "key": "features",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "feature_id": {
+       "t": "s",
+       "req": true
+      },
+      "feature": {
+       "t": "s",
+       "req": true
+      },
+      "primary_requirement": {
+       "t": "s",
+       "req": true
+      },
+      "units": {
+       "t": "l",
+       "req": true
+      },
+      "current_implementation": {
+       "t": "s",
+       "req": true
+      },
+      "entry_points": "l",
+      "target_api_coverage": {
+       "t": "s",
+       "enum": [
+        "full",
+        "partial",
+        "none"
+       ],
+       "req": true
+      },
+      "target_api_endpoints": "l",
+      "custom_api_exists": "b",
+      "custom_api_needed": "s",
+      "content_dependency": {
+       "t": "s",
+       "enum": [
+        "standard-components",
+        "custom-components",
+        "none"
+       ],
+       "req": true
+      },
+      "content_components": "l",
+      "state_dependency": {
+       "t": "s",
+       "enum": [
+        "none",
+        "session-attributes",
+        "server-side-view-state",
+        "cart-based"
+       ],
+       "req": true
+      },
+      "verdict": {
+       "t": "s",
+       "enum": [
+        "ready",
+        "needs-api-work",
+        "needs-redesign"
+       ],
+       "req": true
+      },
+      "rationale": {
+       "t": "s",
+       "req": true
+      },
+      "key_statement": "s",
+      "related_requirements": "l",
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "de-duplicated across units (frontend controller + facade + API endpoint of the same feature = one row); stable ids F-001..; primary_requirement = exactly ONE requirement id the feature serves first (FR/TR of the client's list, or the NR id you created in D3's New requirements for undocumented behaviour) - every feature has one, the requirement row in D3 aggregates its features from it; related_requirements = further ids it touches. Sort the table by primary_requirement.; key_statement = the Kernaussage shown next to the verdict in the client workbook: ONE sentence (<= 160 characters) in the deliverable language that states the consequence for the client (what the verdict means for the shop, its users or the project), using only facts of this row - no ids, no enum tokens, no class names, no figures the row does not carry"
+    },
+    {
+     "heading": "Content components",
+     "key": "content_components",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "component_type": {
+       "t": "s",
+       "req": true
+      },
+      "kind": {
+       "t": "s",
+       "enum": [
+        "standard",
+        "custom"
+       ],
+       "req": true
+      },
+      "target_support": {
+       "t": "s",
+       "enum": [
+        "supported",
+        "needs-custom-mapping",
+        "unsupported",
+        "unknown"
+       ],
+       "req": true
+      },
+      "usages": {
+       "t": "n"
+      },
+      "units": "l",
+      "notes": "s",
+      "evidence": "l"
+     },
+     "help": "every content/CMS building block type in use; target_support = does the target frontend render it out of the box; usages = number of CMS instances COUNTED (e.g. rows in the content data scripts, name the count in a claim) - leave empty when not counted (shown as 'not counted', never 0); evidence = locators or claim ids of the support verdict (PS-7-NNN for the target frontend fact, file:line for the component definition)"
+    },
+    {
+     "heading": "Integrations",
+     "key": "integrations",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "system": {
+       "t": "s",
+       "req": true
+      },
+      "direction": {
+       "t": "s",
+       "enum": [
+        "inbound",
+        "outbound",
+        "both"
+       ],
+       "req": true
+      },
+      "mechanism": {
+       "t": "s",
+       "enum": [
+        "integration-api",
+        "middleware",
+        "rest",
+        "soap",
+        "rfc-jco",
+        "file-transfer",
+        "edi",
+        "messaging",
+        "sso",
+        "js-widget",
+        "database",
+        "other"
+       ],
+       "req": true
+      },
+      "data_objects": "l",
+      "trigger": {
+       "t": "s",
+       "enum": [
+        "sync",
+        "async",
+        "batch",
+        "event"
+       ]
+      },
+      "implementation": {
+       "t": "s",
+       "enum": [
+        "standard",
+        "custom",
+        "partner"
+       ],
+       "req": true
+      },
+      "units": {
+       "t": "l",
+       "req": true
+      },
+      "purpose": "s",
+      "target_impact": {
+       "t": "s",
+       "enum": [
+        "unchanged",
+        "frontend-rewire",
+        "rebuild",
+        "replace-by-standard",
+        "retire"
+       ],
+       "req": true
+      },
+      "operator": "s",
+      "target_note": "s",
+      "related_requirements": "l",
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "the interface inventory of the shop, merged and de-duplicated from all units' Integrations rows (one row per external system and direction; units lists every unit that touches it). target_impact = what the move to TARGET does to this interface: unchanged (backend interface, no frontend involvement) | frontend-rewire (the interface is called from the storefront's server-side rendering today and must be reached through the target API) | rebuild | replace-by-standard (a target standard module carries it) | retire; related_requirements = the TR/FR ids it serves.; operator = who operates and monitors the interface in the TARGET (e.g. 'SAP (Cloud-Plattform), Monitoring durch die Kunden-IT', 'Middleware-Team des Kunden') - from repository facts and vendor documentation; when it is not determinable, raise a client question and write the assumed operator"
+    },
+    {
+     "heading": "Migration tasks",
+     "key": "migration_tasks",
+     "type": "table",
+     "req": true,
+     "fields": {
+      "id": {
+       "t": "s",
+       "req": true
+      },
+      "topic": {
+       "t": "s",
+       "enum": [
+        "session",
+        "cart",
+        "auth",
+        "security",
+        "i18n",
+        "content",
+        "search",
+        "performance",
+        "deployment-config",
+        "integration",
+        "data-migration",
+        "testing",
+        "other"
+       ],
+       "req": true
+      },
+      "task": {
+       "t": "s",
+       "req": true
+      },
+      "finding": {
+       "t": "s",
+       "req": true
+      },
+      "affected_requirements": {
+       "t": "l",
+       "req": true
+      },
+      "units": "l",
+      "impact": {
+       "t": "s",
+       "enum": [
+        "blocker",
+        "major",
+        "minor"
+       ],
+       "req": true
+      },
+      "rank": "i",
+      "sequence": {
+       "t": "n",
+       "enum": [
+        "before",
+        "during",
+        "after",
+        null
+       ]
+      },
+      "depends_on": "l",
+      "evidence": {
+       "t": "l",
+       "req": true
+      }
+     },
+     "help": "the overarching migration tasks a development team plans from, merged and de-duplicated from all units' Migration concerns. One row per task: id MT-001..; task = what has to be done (imperative, deliverable language); finding = why (the fact behind it); affected_requirements = the FR/TR/NR ids it affects (two or more, or none when it is estate-wide; a concern that affects exactly one requirement's frontend goes into that feature's rationale / custom_api_needed instead of a task row); impact = blocker (nothing ships without it) | major | minor; sequence = before | during | after the storefront rebuild; depends_on = MT ids that must be done first. rank = the order within the impact class (1 = first; a blocker-class ranking is read by the product owner to cut epics): tasks others depend on first, then by sequence and the number of affected requirements - the table is ordered impact, then rank; depends_on = the MT ids that must be done first (empty is shown as 'none')."
+    },
+    "CLAIMS"
+   ]
+  }
+ }
+}
