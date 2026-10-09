@@ -1,0 +1,13 @@
+{
+  "name": "dbcx-agentic-plugins",
+  "owner": {
+    "name": "valantic CEC"
+  },
+  "description": "Claude Code plugin marketplace of valantic CEC",
+  "plugins": [
+    {
+      "name": "dbcx-agentic-loop",
+      "source": "./plugins/dbcx-agentic-loop"
+    }
+  ]
+}
