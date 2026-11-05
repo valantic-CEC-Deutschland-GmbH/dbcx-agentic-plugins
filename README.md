@@ -29,6 +29,8 @@ separate evidence bases, and a final gate reads the result as the client's stake
 architecture landscapes, requirements, technology scoring and technology-fit estimation. The results are formula-driven Excel
 deliverables, followed on a live run dashboard.
 
+[![Demo video of the dbcx agentic loop (4 min)](docs/media/agentic-loop-demo.jpg)](https://github.com/valantic-CEC-Deutschland-GmbH/dbcx-agentic-plugins/releases/download/demo-video/agentic-loop-demo.mp4)
+
 Install:
 
 ```
